@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitterIrcGateway", "TwitterIrcGateway\TwitterIrcGateway.csproj", "{1D1391F6-74ED-4FDF-8C27-0BD421D0FF4D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitterIrcGatewayCLI", "TwitterIrcGatewayCLI\TwitterIrcGatewayCLI.csproj", "{4FCEDBD3-FA87-4ADE-82E9-B3C5BA431F54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitterIrcGatewayCore", "TwitterIrcGatewayCore\TwitterIrcGatewayCore.csproj", "{8A256703-BDC7-4E96-8AC3-89A56A2AFB86}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1D1391F6-74ED-4FDF-8C27-0BD421D0FF4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D1391F6-74ED-4FDF-8C27-0BD421D0FF4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D1391F6-74ED-4FDF-8C27-0BD421D0FF4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D1391F6-74ED-4FDF-8C27-0BD421D0FF4D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FCEDBD3-FA87-4ADE-82E9-B3C5BA431F54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FCEDBD3-FA87-4ADE-82E9-B3C5BA431F54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FCEDBD3-FA87-4ADE-82E9-B3C5BA431F54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FCEDBD3-FA87-4ADE-82E9-B3C5BA431F54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A256703-BDC7-4E96-8AC3-89A56A2AFB86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A256703-BDC7-4E96-8AC3-89A56A2AFB86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A256703-BDC7-4E96-8AC3-89A56A2AFB86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A256703-BDC7-4E96-8AC3-89A56A2AFB86}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
