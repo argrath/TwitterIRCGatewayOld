@@ -66,6 +66,14 @@ namespace Misuzilla.Net.Irc
                             Debug.WriteLine(String.Format("Unknown mode: {0}", s[j]));
                             continue;
                         }
+
+                        // ƒpƒ‰ƒ[ƒ^‚ª‚ ‚é‚Í‚¸‚È‚Ì‚É‚È‚¢ê‡
+                        if (hasParam && (i + paramPosition) > (param.Length - 1))
+                        {
+                            // throw new ChannelModeParseException();
+                            Debug.WriteLine(String.Format("Channel mode: {0} / Invalid Parameters", s[j]));
+                            continue;
+                        }
                         
                         ChannelMode cmode = new ChannelMode()
                         {

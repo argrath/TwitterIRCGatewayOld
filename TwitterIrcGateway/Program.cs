@@ -61,7 +61,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _server.BroadcastUpdate = _settings.BroadcastUpdate;
             _server.ClientMessageWait = _settings.ClientMessageWait;
             _server.BroadcastUpdateMessageIsNotice = _settings.BroadcastUpdateMessageIsNotice;
-            _server.SessionStartedRecieved += new EventHandler<SessionStartedEventArgs>(_server_SessionStartedRecieved);
+            _server.POSTFetchMode = _settings.POSTFetchMode;
+            _server.SessionStartedReceived += new EventHandler<SessionStartedEventArgs>(_server_SessionStartedReceived);
             try
             {
                 _server.Encoding = (String.Compare(_settings.Charset, "UTF-8", true) == 0)
@@ -95,7 +96,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _server.Stop();
         }
 
-        void _server_SessionStartedRecieved(object sender, SessionStartedEventArgs e)
+        void _server_SessionStartedReceived(object sender, SessionStartedEventArgs e)
         {
             _notifyIcon.ShowBalloonTip(1000 * 10, Name, String.Format("ユーザ {0} がサーバに接続しました。", e.UserName), ToolTipIcon.Info);
         }

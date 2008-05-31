@@ -638,6 +638,18 @@ namespace Misuzilla.Net.Irc
 		private String _modeargs = "";
 		private String _target = "";
 
+        public String ModeArgs
+        {
+            get { return _modeargs; }
+            set { _modeargs = value; }
+        }
+
+        public String Target
+        {
+            get { return _target; }
+            set { _target = value; }
+        }
+        
 		public
 		ModeMessage() : base()
 		{
@@ -647,7 +659,19 @@ namespace Misuzilla.Net.Irc
 		ModeMessage(String raw) : base(raw)
 		{
 			_target = this.CommandParams[0];
-			_modeargs = this.CommandParams[1];
+
+            StringBuilder sb = new StringBuilder();
+            for (var i = 1; i < this.CommandParams.Length; i++)
+            {
+                if (String.IsNullOrEmpty(this.CommandParams[i]))
+                    break;
+                
+                if (i != 1)
+                    sb.Append(" ");
+
+                sb.Append(this.CommandParams[i]);
+            }
+            _modeargs = sb.ToString();
 		}
 		public
 		ModeMessage(String target, String param)

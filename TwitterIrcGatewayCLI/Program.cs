@@ -18,7 +18,7 @@ namespace TwitterIrcGatewayCLI
         {
             IPAddress bindAddress = IPAddress.Loopback;
             Encoding encoding = Encoding.GetEncoding("ISO-2022-JP");
-            IWebProxy proxy = WebProxy.GetDefaultProxy();
+            IWebProxy proxy = WebRequest.DefaultWebProxy;
 
             CommandLineOptions options;
             if (CommandLineParser.TryParse(args, out options))
@@ -71,7 +71,8 @@ namespace TwitterIrcGatewayCLI
             _server.BroadcastUpdate = options.BroadcastUpdate;
             _server.ClientMessageWait = options.ClientMessageWait;
             _server.BroadcastUpdateMessageIsNotice = options.BroadcastUpdateMessageIsNotice;
-            _server.SessionStartedRecieved += new EventHandler<SessionStartedEventArgs>(_server_SessionStartedRecieved);
+            _server.POSTFetchMode = options.PostFetchMode;
+            _server.SessionStartedReceived += new EventHandler<SessionStartedEventArgs>(_server_SessionStartedReceived);
             _server.Proxy = proxy;
 
             Console.WriteLine("Start TwitterIrcGateway Server v{0}", typeof(Server).Assembly.GetName().Version);
@@ -91,8 +92,9 @@ namespace TwitterIrcGatewayCLI
             Console.WriteLine("[Configuration] DisableUserList: {0}", _server.DisableUserList);
             Console.WriteLine("[Configuration] BroadcastUpdate: {0}", _server.BroadcastUpdate);
             Console.WriteLine("[Configuration] ClientMessageWait: {0}", _server.ClientMessageWait);
-            Console.WriteLine("[Configuration] BroadcatUpdateMessageIsNotice: {0}", _server.BroadcastUpdateMessageIsNotice);
+            Console.WriteLine("[Configuration] BroadcastUpdateMessageIsNotice: {0}", _server.BroadcastUpdateMessageIsNotice);
             Console.WriteLine("[Configuration] Proxy: {0}", options.Proxy);
+            Console.WriteLine("[Configuration] PostFetchMode: {0}", options.PostFetchMode);
 
             _server.Start(bindAddress, options.Port);
 
@@ -107,7 +109,7 @@ namespace TwitterIrcGatewayCLI
             CommandLineParser.ShowHelp();
         }
 
-        static void _server_SessionStartedRecieved(object sender, SessionStartedEventArgs e)
+        static void _server_SessionStartedReceived(object sender, SessionStartedEventArgs e)
         {
             //Console.WriteLine("[Connect] User: {0}", e.UserName);
         }
@@ -156,7 +158,7 @@ namespace TwitterIrcGatewayCLI
         public Int32 IntervalDirectmessage { get; set; }
 
         [DefaultValue(false)]
-        [Description("enable cookie-login mode")]
+        [Description("enable cookie-login mode (Obsolete / not working)")]
         public Boolean CookieLoginMode { get; set; }
 
         [DefaultValue("Twitter")]
@@ -190,5 +192,9 @@ namespace TwitterIrcGatewayCLI
         [DefaultValue("")]
         [Description("HTTP proxy server URL (http://host:port)")]
         public String Proxy { get; set; }
+
+        [DefaultValue(false)]
+        [Description("fetch data by POST method")]
+        public Boolean PostFetchMode { get; set; }
     }
 }

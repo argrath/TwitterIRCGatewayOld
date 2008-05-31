@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Xml;
 using Misuzilla.Net.Irc;
+using System.Diagnostics;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
@@ -58,6 +59,68 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
 
             return retGroups;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static Groups Load(String path)
+        {
+            // group “Ç‚ÝŽæ‚è
+            if (File.Exists(path))
+            {
+                Trace.WriteLine(String.Format("Load Group: {0}", path));
+                try
+                {
+                    using (FileStream fs = new FileStream(path, FileMode.Open))
+                    {
+                        try
+                        {
+                            Groups groups = Groups.Deserialize(fs);
+                            if (groups != null)
+                                return groups;
+                        }
+                        catch (XmlException xe) { Trace.WriteLine(xe.Message); }
+                        catch (InvalidOperationException ioe) { Trace.WriteLine(ioe.Message); }
+                    }
+                }
+                catch (IOException ie)
+                {
+                    Trace.WriteLine(ie.Message);
+                    throw;
+                }
+            }
+            return new Groups();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        public void Save(String path)
+        {
+            Trace.WriteLine(String.Format("Save Group: {0}", path));
+            try
+            {
+                String dir = Path.GetDirectoryName(path);
+                Directory.CreateDirectory(dir);
+                using (FileStream fs = new FileStream(path, FileMode.Create))
+                {
+                    try
+                    {
+                        this.Serialize(fs);
+                    }
+                    catch (XmlException xe) { Trace.WriteLine(xe.Message); }
+                    catch (InvalidOperationException ioe) { Trace.WriteLine(ioe.Message); }
+                }
+            }
+            catch (IOException ie)
+            {
+                Trace.WriteLine(ie.Message);
+                throw;
+            }
         }
     }
 

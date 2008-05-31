@@ -5,6 +5,8 @@ using System.Xml.Serialization;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Misuzilla.Net.Irc;
+using System.IO;
+using System.Xml;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.Filter
 {
@@ -75,6 +77,45 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public static Filters Load(String path)
+        {
+            if (File.Exists(path))
+            {
+                Trace.WriteLine(String.Format("Load Filters: {0}", path));
+                try
+                {
+                    using (FileStream fs = new FileStream(path, FileMode.Open))
+                    {
+                        try
+                        {
+                            Filters filters = Filters.Serializer.Deserialize(fs) as Filters;
+                            if (filters != null)
+                            {
+                                foreach (FilterItem item in filters.Items)
+                                {
+                                    Trace.WriteLine(String.Format(" - Filter:{0}", item.ToString()));
+                                }
+                                return filters;
+                            }
+                        }
+                        catch (XmlException xe) { Trace.WriteLine(xe.Message); }
+                        catch (InvalidOperationException ioe) { Trace.WriteLine(ioe.Message); }
+                    }
+                }
+                catch (IOException ie)
+                {
+                    Trace.WriteLine(ie.Message);
+                    throw;
+                }
+            }
+            return new Filters();
         }
     }
 

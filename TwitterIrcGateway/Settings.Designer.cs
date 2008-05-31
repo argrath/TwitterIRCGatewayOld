@@ -238,5 +238,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway {
                 this["BroadcastUpdateMessageIsNotice"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool POSTFetchMode {
+            get {
+                return ((bool)(this["POSTFetchMode"]));
+            }
+            set {
+                this["POSTFetchMode"] = value;
+            }
+        }
     }
 }

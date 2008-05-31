@@ -7,12 +7,12 @@ using Misuzilla.Net.Irc;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
-    public class MessageRecievedEventArgs : EventArgs
+    public class MessageReceivedEventArgs : EventArgs
     {
         public IRCMessage Message;
         public TcpClient Client;
         public StreamWriter Writer;
-        public MessageRecievedEventArgs(IRCMessage msg, StreamWriter sw, TcpClient tcpClient)
+        public MessageReceivedEventArgs(IRCMessage msg, StreamWriter sw, TcpClient tcpClient)
         {
             Writer = sw;
             Client = tcpClient;

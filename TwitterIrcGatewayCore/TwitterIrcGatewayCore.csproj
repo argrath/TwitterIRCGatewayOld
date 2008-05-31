@@ -39,6 +39,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
     <Compile Include="EventArgs.cs" />
     <Compile Include="Filter.cs" />
     <Compile Include="Group.cs" />
@@ -54,9 +55,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Server.cs" />
     <Compile Include="Session.cs" />
+    <Compile Include="TwitterIMService.cs" />
     <Compile Include="TwitterService.cs">
     </Compile>
     <Compile Include="Utility.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="agsXMPP\agsXMPP2008.csproj">
+      <Project>{DC39021C-FA24-4E34-AB4A-3260BB5314AF}</Project>
+      <Name>agsXMPP2008</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

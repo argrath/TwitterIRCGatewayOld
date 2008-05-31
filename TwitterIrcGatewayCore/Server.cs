@@ -93,10 +93,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public IWebProxy Proxy = null;
 
+        /// <summary>
+        /// データの取得にPOSTメソッドを利用するかどうか
+        /// </summary>
+        public Boolean POSTFetchMode = false;
+
         public const String ServerName = "localhost";
         public const String ServerNick = "$TwitterIrcGatewayServer$";
 
-        public event EventHandler<SessionStartedEventArgs> SessionStartedRecieved;
+        public event EventHandler<SessionStartedEventArgs> SessionStartedReceived;
 
         void AcceptHandled(IAsyncResult ar)
         {
@@ -111,7 +116,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 {
                     _sessions.Add(session);
                 }
-                session.SessionStarted += new EventHandler<SessionStartedEventArgs>(session_SessionStartedRecieved);
+                session.SessionStarted += new EventHandler<SessionStartedEventArgs>(session_SessionStartedReceived);
                 session.SessionEnded += new EventHandler(session_SessionEnded);
                 session.Start();
             }
@@ -125,12 +130,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
-        void session_SessionStartedRecieved(object sender, SessionStartedEventArgs e)
+        void session_SessionStartedReceived(object sender, SessionStartedEventArgs e)
         {
             // 中継
-            if (SessionStartedRecieved != null)
+            if (SessionStartedReceived != null)
             {
-                SessionStartedRecieved(sender, e);
+                SessionStartedReceived(sender, e);
             }
         }
 
