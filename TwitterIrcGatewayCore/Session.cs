@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -12,6 +13,7 @@ using System.Threading;
 using System.Web;
 using System.Xml;
 
+using TypableMap;
 using Misuzilla.Net.Irc;
 using Misuzilla.Applications.TwitterIrcGateway.Filter;
 
@@ -31,6 +33,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Groups _groups;
         private Filters _filter;
         private Config _config;
+        private TypableMap<Int32> _typableMap;
 
         private List<String> _nickNames = new List<string>();
         private Boolean _isFirstTime = true;
@@ -66,10 +69,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_MODE);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMENABLE);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMDISABLE);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGCONFIG);
 
             _groups = new Groups();
             _filter = new Filters();
             _config = new Config();
+            _typableMap = new TypableMap<Int32>();
 
             _server = server;
             _tcpClient = tcpClient;
@@ -611,6 +616,32 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             PrivMsgMessage message = e.Message as PrivMsgMessage;
             if (message == null) return;
 
+            // fav コマンド?
+            if (_config.EnableTypableMap)
+            {
+                Match m = Regex.Match(message.Content, @"^\s*(unfav|fav)\s+([a-zA-Z0-9_]+)\s*$", RegexOptions.IgnoreCase);
+                if (m.Success)
+                {
+                    Int32 id;
+                    if (_typableMap.TryGetValue(m.Groups[2].Value, out id))
+                    {
+                        // TypableMap にある
+                        Boolean isUnfav = (String.Compare(m.Groups[1].Value, "unfav", true) == 0);
+                        Status favStatus = (isUnfav ? _twitter.DestroyFavorite(id) : _twitter.CreateFavorite(id));
+                        Send(new NoticeMessage
+                                 {
+                                     Sender = _clientHost,
+                                     Receiver = message.Receiver,
+                                     Content =
+                                         String.Format("ユーザ {0} のステータス \"{1}\"をFavorites{2}しました。",
+                                                       favStatus.User.ScreenName, favStatus.Text,
+                                                       (isUnfav ? "から削除" : "に追加"))
+                                 });
+                    }
+                    return;
+                }
+            }
+
             Boolean isRetry = false;
             Retry:
             try
@@ -878,7 +909,68 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             SaveConfig();
             DisconnectToIMService(false);
         }
-        
+
+        void MessageReceived_TIGCONFIG(object sender, MessageReceivedEventArgs e)
+        {
+            if (String.Compare(e.Message.Command, "TIGCONFIG", true) != 0) return;
+
+            Type t = typeof(Config);
+            
+            // プロパティ一覧を作る
+            if (String.IsNullOrEmpty(e.Message.CommandParams[0]))
+            {
+                //SendTwitterGatewayServerMessage("TIGCONFIG コマンドは1つまたは2つの引数(ConfigName, Value)が必要です。");
+                foreach (var pi in t.GetProperties(BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.SetProperty))
+                {
+                    SendTwitterGatewayServerMessage(
+                        String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.FullName, pi.GetValue(_config, null)));
+                }
+                return;
+            }
+            
+            // プロパティを探す
+            String propName = e.Message.CommandParams[0];
+            PropertyInfo propInfo = t.GetProperty(propName, BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.SetProperty);
+            if (propInfo == null)
+            {
+                SendTwitterGatewayServerMessage(String.Format("設定項目 \"{0}\" は存在しません。", propName));
+                return;
+            }
+
+            // 2つめの引数があるときは値を設定する。
+            if (!String.IsNullOrEmpty(e.Message.CommandParams[1]))
+            {
+                TypeConverter tConv = TypeDescriptor.GetConverter(propInfo.PropertyType);
+                if (!tConv.CanConvertFrom(typeof (String)))
+                {
+                    SendTwitterGatewayServerMessage(
+                        String.Format("設定項目 \"{0}\" の型 \"{1}\" には適切な TypeConverter がないため、このコマンドで設定することはできません。", propName,
+                                      propInfo.PropertyType.FullName));
+                    return;
+                }
+
+                try
+                {
+                    Object value = tConv.ConvertFromString(e.Message.CommandParams[1]);
+                    propInfo.SetValue(_config, value, null);
+                }
+                catch (Exception ex)
+                {
+                    SendTwitterGatewayServerMessage(String.Format(
+                                                        "設定項目 \"{0}\" の型 \"{1}\" に値を変換し設定する際にエラーが発生しました({2})。", propName,
+                                                        propInfo.PropertyType.FullName, ex.GetType().Name));
+                    foreach (var line in ex.Message.Split('\n'))
+                        SendTwitterGatewayServerMessage(line);
+                }
+
+                SaveConfig();
+            }
+            
+            SendTwitterGatewayServerMessage(
+                String.Format("{0} ({1}) = {2}", propName, propInfo.PropertyType.FullName, propInfo.GetValue(_config, null)));
+            
+        }
+ 
         private void ConnectToIMService(Boolean initialConnect)
         {
             DisconnectToIMService(!initialConnect);
@@ -1053,7 +1145,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// サーバメッセージ系
         /// </summary>
-        /// <param name="msg"></param>
+        /// <param name="message"></param>
         public void SendTwitterGatewayServerMessage(String message)
         {
             NoticeMessage noticeMsg = new NoticeMessage();
@@ -1111,10 +1203,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             RunCheck(delegate
             {
                 User[] friends = _twitter.GetFriends();
-                _nickNames = new List<string>(Array.ConvertAll<User, String>(friends, delegate(User u)
-                {
-                    return u.ScreenName;
-                }));
+                _nickNames = new List<string>(Array.ConvertAll<User, String>(friends, u => u.ScreenName));
 
                 SendNumericReply(NumericReply.RPL_NAMREPLY, "=", _server.ChannelName, String.Join(" ", _nickNames.ToArray()));
                 SendNumericReply(NumericReply.RPL_ENDOFNAMES, _server.ChannelName, "End of NAMES list");
@@ -1143,10 +1232,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             RunCheck(delegate
             {
                 User[] friends = _twitter.GetFriends();
-                List<String> screenNames = new List<string>(Array.ConvertAll<User, String>(friends, delegate(User u)
-                {
-                    return u.ScreenName;
-                }));
+                List<String> screenNames = new List<string>(Array.ConvertAll<User, String>(friends, u => u.ScreenName));
 
                 // てきとうに。
                 // 増えた分
@@ -1206,6 +1292,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             // TinyURL
             String text = (_server.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(filterArgs.Content) : filterArgs.Content;
 
+            // TypableMap
+            if (_config.EnableTypableMap)
+            {
+                String typableMapId = _typableMap.Add(status.Id);
+                text = String.Format("{0} \x0003{1}({2})", text, _config.TypableMapKeyColorNumber, typableMapId);
+            }
+            
             String[] lines = text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (String line in lines)
             {

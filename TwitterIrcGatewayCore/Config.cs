@@ -15,6 +15,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public String IMServerName { get; set; }
         public String IMUserName { get; set; }
         public String IMEncryptoPassword { get; set; }
+
+        public Boolean EnableTypableMap { get; set; }
+        public Int32 TypableMapKeyColorNumber { get; set; }
         
         public String GetIMPassword(String key)
         {
@@ -35,6 +38,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 sb.Append((Char)(password[i] ^ key[i % key.Length]));
             }
             IMEncryptoPassword = Convert.ToBase64String(Encoding.UTF8.GetBytes(sb.ToString()));
+        }
+        
+        public Config()
+        {
+            EnableTypableMap = false;
+            TypableMapKeyColorNumber = 14;
         }
 
         #region XML Serialize

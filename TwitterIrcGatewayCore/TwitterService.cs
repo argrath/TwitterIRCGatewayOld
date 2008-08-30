@@ -343,6 +343,52 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             });
         }
 
+        /// <summary>
+        /// メッセージをfavoritesに追加します。
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Status CreateFavorite(Int32 id)
+        {
+            return ExecuteRequest<Status>(() =>
+            {
+                String responseBody = POST(String.Format("/favorites/create/{0}.xml", id), new byte[0]);
+                Status status;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    status = Status.Serializer.Deserialize(new StringReader(responseBody)) as Status;
+                    return status;
+                }
+            });
+        }
+
+        /// <summary>
+        /// メッセージをfavoritesから削除します。
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Status DestroyFavorite(Int32 id)
+        {
+            return ExecuteRequest<Status>(() =>
+            {
+                String responseBody = POST(String.Format("/favorites/destroy/{0}.xml", id), new byte[0]);
+                Status status;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    status = Status.Serializer.Deserialize(new StringReader(responseBody)) as Status;
+                    return status;
+                }
+            });
+        }
+
         #region 内部タイマーイベント
         /// <summary>
         /// Twitter のタイムラインの受信を開始します。
