@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Misuzilla.org")]
 [assembly: AssemblyProduct("TwitterIrcGateway")]
-[assembly: AssemblyCopyright("Copyright © Misuzilla.org 2007")]
+[assembly: AssemblyCopyright("Copyright © Misuzilla.org 2007-2008")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
