@@ -33,12 +33,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Groups _groups;
         private Filters _filter;
         private Config _config;
-        private TypableMap<Int32> _typableMap;
+        private TypableMapCommandProcessor _typableMapCommands;
 
         private List<String> _nickNames = new List<string>();
         private Boolean _isFirstTime = true;
 
-        private TraceListener _traceListeneer;
+        private TraceListener _traceListener;
 
         private event EventHandler<MessageReceivedEventArgs> MessageReceived;
         private String _username;
@@ -70,11 +70,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMENABLE);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMDISABLE);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGCONFIG);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGLOADFILTER);
 
             _groups = new Groups();
             _filter = new Filters();
             _config = new Config();
-            _typableMap = new TypableMap<Int32>();
 
             _server = server;
             _tcpClient = tcpClient;
@@ -114,6 +114,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             get
             {
                 return _clientHost;
+            }
+        }
+        
+        public TwitterService TwitterService
+        {
+            get
+            {
+                return _twitter;
             }
         }
 
@@ -167,9 +175,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         protected virtual void OnSessionStarted(String username)
         {
+            LoadConfig();
+
+            if (_server.EnableTrace || _config.EnableTrace)
+            {
+                _traceListener = new IrcTraceListener(this);
+                Trace.Listeners.Add(_traceListener);
+            }
+
             LoadGroups();
             LoadFilters();
-            LoadConfig();
 
             if (!String.IsNullOrEmpty(_config.IMServiceServerName))
             {
@@ -551,12 +566,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             autoMsg.Receiver = _server.ChannelName;
             autoMsg.Content = "Twitter IRC Gateway Server Connected.";
 
-            if (_server.EnableTrace)
-            {
-                _traceListeneer = new IrcTraceListener(this);
-                Trace.Listeners.Add(_traceListeneer);
-            }
-
             SendServer(joinMsg);
             Send(autoMsg);
 
@@ -576,6 +585,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _twitter.DirectMessageReceived += new EventHandler<DirectMessageEventArgs>(twitter_DirectMessageReceived);
             if (_server.Proxy != null)
                 _twitter.Proxy = _server.Proxy;
+            
+            // TypableMap
+            _typableMapCommands = new TypableMapCommandProcessor(_twitter, this);
 
             _twitter.Start();
 
@@ -616,28 +628,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             PrivMsgMessage message = e.Message as PrivMsgMessage;
             if (message == null) return;
 
-            // fav コマンド?
+            // Typable Map コマンド?
             if (_config.EnableTypableMap)
             {
-                Match m = Regex.Match(message.Content, @"^\s*(unfav|fav)\s+([a-zA-Z0-9_]+)\s*$", RegexOptions.IgnoreCase);
-                if (m.Success)
-                {
-                    Int32 id;
-                    if (_typableMap.TryGetValue(m.Groups[2].Value, out id))
-                    {
-                        // TypableMap にある
-                        Boolean isUnfav = (String.Compare(m.Groups[1].Value, "unfav", true) == 0);
-                        Status favStatus = (isUnfav ? _twitter.DestroyFavorite(id) : _twitter.CreateFavorite(id));
-                        Send(new NoticeMessage
-                                 {
-                                     Sender = _clientHost,
-                                     Receiver = message.Receiver,
-                                     Content =
-                                         String.Format("ユーザ {0} のステータス \"{1}\"をFavorites{2}しました。",
-                                                       favStatus.User.ScreenName, favStatus.Text,
-                                                       (isUnfav ? "から削除" : "に追加"))
-                                 });
-                    }
+                if (_typableMapCommands.Process(message)) {
                     return;
                 }
             }
@@ -964,13 +958,30 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
 
                 SaveConfig();
+
+                if (_traceListener == null && (_config.EnableTrace || _server.EnableTrace))
+                {
+                    _traceListener = new IrcTraceListener(this);
+                    Trace.Listeners.Add(_traceListener);
+                }
+                else if ((_traceListener != null) && !_config.EnableTrace && !_server.EnableTrace)
+                {
+                    Trace.Listeners.Remove(_traceListener);
+                    _traceListener = null;
+                }
             }
             
             SendTwitterGatewayServerMessage(
                 String.Format("{0} ({1}) = {2}", propName, propInfo.PropertyType.FullName, propInfo.GetValue(_config, null)));
             
         }
- 
+
+        void MessageReceived_TIGLOADFILTER(object sender, MessageReceivedEventArgs e)
+        {
+            if (String.Compare(e.Message.Command, "TIGLOADFILTER", true) != 0) return;
+            LoadFilters();
+        }
+
         private void ConnectToIMService(Boolean initialConnect)
         {
             DisconnectToIMService(!initialConnect);
@@ -1276,7 +1287,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             friendsCheckRequired |= !(_nickNames.Contains(status.User.ScreenName));
             
             // フィルタ
-            FilterArgs filterArgs = new FilterArgs(this, status.Text, status.User, "PRIVMSG", false);
+            FilterArgs filterArgs = new FilterArgs(this, status.Text, status.User, "PRIVMSG", false, status);
             if (!_filter.ExecuteFilters(filterArgs))
             {
                 // 捨てる
@@ -1295,7 +1306,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             // TypableMap
             if (_config.EnableTypableMap)
             {
-                String typableMapId = _typableMap.Add(status.Id);
+                String typableMapId = _typableMapCommands.TypableMap.Add(status);
                 text = String.Format("{0} \x0003{1}({2})", text, _config.TypableMapKeyColorNumber, typableMapId);
             }
             
@@ -1369,13 +1380,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return msg;
         }
 
-        private delegate void Procedure();
+        public delegate void Procedure();
         /// <summary>
         /// チェックを実行します。例外が発生した場合には自動的にメッセージを送信します。
         /// </summary>
         /// <param name="proc">実行するチェック処理</param>
         /// <returns></returns>
-        private Boolean RunCheck(Procedure proc)
+        public Boolean RunCheck(Procedure proc)
         {
             try
             {
@@ -1424,7 +1435,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 if (_server.EnableTrace)
                 {
-                    Trace.Listeners.Remove(_traceListeneer);
+                    Trace.Listeners.Remove(_traceListener);
                 }
 
                 if (_twitter != null)

@@ -61,6 +61,7 @@
     <Compile Include="TwitterService.cs">
     </Compile>
     <Compile Include="TypableMap.cs" />
+    <Compile Include="TypableMapCommandProcessor.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>

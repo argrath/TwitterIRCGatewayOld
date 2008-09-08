@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
 using System.Text.RegularExpressions;
@@ -13,6 +14,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
     [XmlInclude(typeof(Drop))]
     [XmlInclude(typeof(Redirect))]
     [XmlInclude(typeof(RewriteContent))]
+    [XmlInclude(typeof(Process))]
     public class Filters
     {
         public Filters()
@@ -55,26 +57,39 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
         /// <summary>
         /// メッセージをフィルタします
         /// </summary>
-        /// <param name="user"></param>
-        /// <param name="message"></param>
+        /// <param name="args"></param>
         /// <returns>メッセージを捨てるかどうか</returns>
         public Boolean ExecuteFilters(FilterArgs args)
         {
             Trace.WriteLine(String.Format("Filter: User: {0} / Message: {1}",args.User.ScreenName, args.Content.Replace('\n', ' ')));
+            Trace.Indent();
             foreach (FilterItem item in _items)
             {
                 if (!item.Enabled)
                     continue;
-
-                item.Execute(args);
-
-                if (args.Drop)
+                
+                Trace.WriteLine("=> " + item.GetType().Name);
+                Trace.Indent();
+                try
                 {
-                    Trace.WriteLine(String.Format("  => DROP", item.GetType().Name, args.User.ScreenName, args.Content.Replace('\n', ' ')));
-                    return false;
+                    Boolean executed = item.Execute(args);
+                    if (args.Drop)
+                    {
+                        Trace.WriteLine(String.Format("=> DROP", item.GetType().Name, args.User.ScreenName, args.Content.Replace('\n', ' ')));
+                        return false;
+                    }
+                    else if (executed)
+                    {
+                        Trace.WriteLine(String.Format("=> Result: User: {1} / Message: {2}", item.GetType().Name,
+                                                      args.User.ScreenName, args.Content.Replace('\n', ' ')));
+                    }
                 }
-                Trace.WriteLine(String.Format("  => {0} / User: {1} / Message: {2}", item.GetType().Name, args.User.ScreenName, args.Content.Replace('\n', ' ')));
+                finally
+                {
+                    Trace.Unindent();
+                }
             }
+            Trace.Unindent();
 
             return true;
         }
@@ -129,7 +144,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
             set { _enabled = value; }
         }
 
-        public abstract void Execute(FilterArgs args);
+        public abstract Boolean Execute(FilterArgs args);
     }
 
     public class FilterArgs
@@ -139,14 +154,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
         public String IRCMessageType;
         public Boolean Drop;
         public Session Session;
+        public Status Status;
 
-        public FilterArgs(Session session, String content, User user, String ircMessageType, Boolean drop)
+        public FilterArgs(Session session, String content, User user, String ircMessageType, Boolean drop, Status status)
         {
             this.Session = session;
             this.Content = content;
             this.User = user;
             this.IRCMessageType = ircMessageType;
             this.Drop = drop;
+            this.Status = status;
         }
     }
 
@@ -166,14 +183,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
             set { _userMatchPattern = value; }
         }
 
-        public override void Execute(FilterArgs args)
+        public override Boolean Execute(FilterArgs args)
         {
             if (!String.IsNullOrEmpty(_matchPattern))
             {
-                args.Drop =
+                return args.Drop =
                     Regex.IsMatch(args.Content, _matchPattern, RegexOptions.IgnoreCase) &&
                     ((String.IsNullOrEmpty(_userMatchPattern)) ? true : Regex.IsMatch(args.User.ScreenName, _userMatchPattern));
             }
+            return false;
         }
         public override string ToString()
         {
@@ -215,7 +233,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
             set { _messageType = value; }
         }
 
-        public override void Execute(FilterArgs args)
+        public override Boolean Execute(FilterArgs args)
         {
             if (!String.IsNullOrEmpty(_matchPattern))
             {
@@ -228,8 +246,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
                     }
 
                     args.IRCMessageType = _messageType;
+                    return true;
                 }
             }
+            return false;
         }
 
         public override string ToString()
@@ -274,10 +294,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
             set { _duplicate = value; }
         }
 
-        public override void Execute(FilterArgs args)
+        public override Boolean Execute(FilterArgs args)
         {
             if (String.IsNullOrEmpty(_channelName))
-                return;
+                return false;
 
             if (!String.IsNullOrEmpty(_matchPattern))
             {
@@ -286,7 +306,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
                     ((String.IsNullOrEmpty(_userMatchPattern)) ? true : Regex.IsMatch(args.User.ScreenName, _userMatchPattern));
                 
                 if (!rerouteRequired)
-                    return;
+                    return false;
                 
                 IRCMessage msg;
                 switch (args.IRCMessageType.ToUpperInvariant())
@@ -305,7 +325,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
                 
                 if (!_duplicate)
                     args.Drop = true;
+
+                return true;
             }
+            return false;
         }
         public override string ToString()
         {
@@ -319,4 +342,202 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
         }
     }
 
+    public class Process : FilterItem
+    {
+        private String _replacePattern = "";
+        public String ReplacePattern
+        {
+            get { return _replacePattern; }
+            set { _replacePattern = value; }
+        }
+
+        private String _matchPattern = "";
+        public String MatchPattern
+        {
+            get { return _matchPattern; }
+            set { _matchPattern = value; }
+        }
+
+        private String _userMatchPattern = "";
+        public String UserMatchPattern
+        {
+            get { return _userMatchPattern; }
+            set { _userMatchPattern = value; }
+        }
+
+        private String _messageType = "PRIVMSG";
+        public String MessageType
+        {
+            get { return _messageType; }
+            set { _messageType = value; }
+        }
+
+        public String InputEncoding
+        {
+            get; set;
+        }
+
+        public String OutputEncoding
+        {
+            get; set;
+        }
+        
+        public String ProcessPath
+        {
+            get; set;
+        }
+
+        public String Arguments
+        {
+            get; set;
+        }
+
+        public Boolean XmlMode
+        {
+            get; set;
+        }
+
+        public override Boolean Execute(FilterArgs args)
+        {
+            if (!String.IsNullOrEmpty(_matchPattern))
+            {
+                if (Regex.IsMatch(args.Content, _matchPattern, RegexOptions.IgnoreCase) &&
+                    ((String.IsNullOrEmpty(_userMatchPattern))
+                         ? true
+                         : Regex.IsMatch(args.User.ScreenName, _userMatchPattern)))
+                {
+                    Encoding encIn = (String.Compare(InputEncoding, "UTF-8", true) == 0)
+                                         ? new UTF8Encoding(false)
+                                         : Encoding.GetEncoding(InputEncoding);
+
+                    Encoding encOut = (String.Compare(OutputEncoding, "UTF-8", true) == 0)
+                                          ? new UTF8Encoding(false)
+                                          : Encoding.GetEncoding(OutputEncoding);
+
+                    Trace.WriteLine(String.Format("Start: {0} ({1})", ProcessPath, Arguments));
+                    
+                    ProcessStartInfo psInfo = new ProcessStartInfo(ProcessPath, Arguments);
+                    psInfo.RedirectStandardInput = true;
+                    psInfo.RedirectStandardOutput = true;
+                    psInfo.StandardOutputEncoding = encIn; // Process -> TIG のエンコーディング
+                    psInfo.UseShellExecute = false;
+                    psInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    psInfo.CreateNoWindow = true;
+
+                    Dictionary<String, String> headers =
+                        new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+                    String content;
+                    using (System.Diagnostics.Process process = System.Diagnostics.Process.Start(psInfo))
+                    using (StreamWriter sw = new StreamWriter(process.StandardInput.BaseStream, encOut))
+                    {
+                        sw.WriteLine("Url: http://twitter.com/{0}/statuses/{1}", args.Status.User.ScreenName,
+                                     args.Status.Id);
+                        WriteFieldsAndProperties(sw, "User", args.User);
+                        WriteFieldsAndProperties(sw, "Status", args.Status);
+                        sw.WriteLine("Filter-Drop: {0}", args.Drop);
+                        sw.WriteLine("Filter-IRCMessageType: {0}", args.IRCMessageType);
+                        sw.WriteLine();
+                        if (XmlMode)
+                            Status.Serializer.Serialize(sw, args.Status);
+                        else
+                            sw.WriteLine(args.Content);
+                        sw.Close();
+
+                        String output = process.StandardOutput.ReadToEnd();
+                        if (String.IsNullOrEmpty(output))
+                            return false;
+
+                        String[] parts = output.Split(new string[] {"\n\n"}, 2, StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length == 1)
+                        {
+                            content = parts[0].Trim();
+                        }
+                        else
+                        {
+                            if (parts.Length == 0)
+                            {
+                                Trace.WriteLine("Filter was recieved invalid data");
+                                return false;
+                            }
+                            foreach (var line in parts[0].Split('\n'))
+                            {
+                                String[] headerParts = line.Split(new char[] {':'}, 2);
+                                if (headerParts.Length != 2)
+                                    continue;
+
+                                headers[headerParts[0].Trim()] = headerParts[1].Trim();
+                            }
+                            content = parts[1].Trim();
+                        }
+
+                        if (process.WaitForExit(60*1000))
+                        {
+                            Trace.WriteLine("Process Exited: " + process.ExitCode.ToString());
+                            // 終了コード見る
+                            if (process.ExitCode == 0)
+                            {
+                                // 書き換え
+                                Boolean drop = args.Drop;
+                                if (headers.ContainsKey("Filter-Drop"))
+                                    Boolean.TryParse(headers["Filter-Drop"], out drop);
+                                if (headers.ContainsKey("Filter-IRCMessageType"))
+                                    args.IRCMessageType = headers["Filter-IRCMessageType"];
+
+                                args.Content = content;
+                            }
+                            else
+                            {
+                                // 何もしない
+                                return false;
+                            }
+                        }
+                    }
+
+                    args.IRCMessageType = _messageType;
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        private void WriteFieldsAndProperties(TextWriter writer, String name, Object o)
+        {
+            Type t = o.GetType();
+            foreach (MemberInfo mi in t.GetMembers(BindingFlags.Public | BindingFlags.GetProperty | BindingFlags.GetField | BindingFlags.Instance))
+            {
+                if (mi.Name.StartsWith("_"))
+                    continue;
+                
+                Object value = null;
+                if (mi.MemberType == MemberTypes.Property)
+                {
+                    PropertyInfo pi = (PropertyInfo) mi;
+                    value = pi.GetValue(o, null);
+                }
+                else if (mi.MemberType == MemberTypes.Field)
+                {
+                    FieldInfo fi = (FieldInfo) mi;
+                    value = fi.GetValue(o);
+                }
+                if (value != null)
+                    writer.WriteLine("{0}-{1}: {2}", name, mi.Name, EscapeString(value.ToString()));
+            }
+        }
+        private String EscapeString(String s)
+        {
+            return s.Replace("\\", "\\\\").Replace("\r", "\\r").Replace("\n", "\\n");
+        }
+
+        public override string ToString()
+        {
+            return "Process:"
+                + ((Enabled) ? "" : "[DISABLED]")
+                + String.Format(" ProcessPath={0}", ProcessPath)
+                + ((String.IsNullOrEmpty(_userMatchPattern)) ? "" : String.Format(" UserMatchPattern={0}", _userMatchPattern))
+                + ((String.IsNullOrEmpty(_messageType)) ? "" : String.Format(" MessageType={0}", _messageType))
+                + ((String.IsNullOrEmpty(_matchPattern)) ? "" : String.Format(" MatchPattern={0}", _matchPattern))
+                + ((String.IsNullOrEmpty(_replacePattern)) ? "" : String.Format(" ReplacePattern={0}", _replacePattern))
+            ;
+        }
+    }
 }

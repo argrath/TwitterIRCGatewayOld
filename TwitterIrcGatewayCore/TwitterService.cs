@@ -159,12 +159,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// ステータスを更新します。
         /// </summary>
         /// <param name="message"></param>
+        /// <returns></returns>
         public Status UpdateStatus(String message)
+        {
+            return UpdateStatus(message, 0);
+        }
+        
+        /// <summary>
+        /// ステータスを更新します。
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inReplyToStatusId"></param>
+        public Status UpdateStatus(String message, Int32 inReplyToStatusId)
         {
             String encodedMessage = TwitterService.EncodeMessage(message);
             return ExecuteRequest<Status>(() =>
             {
-                String responseBody = POST(String.Format("/statuses/update.xml?status={0}&source={1}", encodedMessage, ClientName), Encoding.Default.GetBytes("1"));
+                String responseBody = POST(String.Format("/statuses/update.xml?status={0}&source={1}{2}", encodedMessage, ClientName, (inReplyToStatusId != 0 ? "&in_reply_to_status_id="+inReplyToStatusId : "")), Encoding.Default.GetBytes("1"));
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -1365,10 +1376,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public String _createdAtOriginal;
         [XmlElement("id")]
         public Int32 Id;
+        [XmlElement("in_reply_to_status_id")]
+        public String InReplyToStatusId;
+        [XmlElement("in_reply_to_user_id")]
+        public String InReplyToUserId;
         [XmlElement("text")]
         public String _textOriginal;
         [XmlElement("user")]
         public User User;
+        [XmlElement("source")]
+        public String Source;
+        [XmlElement("favorited")]
+        public String Favorited;
+        [XmlElement("truncated")]
+        public Boolean Truncated;
 
         [XmlIgnore]
         private String _text;
