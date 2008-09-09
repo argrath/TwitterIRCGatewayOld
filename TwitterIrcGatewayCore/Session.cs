@@ -1307,7 +1307,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (_config.EnableTypableMap)
             {
                 String typableMapId = _typableMapCommands.TypableMap.Add(status);
-                text = String.Format("{0} \x0003{1}({2})", text, _config.TypableMapKeyColorNumber, typableMapId);
+                // TypableMapKeyColorNumber = -1 の場合には色がつかなくなる
+                if (_config.TypableMapKeyColorNumber < 0)
+                    text = String.Format("{0} ({1})", text, typableMapId);
+                else
+                    text = String.Format("{0} \x0003{1}({2})", text, _config.TypableMapKeyColorNumber, typableMapId);
             }
             
             String[] lines = text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
