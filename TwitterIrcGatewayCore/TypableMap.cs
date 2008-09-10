@@ -45,7 +45,7 @@ namespace TypableMap
         /// <param name="size">保持するサイズの元となる値。ローマ字の組み合わせ数に指定した値を累乗します。</param>
         public TypableMap(Int32 size)
         {
-            _size = 2;
+            _size = size;
             _num = 0;
             _map = new Dictionary<String, T>();
         }

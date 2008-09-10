@@ -585,14 +585,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _twitter.DirectMessageReceived += new EventHandler<DirectMessageEventArgs>(twitter_DirectMessageReceived);
             if (_server.Proxy != null)
                 _twitter.Proxy = _server.Proxy;
-            
-            // TypableMap
-            _typableMapCommands = new TypableMapCommandProcessor(_twitter, this);
-
-            _twitter.Start();
 
             OnSessionStarted(_username);
             Trace.WriteLine(String.Format("SessionStarted: UserName={0}; Nickname={1}", _username, _nick));
+            
+            // TypableMap
+            _typableMapCommands = new TypableMapCommandProcessor(_twitter, this, _config.TypableMapKeySize);
+
+            _twitter.Start();
         }
 
         void MessageReceived_NICK(object sender, MessageReceivedEventArgs e)
@@ -959,6 +959,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
                 SaveConfig();
 
+                _typableMapCommands.TypableMapKeySize = _config.TypableMapKeySize;
+                
                 if (_traceListener == null && (_config.EnableTrace || _server.EnableTrace))
                 {
                     _traceListener = new IrcTraceListener(this);

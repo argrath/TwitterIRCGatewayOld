@@ -18,7 +18,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public Boolean EnableTypableMap { get; set; }
         public Int32 TypableMapKeyColorNumber { get; set; }
-
+        public Int32 TypableMapKeySize { get; set; }
+        
         public Boolean EnableTrace { get; set; }
         
         public String GetIMPassword(String key)
@@ -46,6 +47,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             EnableTypableMap = false;
             TypableMapKeyColorNumber = 14;
+            TypableMapKeySize = 2;
         }
 
         #region XML Serialize

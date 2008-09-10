@@ -12,14 +12,33 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     {
         public Session Session { get; private set; }
         public TypableMap<Status> TypableMap { get; private set; }
+        private Int32 _typableMapKeySize;
+        public Int32 TypableMapKeySize
+        {
+            get
+            {
+                return _typableMapKeySize;
+            }
+            set
+            {
+                if (value < 1)
+                    value = 1;
+
+                if (_typableMapKeySize != value)
+                {
+                    _typableMapKeySize = value;
+                    TypableMap = new TypableMap<Status>(_typableMapKeySize);
+                }
+            }
+        }
 
         private Dictionary<String, ITypableMapCommand> _commands;
         private Regex _matchRE;
 
-        public TypableMapCommandProcessor(TwitterService twitter, Session session)
+        public TypableMapCommandProcessor(TwitterService twitter, Session session, Int32 typableMapKeySize)
         {
             Session = session;
-            TypableMap = new TypableMap<Status>();
+            TypableMap = new TypableMap<Status>(typableMapKeySize);
 
             _commands = new Dictionary<string, ITypableMapCommand>(StringComparer.InvariantCultureIgnoreCase);
 
