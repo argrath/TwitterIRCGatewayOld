@@ -966,7 +966,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         void OnConfigChanged()
         {
             if (_config.EnableTypableMap)
-                _typableMapCommands.TypableMapKeySize = _config.TypableMapKeySize;
+            {
+                if (_typableMapCommands == null)
+                    _typableMapCommands = new TypableMapCommandProcessor(_twitter, this, _config.TypableMapKeySize);
+                if (_typableMapCommands.TypableMapKeySize != _config.TypableMapKeySize)
+                    _typableMapCommands.TypableMapKeySize = _config.TypableMapKeySize;
+            }
+            else
+            {
+                _typableMapCommands = null;
+            }
 
             if (_traceListener == null && (_config.EnableTrace || _server.EnableTrace))
             {
