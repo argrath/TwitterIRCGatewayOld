@@ -13,6 +13,37 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             InitializeCharEntityReferenceTable();
         }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="hintTexts"></param>
+        /// <returns></returns>
+        public static String DetectRedundantSuffix(String text, ICollection<String> hintTexts)
+        {
+            String redundantSuffix = null;
+            String a1 = text;
+            foreach (var a2 in hintTexts)
+            {
+                for (var i = 0; i < a1.Length; i++)
+                {
+                    var pos = a2.LastIndexOf(a1.Substring(i));
+                    if (pos > -1)
+                    {
+                        var suffix = a1.Substring(i);
+                        var matches = Regex.Matches(suffix, @"^(\s*(\(.{2,}\)|\[.{2,}\]|\*.{2,}\*|lang:ja)+)$");
+                        if (matches.Count > 0)
+                        {
+                            redundantSuffix = a1 = suffix;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return redundantSuffix;
+        }
 
         /// <summary>
         /// “ú•t‚Ì•¶š—ñ‚ğDateTimeŒ^‚É•ÏŠ·‚µ‚Ü‚·B

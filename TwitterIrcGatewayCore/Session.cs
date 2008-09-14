@@ -34,6 +34,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Filters _filter;
         private Config _config;
         private TypableMapCommandProcessor _typableMapCommands;
+        private Dictionary<Int32, LinkedList<String>> _lastStatusFromFriends;
 
         private List<String> _nickNames = new List<string>();
         private Boolean _isFirstTime = true;
@@ -79,6 +80,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _server = server;
             _tcpClient = tcpClient;
             _lastStatusIdsFromGateway = new LinkedList<int>();
+            _lastStatusFromFriends = new Dictionary<int, LinkedList<string>>();
         }
 
         ~Session()
@@ -176,13 +178,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         protected virtual void OnSessionStarted(String username)
         {
             LoadConfig();
-
-            if (_server.EnableTrace || _config.EnableTrace)
-            {
-                _traceListener = new IrcTraceListener(this);
-                Trace.Listeners.Add(_traceListener);
-            }
-
+            OnConfigChanged();
+            
             LoadGroups();
             LoadFilters();
 
@@ -959,23 +956,37 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
                 SaveConfig();
 
-                _typableMapCommands.TypableMapKeySize = _config.TypableMapKeySize;
-                
-                if (_traceListener == null && (_config.EnableTrace || _server.EnableTrace))
-                {
-                    _traceListener = new IrcTraceListener(this);
-                    Trace.Listeners.Add(_traceListener);
-                }
-                else if ((_traceListener != null) && !_config.EnableTrace && !_server.EnableTrace)
-                {
-                    Trace.Listeners.Remove(_traceListener);
-                    _traceListener = null;
-                }
+                OnConfigChanged();
             }
             
             SendTwitterGatewayServerMessage(
                 String.Format("{0} ({1}) = {2}", propName, propInfo.PropertyType.FullName, propInfo.GetValue(_config, null)));
-            
+        }
+        
+        void OnConfigChanged()
+        {
+            if (_config.EnableTypableMap)
+                _typableMapCommands.TypableMapKeySize = _config.TypableMapKeySize;
+
+            if (_traceListener == null && (_config.EnableTrace || _server.EnableTrace))
+            {
+                _traceListener = new IrcTraceListener(this);
+                Trace.Listeners.Add(_traceListener);
+            }
+            else if ((_traceListener != null) && !_config.EnableTrace && !_server.EnableTrace)
+            {
+                Trace.Listeners.Remove(_traceListener);
+                _traceListener = null;
+            }
+        
+            if (_lastStatusFromFriends == null && _config.EnableRemoveRedundantSuffix)
+            {
+                _lastStatusFromFriends = new Dictionary<int, LinkedList<string>>();
+            }
+            else
+            {
+                _lastStatusFromFriends = null;
+            }
         }
 
         void MessageReceived_TIGLOADFILTER(object sender, MessageReceivedEventArgs e)
@@ -1275,7 +1286,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             });
         }
-      
+
+
         private void ProcessTimelineStatus (Status status, ref Boolean friendsCheckRequired)
         {
             // チェック
@@ -1300,10 +1312,31 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (_lastStatusIdsFromGateway.Contains(status.Id))
             {
                 return;
-            }
+            }         
 
             // TinyURL
             String text = (_server.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(filterArgs.Content) : filterArgs.Content;
+            
+            // Remove Redundant Suffixes
+            if (_config.EnableRemoveRedundantSuffix)
+            {
+                if (!_lastStatusFromFriends.ContainsKey(status.User.Id))
+                {
+                    _lastStatusFromFriends[status.User.Id] = new LinkedList<string>();
+                }
+                LinkedList<String> lastStatusTextsByUId = _lastStatusFromFriends[status.User.Id];
+                String suffix = Utility.DetectRedundantSuffix(text, lastStatusTextsByUId);
+                lastStatusTextsByUId.AddLast(text);
+                if (lastStatusTextsByUId.Count > 5)
+                {
+                    lastStatusTextsByUId.RemoveFirst();
+                }
+                if (!String.IsNullOrEmpty(suffix))
+                {
+                    Trace.WriteLine("Remove Redundant suffix: " + suffix);
+                    text = text.Substring(0, text.Length - suffix.Length);
+                }
+            }
 
             // TypableMap
             if (_config.EnableTypableMap)
