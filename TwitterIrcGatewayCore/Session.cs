@@ -16,6 +16,7 @@ using System.Xml;
 using TypableMap;
 using Misuzilla.Net.Irc;
 using Misuzilla.Applications.TwitterIrcGateway.Filter;
+using Misuzilla.Applications.TwitterIrcGateway.AddIns;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
@@ -33,21 +34,37 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Groups _groups;
         private Filters _filter;
         private Config _config;
-        private TypableMapCommandProcessor _typableMapCommands;
-        private Dictionary<Int32, LinkedList<String>> _lastStatusFromFriends;
+        private AddInManager _addinManager;
 
         private List<String> _nickNames = new List<string>();
         private Boolean _isFirstTime = true;
 
         private TraceListener _traceListener;
 
-        private event EventHandler<MessageReceivedEventArgs> MessageReceived;
         private String _username;
         private String _password;
         private String _nick;
-
+        
+        #region Events
+        public event EventHandler<MessageReceivedEventArgs> MessageReceived;
         public event EventHandler<SessionStartedEventArgs> SessionStarted;
-        public event EventHandler SessionEnded;
+        public event EventHandler<EventArgs> SessionEnded;
+        
+        public event EventHandler<EventArgs> ConfigChanged;
+
+        public event EventHandler<EventArgs> AddInsLoadCompleted;
+
+        public event EventHandler<TimelineStatusesEventArgs> PreProcessTimelineStatuses;
+        public event EventHandler<TimelineStatusEventArgs> PreProcessTimelineStatus;
+        public event EventHandler<TimelineStatusEventArgs> PreFilterProcessTimelineStatus;
+        public event EventHandler<TimelineStatusEventArgs> PostFilterProcessTimelineStatus;
+        public event EventHandler<TimelineStatusEventArgs> PreSendMessageTimelineStatus;
+        public event EventHandler<TimelineStatusEventArgs> PostSendMessageTimelineStatus;
+        public event EventHandler<TimelineStatusEventArgs> PostProcessTimelineStatus;
+        public event EventHandler<TimelineStatusesEventArgs> PostProcessTimelineStatuses;
+
+        public event EventHandler<StatusUpdateEventArgs> PreSendUpdateStatus;
+        #endregion
 
         private Boolean _requireIMReconnect = false;
         private Int32 _imReconnectCount = 0;
@@ -65,13 +82,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_PART);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_KICK);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_LIST);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGGC);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TOPIC);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_MODE);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMENABLE);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMDISABLE);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGCONFIG);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGLOADFILTER);
 
             _groups = new Groups();
             _filter = new Filters();
@@ -80,7 +94,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _server = server;
             _tcpClient = tcpClient;
             _lastStatusIdsFromGateway = new LinkedList<int>();
-            _lastStatusFromFriends = new Dictionary<int, LinkedList<string>>();
+            
+            _addinManager = new AddInManager();
         }
 
         ~Session()
@@ -126,6 +141,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return _twitter;
             }
         }
+        
+        public Config Config
+        {
+            get
+            {
+                return _config;
+            }
+        }
 
         /// <summary>
         /// セッションを開始します。
@@ -166,15 +189,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         #region イベント実行メソッド
-
         protected virtual void OnMessageReceived(IRCMessage msg)
         {
-            if (MessageReceived != null)
-            {
-                MessageReceived(this, new MessageReceivedEventArgs(msg, _writer, _tcpClient));
-            }
+            FireEvent(MessageReceived, new MessageReceivedEventArgs(msg, _writer, _tcpClient));
         }
-
         protected virtual void OnSessionStarted(String username)
         {
             LoadConfig();
@@ -187,17 +205,38 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 ConnectToIMService(true);
             }
-            
-            if (SessionStarted != null)
-            {
-                SessionStarted(this, new SessionStartedEventArgs(username));
-            }
-        }
 
+            _addinManager.Load(_server, this);
+            FireEvent(AddInsLoadCompleted, EventArgs.Empty);
+            
+            FireEvent(SessionStarted, new SessionStartedEventArgs(username));
+        }
+        protected virtual void OnSessionEnded()
+        {
+            FireEvent(SessionEnded, EventArgs.Empty);
+        }
+        protected virtual void OnConfigChanged()
+        {
+            if (ConfigChanged != null)
+                ConfigChanged(this, EventArgs.Empty);
+
+            if (_traceListener == null && (_config.EnableTrace || _server.EnableTrace))
+            {
+                _traceListener = new IrcTraceListener(this);
+                Trace.Listeners.Add(_traceListener);
+            }
+            else if ((_traceListener != null) && !_config.EnableTrace && !_server.EnableTrace)
+            {
+                Trace.Listeners.Remove(_traceListener);
+                _traceListener = null;
+            }
+
+        }
+        
         /// <summary>
         /// 
         /// </summary>
-        private void LoadFilters()
+        public void LoadFilters()
         {
             // filters 読み取り
             String path = Path.Combine(ConfigBasePath, Path.Combine(_username, "Filters.xml"));
@@ -210,11 +249,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 SendTwitterGatewayServerMessage("エラー: " + ie.Message);
             }
         }
-
         /// <summary>
         /// 
         /// </summary>
-        private void LoadGroups()
+        public void LoadGroups()
         {
             // group 読み取り
             lock (_groups)
@@ -239,7 +277,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 
         /// </summary>
-        private void SaveGroups()
+        public void SaveGroups()
         {
             // group 読み取り
             lock (_groups)
@@ -258,7 +296,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 
         /// </summary>
-        private void LoadConfig()
+        public void LoadConfig()
         {
             lock (_config)
             {
@@ -276,7 +314,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 
         /// </summary>
-        private void SaveConfig()
+        public void SaveConfig()
         {
             lock (_config)
             {
@@ -284,18 +322,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 try
                 {
                     _config.Save(path);
+                    OnConfigChanged();
                 }
                 catch (IOException ie)
                 {
                     SendTwitterGatewayServerMessage("エラー: " + ie.Message);
                 }
-            }
-        }
-        protected virtual void OnSessionEnded()
-        {
-            if (SessionEnded != null)
-            {
-                SessionEnded(this, EventArgs.Empty);
             }
         }
 
@@ -585,9 +617,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             OnSessionStarted(_username);
             Trace.WriteLine(String.Format("SessionStarted: UserName={0}; Nickname={1}", _username, _nick));
-            
-            // TypableMap
-            _typableMapCommands = new TypableMapCommandProcessor(_twitter, this, _config.TypableMapKeySize);
 
             _twitter.Start();
         }
@@ -625,13 +654,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             PrivMsgMessage message = e.Message as PrivMsgMessage;
             if (message == null) return;
 
-            // Typable Map コマンド?
-            if (_config.EnableTypableMap)
-            {
-                if (_typableMapCommands.Process(message)) {
-                    return;
-                }
-            }
+            StatusUpdateEventArgs eventArgs = new StatusUpdateEventArgs(message, message.Content);
+            if (!FireEvent(PreSendUpdateStatus, eventArgs)) return;
 
             Boolean isRetry = false;
             Retry:
@@ -800,14 +824,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             SendNumericReply(NumericReply.RPL_ENDOFWHOIS, "End of /WHOIS list");
         }
 
-        void MessageReceived_TIGGC(object sender, MessageReceivedEventArgs e)
-        {
-            if (String.Compare(e.Message.Command, "TIGGC", true) != 0) return;
-            Int64 memUsage = GC.GetTotalMemory(false);
-            GC.Collect();
-            SendTwitterGatewayServerMessage(String.Format("Garbage Collect: {0:###,##0} bytes -> {1:###,##0} bytes", memUsage, GC.GetTotalMemory(false)));
-        }
-
         void MessageReceived_TOPIC(object sender, MessageReceivedEventArgs e)
         {
             if (String.Compare(e.Message.Command, "TOPIC", true) != 0) return;
@@ -901,109 +917,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             DisconnectToIMService(false);
         }
 
-        void MessageReceived_TIGCONFIG(object sender, MessageReceivedEventArgs e)
-        {
-            if (String.Compare(e.Message.Command, "TIGCONFIG", true) != 0) return;
-
-            Type t = typeof(Config);
-            
-            // プロパティ一覧を作る
-            if (String.IsNullOrEmpty(e.Message.CommandParams[0]))
-            {
-                //SendTwitterGatewayServerMessage("TIGCONFIG コマンドは1つまたは2つの引数(ConfigName, Value)が必要です。");
-                foreach (var pi in t.GetProperties(BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.SetProperty))
-                {
-                    SendTwitterGatewayServerMessage(
-                        String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.FullName, pi.GetValue(_config, null)));
-                }
-                return;
-            }
-            
-            // プロパティを探す
-            String propName = e.Message.CommandParams[0];
-            PropertyInfo propInfo = t.GetProperty(propName, BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance | BindingFlags.SetProperty);
-            if (propInfo == null)
-            {
-                SendTwitterGatewayServerMessage(String.Format("設定項目 \"{0}\" は存在しません。", propName));
-                return;
-            }
-
-            // 2つめの引数があるときは値を設定する。
-            if (!String.IsNullOrEmpty(e.Message.CommandParams[1]))
-            {
-                TypeConverter tConv = TypeDescriptor.GetConverter(propInfo.PropertyType);
-                if (!tConv.CanConvertFrom(typeof (String)))
-                {
-                    SendTwitterGatewayServerMessage(
-                        String.Format("設定項目 \"{0}\" の型 \"{1}\" には適切な TypeConverter がないため、このコマンドで設定することはできません。", propName,
-                                      propInfo.PropertyType.FullName));
-                    return;
-                }
-
-                try
-                {
-                    Object value = tConv.ConvertFromString(e.Message.CommandParams[1]);
-                    propInfo.SetValue(_config, value, null);
-                }
-                catch (Exception ex)
-                {
-                    SendTwitterGatewayServerMessage(String.Format(
-                                                        "設定項目 \"{0}\" の型 \"{1}\" に値を変換し設定する際にエラーが発生しました({2})。", propName,
-                                                        propInfo.PropertyType.FullName, ex.GetType().Name));
-                    foreach (var line in ex.Message.Split('\n'))
-                        SendTwitterGatewayServerMessage(line);
-                }
-
-                SaveConfig();
-
-                OnConfigChanged();
-            }
-            
-            SendTwitterGatewayServerMessage(
-                String.Format("{0} ({1}) = {2}", propName, propInfo.PropertyType.FullName, propInfo.GetValue(_config, null)));
-        }
-        
-        void OnConfigChanged()
-        {
-            if (_config.EnableTypableMap)
-            {
-                if (_typableMapCommands == null)
-                    _typableMapCommands = new TypableMapCommandProcessor(_twitter, this, _config.TypableMapKeySize);
-                if (_typableMapCommands.TypableMapKeySize != _config.TypableMapKeySize)
-                    _typableMapCommands.TypableMapKeySize = _config.TypableMapKeySize;
-            }
-            else
-            {
-                _typableMapCommands = null;
-            }
-
-            if (_traceListener == null && (_config.EnableTrace || _server.EnableTrace))
-            {
-                _traceListener = new IrcTraceListener(this);
-                Trace.Listeners.Add(_traceListener);
-            }
-            else if ((_traceListener != null) && !_config.EnableTrace && !_server.EnableTrace)
-            {
-                Trace.Listeners.Remove(_traceListener);
-                _traceListener = null;
-            }
-        
-            if (_lastStatusFromFriends == null && _config.EnableRemoveRedundantSuffix)
-            {
-                _lastStatusFromFriends = new Dictionary<int, LinkedList<string>>();
-            }
-            else
-            {
-                _lastStatusFromFriends = null;
-            }
-        }
-
-        void MessageReceived_TIGLOADFILTER(object sender, MessageReceivedEventArgs e)
-        {
-            if (String.Compare(e.Message.Command, "TIGLOADFILTER", true) != 0) return;
-            LoadFilters();
-        }
-
         private void ConnectToIMService(Boolean initialConnect)
         {
             DisconnectToIMService(!initialConnect);
@@ -1023,7 +936,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 _imReconnectCount = 0;
             }
         }
+        #endregion
 
+        #region Twitter IM Service
         private void DisconnectToIMService(Boolean requireIMReconnect)
         {
             if (_twitterIm != null)
@@ -1107,6 +1022,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             SendPing();
 
+            TimelineStatusesEventArgs eventArgs = new TimelineStatusesEventArgs(e.Statuses, _isFirstTime);
+            if (!FireEvent(PreProcessTimelineStatuses, eventArgs)) return;
+
             // 初回だけは先にチェックしておかないとnamesが後から来てジャマ
             if (_isFirstTime)
             {
@@ -1124,6 +1042,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 CheckFriends();
             }
+
+            if (!FireEvent(PostProcessTimelineStatuses, eventArgs)) return;
             
             _isFirstTime = false;
         }
@@ -1296,11 +1216,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             });
         }
 
-
         private void ProcessTimelineStatus (Status status, ref Boolean friendsCheckRequired)
         {
+            TimelineStatusEventArgs eventArgs = new TimelineStatusEventArgs(status, status.Text, "PRIVMSG");
+            if (!FireEvent(PreProcessTimelineStatus, eventArgs)) return;
+            
             // チェック
-            if (status.User == null || String.IsNullOrEmpty(status.User.ScreenName))
+            // 自分がゲートウェイを通して発言したものは捨てる
+            if (status.User == null || String.IsNullOrEmpty(status.User.ScreenName) || _lastStatusIdsFromGateway.Contains(status.Id))
             {
                 return;
             }
@@ -1310,55 +1233,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             friendsCheckRequired |= !(_nickNames.Contains(status.User.ScreenName));
             
             // フィルタ
-            FilterArgs filterArgs = new FilterArgs(this, status.Text, status.User, "PRIVMSG", false, status);
+            if (!FireEvent(PreFilterProcessTimelineStatus, eventArgs)) return;
+            FilterArgs filterArgs = new FilterArgs(this, eventArgs.Text, status.User, eventArgs.IRCMessageType, false, status);
             if (!_filter.ExecuteFilters(filterArgs))
             {
                 // 捨てる
                 return;
             }
+            eventArgs.Text = filterArgs.Content;
 
-            // 自分がゲートウェイを通して発言したものは捨てる
-            if (_lastStatusIdsFromGateway.Contains(status.Id))
-            {
-                return;
-            }         
-
-            // TinyURL
-            String text = (_server.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(filterArgs.Content) : filterArgs.Content;
+            if (!FireEvent(PostFilterProcessTimelineStatus, eventArgs)) return;
+            if (!FireEvent(PreSendMessageTimelineStatus, eventArgs)) return;
             
-            // Remove Redundant Suffixes
-            if (_config.EnableRemoveRedundantSuffix)
-            {
-                if (!_lastStatusFromFriends.ContainsKey(status.User.Id))
-                {
-                    _lastStatusFromFriends[status.User.Id] = new LinkedList<string>();
-                }
-                LinkedList<String> lastStatusTextsByUId = _lastStatusFromFriends[status.User.Id];
-                String suffix = Utility.DetectRedundantSuffix(text, lastStatusTextsByUId);
-                lastStatusTextsByUId.AddLast(text);
-                if (lastStatusTextsByUId.Count > 5)
-                {
-                    lastStatusTextsByUId.RemoveFirst();
-                }
-                if (!String.IsNullOrEmpty(suffix))
-                {
-                    Trace.WriteLine("Remove Redundant suffix: " + suffix);
-                    text = text.Substring(0, text.Length - suffix.Length);
-                }
-            }
-
-            // TypableMap
-            if (_config.EnableTypableMap)
-            {
-                String typableMapId = _typableMapCommands.TypableMap.Add(status);
-                // TypableMapKeyColorNumber = -1 の場合には色がつかなくなる
-                if (_config.TypableMapKeyColorNumber < 0)
-                    text = String.Format("{0} ({1})", text, typableMapId);
-                else
-                    text = String.Format("{0} \x0003{1}({2})", text, _config.TypableMapKeyColorNumber, typableMapId);
-            }
-            
-            String[] lines = text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            String[] lines = eventArgs.Text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (String line in lines)
             {
                 // 初回はrecentろぐっぽく
@@ -1374,7 +1261,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
                 else
                 {
-                    Send(CreateIRCMessageFromStatusAndType(status, filterArgs.IRCMessageType, _server.ChannelName, line));
+                    Send(CreateIRCMessageFromStatusAndType(status, eventArgs.IRCMessageType, _server.ChannelName, line));
                 }
 
                 // グループにも投げる
@@ -1397,15 +1284,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         }
                         else
                         {
-                            Send(CreateIRCMessageFromStatusAndType(status, filterArgs.IRCMessageType, group.Name, line));
+                            Send(CreateIRCMessageFromStatusAndType(status, eventArgs.IRCMessageType, group.Name, line));
                         }
                     }
                 }
             }
 
-            // ウェイト
-            if (_server.ClientMessageWait > 0)
-                Thread.Sleep(_server.ClientMessageWait);
+            if (!FireEvent(PostSendMessageTimelineStatus, eventArgs)) return;
+            if (!FireEvent(PostProcessTimelineStatus, eventArgs)) return;
         }
 
         // XXX: IRCクライアントライブラリのアップデートで対応できるけどとりあえず...
@@ -1473,6 +1359,21 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (_isDisposed)
                 throw new ObjectDisposedException(this.GetType().Name);
         }
+
+        #region ヘルパーメソッド
+        private Boolean FireEvent<TEventArgs>(EventHandler<TEventArgs> hander, TEventArgs e) where TEventArgs:EventArgs
+        {
+            if (hander != null)
+                hander(this, e);
+            
+            if (e is CancelableEventArgs)
+            {
+                return !((e as CancelableEventArgs).Cancel);
+            }
+            
+            return true;
+        }
+        #endregion
 
         #region IDisposable メンバ
         private Boolean _isDisposed = false;

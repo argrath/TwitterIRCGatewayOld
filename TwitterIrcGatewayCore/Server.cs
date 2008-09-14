@@ -117,7 +117,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     _sessions.Add(session);
                 }
                 session.SessionStarted += new EventHandler<SessionStartedEventArgs>(session_SessionStartedReceived);
-                session.SessionEnded += new EventHandler(session_SessionEnded);
+                session.SessionEnded += new EventHandler<EventArgs>(session_SessionEnded);
                 session.Start();
             }
         }

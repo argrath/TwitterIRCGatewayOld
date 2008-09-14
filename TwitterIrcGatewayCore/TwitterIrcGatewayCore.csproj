@@ -41,6 +41,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddInManager.cs" />
+    <Compile Include="AddIns\ClientMessageWait.cs" />
+    <Compile Include="AddIns\ExtensionCommands.cs" />
+    <Compile Include="AddIns\IAddIn.cs" />
+    <Compile Include="AddIns\RemoveRedundantSuffix.cs" />
+    <Compile Include="AddIns\ResolveTinyUrl.cs" />
+    <Compile Include="AddIns\TypableMapSupport.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="EventArgs.cs" />
     <Compile Include="Filter.cs" />
@@ -60,8 +67,8 @@
     <Compile Include="TwitterIMService.cs" />
     <Compile Include="TwitterService.cs">
     </Compile>
-    <Compile Include="TypableMap.cs" />
-    <Compile Include="TypableMapCommandProcessor.cs" />
+    <Compile Include="AddIns\TypableMap\TypableMap.cs" />
+    <Compile Include="AddIns\TypableMap\TypableMapCommandProcessor.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>

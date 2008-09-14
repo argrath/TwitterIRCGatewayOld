@@ -15,10 +15,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// 
+        /// 重複した末尾の文字列を取得します。
         /// </summary>
-        /// <param name="text"></param>
-        /// <param name="hintTexts"></param>
+        /// <param name="text">対象の文字列</param>
+        /// <param name="hintTexts">ヒントとなる文字列のコレクション</param>
         /// <returns></returns>
         public static String DetectRedundantSuffix(String text, ICollection<String> hintTexts)
         {

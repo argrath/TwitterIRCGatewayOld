@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Misuzilla.Net.Irc;
 using TypableMap;
 
-namespace Misuzilla.Applications.TwitterIrcGateway
+namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
 {
     public class TypableMapCommandProcessor
     {
