@@ -26,6 +26,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
             {
                 if (_typableMapCommands.Process(e.ReceivedMessage))
                 {
+                    e.Cancel = true;
                     return;
                 }
             }
