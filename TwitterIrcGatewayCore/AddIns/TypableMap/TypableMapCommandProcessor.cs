@@ -102,6 +102,54 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
             Boolean Process(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, String args);
         }
 
+        public class PermalinkCommand : ITypableMapCommand
+        {
+            #region ITypableMapCommand メンバ
+
+            public string CommandName
+            {
+                get { return "u"; }
+            }
+
+            public bool Process(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, string args)
+            {
+                processor.Session.SendServer(new NoticeMessage
+                {
+                    Receiver = msg.Receiver,
+                    Content = String.Format(
+                        "http://twitter.com/{0}/statuses/{1}",
+                        status.User.ScreenName,
+                        status.Id)
+                });
+                return true;
+            }
+            #endregion
+        }
+
+        public class HomelinkCommand : ITypableMapCommand
+        {
+            #region ITypableMapCommand メンバ
+
+            public string CommandName
+            {
+                get { return "h"; }
+            }
+
+            public bool Process(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, string args)
+            {
+                processor.Session.SendServer(new NoticeMessage
+                {
+                    Receiver = msg.Receiver,
+                    Content = String.Format(
+                        "http://twitter.com/{0}",
+                        status.User.ScreenName)
+                });
+                return true;
+            }
+
+            #endregion
+        }
+        
         public class FavCommand : ITypableMapCommand
         {
             public virtual String CommandName { get { return "fav"; } }
