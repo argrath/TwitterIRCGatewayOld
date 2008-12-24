@@ -406,13 +406,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
                          ? true
                          : Regex.IsMatch(args.User.ScreenName, _userMatchPattern)))
                 {
-                    Encoding encIn = (String.Compare(InputEncoding, "UTF-8", true) == 0)
-                                         ? new UTF8Encoding(false)
-                                         : Encoding.GetEncoding(InputEncoding);
+                    Encoding encIn = (InputEncoding == null)
+                                         ? Encoding.Default
+                                         :(String.Compare(InputEncoding, "UTF-8", true) == 0)
+                                                 ? new UTF8Encoding(false)
+                                                 : Encoding.GetEncoding(InputEncoding);
 
-                    Encoding encOut = (String.Compare(OutputEncoding, "UTF-8", true) == 0)
-                                          ? new UTF8Encoding(false)
-                                          : Encoding.GetEncoding(OutputEncoding);
+                    Encoding encOut = (OutputEncoding == null)
+                                          ? Encoding.Default
+                                          : (String.Compare(OutputEncoding, "UTF-8", true) == 0)
+                                                ? new UTF8Encoding(false)
+                                                : Encoding.GetEncoding(OutputEncoding);
 
                     Trace.WriteLine(String.Format("Start: {0} ({1})", ProcessPath, Arguments));
                     

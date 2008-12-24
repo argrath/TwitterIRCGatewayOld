@@ -175,7 +175,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             String encodedMessage = TwitterService.EncodeMessage(message);
             return ExecuteRequest<Status>(() =>
             {
-                String responseBody = POST(String.Format("/statuses/update.xml?status={0}&source={1}{2}", encodedMessage, ClientName, (inReplyToStatusId != 0 ? "&in_reply_to_status_id="+inReplyToStatusId : "")), Encoding.Default.GetBytes("1"));
+                String responseBody = POST(String.Format("/statuses/update.xml?status={0}&source={1}{2}", encodedMessage, ClientName, (inReplyToStatusId != 0 ? "&in_reply_to_status_id="+inReplyToStatusId : "")), new byte[] {});
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;

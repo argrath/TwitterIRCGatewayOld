@@ -108,46 +108,47 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public TcpClient TcpClient
         {
-            get
-            {
-                return _tcpClient;
-            }
+            get { return _tcpClient; }
         }
+        
         /// <summary>
         /// 
         /// </summary>
         public String Nick
         {
-            get
-            {
-                return _nick;
-            }
+            get { return _nick; }
         }
+        
         /// <summary>
         /// 
         /// </summary>
         public String ClientHost
         {
-            get
-            {
-                return _clientHost;
-            }
+            get { return _clientHost; }
         }
         
+        /// <summary>
+        /// セッションに結びつけられたTwitterへのAPIアクセスのためのサービス
+        /// </summary>
         public TwitterService TwitterService
         {
-            get
-            {
-                return _twitter;
-            }
+            get { return _twitter; }
         }
         
+        /// <summary>
+        /// セッションに結びつけられた設定
+        /// </summary>
         public Config Config
         {
-            get
-            {
-                return _config;
-            }
+            get { return _config; }
+        }
+        
+        /// <summary>
+        /// セッションが持つグループのコレクション
+        /// </summary>
+        public Groups Groups
+        {
+            get { return _groups;  }
         }
 
         /// <summary>
