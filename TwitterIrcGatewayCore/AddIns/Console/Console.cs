@@ -75,6 +75,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 {
                     methodInfo.Invoke(CurrentContext, new [] { msgText.Substring(args[0].Length).Trim() });
                 }
+                else if (paramInfo.Length == 1 && paramInfo[0].ParameterType == typeof(String[]))
+                {
+                    String[] shiftedArgs = new string[args.Length - 1];
+                    Array.Copy(args, 1, shiftedArgs, 0, shiftedArgs.Length);
+                    
+                    methodInfo.Invoke(CurrentContext, (shiftedArgs.Length == 0 ? null : new [] { shiftedArgs }));
+                }
                 else
                 {
                     List<Object> convertedArgs = new List<object>();
@@ -140,7 +147,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 }
             }
 
-            Session.SendNumericReply(NumericReply.RPL_NAMREPLY, "=", ConsoleChannelName, String.Join(" ", users.ToArray()));
+            Session.SendNumericReply(NumericReply.RPL_NAMREPLY, "=", ConsoleChannelName, "@"+Session.Nick+" "+ String.Join(" ", users.ToArray()));
             Session.SendNumericReply(NumericReply.RPL_ENDOFNAMES, ConsoleChannelName, "End of NAMES list");
         }
 
