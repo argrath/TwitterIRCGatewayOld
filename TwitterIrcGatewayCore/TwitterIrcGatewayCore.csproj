@@ -43,6 +43,10 @@
   <ItemGroup>
     <Compile Include="AddInManager.cs" />
     <Compile Include="AddIns\ClientMessageWait.cs" />
+    <Compile Include="AddIns\Console\BasicContexts.cs" />
+    <Compile Include="AddIns\Console\Console.cs" />
+    <Compile Include="AddIns\Console\Context.cs" />
+    <Compile Include="AddIns\Console\GenericConfig.cs" />
     <Compile Include="AddIns\ExtensionCommands.cs" />
     <Compile Include="AddIns\IAddIn.cs" />
     <Compile Include="AddIns\RemoveRedundantSuffix.cs" />

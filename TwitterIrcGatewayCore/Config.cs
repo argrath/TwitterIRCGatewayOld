@@ -23,6 +23,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public Boolean EnableTrace { get; set; }
 
         public Boolean EnableRemoveRedundantSuffix { get; set; }
+
+        public Object[] Configurations { get; private set; }
         
         public String GetIMPassword(String key)
         {

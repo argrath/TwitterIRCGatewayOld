@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Net;
 using System.Text.RegularExpressions;
@@ -125,6 +126,67 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
+        /// <summary>
+        /// 文中の URL を TinyURL に変換します。
+        /// タイムアウトするまでの時間は1秒です。
+        /// </summary>
+        /// <param name="message">メッセージ</param>
+        /// <returns></returns>
+        public static String UrlToTinyUrlInMessage(String message)
+        {
+            return UrlToTinyUrlInMessage(message, 1000);
+        }
+
+        /// <summary>
+        /// 文中の URL を TinyURL に変換します。
+        /// </summary>
+        /// <param name="message">メッセージ</param>
+        /// <param name="timeOut">タイムアウトするまでの時間</param>
+        /// <returns></returns>
+        public static String UrlToTinyUrlInMessage(String message, Int32 timeOut)
+        {
+            return Regex.Replace(message, @"https?://[^ ]+", delegate(Match m)
+            {
+                return UrlToTinyUrl(m.Value, timeOut);
+            }, RegexOptions.IgnoreCase);
+        }
+        /// <summary>
+        /// URLをTinyURLに送信して短いURLに変換します。
+        /// </summary>
+        /// <param name="url">URL</param>
+        /// <param name="timeOut">タイムアウトするまでの時間</param>
+        /// <returns></returns>
+        public static String UrlToTinyUrl(String url, Int32 timeOut)
+        {
+            HttpWebResponse res = null;
+            try
+            {
+                HttpWebRequest req = HttpWebRequest.Create("http://tinyurl.com/api-create.php?url="+Utility.UrlEncode(url)) as HttpWebRequest;
+                req.AllowAutoRedirect = false;
+                req.Timeout = timeOut;
+                req.Method = "GET";
+                res = req.GetResponse() as HttpWebResponse;
+                using (StreamReader sr = new StreamReader(res.GetResponseStream()))
+                {
+                    return sr.ReadLine();
+                }
+            }
+            catch (WebException)
+            {
+                return url;
+            }
+            catch (IOException)
+            {
+                return url;
+            }
+            finally
+            {
+                if (res != null)
+                {
+                    res.Close();
+                }
+            }
+        }
         /// <summary>
         /// 文字列をURLエンコードします。
         /// </summary>

@@ -7,7 +7,7 @@ using Misuzilla.Net.Irc;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
-    public class MessageReceivedEventArgs : EventArgs
+    public class MessageReceivedEventArgs : CancelableEventArgs
     {
         public IRCMessage Message;
         public TcpClient Client;

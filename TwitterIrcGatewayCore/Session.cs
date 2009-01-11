@@ -46,7 +46,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private String _nick;
         
         #region Events
+        public event EventHandler<MessageReceivedEventArgs> PreMessageReceived;
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
+        public event EventHandler<MessageReceivedEventArgs> PostMessageReceived;
         public event EventHandler<SessionStartedEventArgs> SessionStarted;
         public event EventHandler<EventArgs> SessionEnded;
         
@@ -84,6 +86,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_LIST);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TOPIC);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_MODE);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_PING);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMENABLE);
             MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMDISABLE);
 
@@ -150,7 +153,31 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             get { return _groups;  }
         }
-
+        
+        /// <summary>
+        /// セッションが持つフィルタのコレクション
+        /// </summary>
+        public Filters Filters
+        {
+            get { return _filter;  }
+        }
+        
+        /// <summary>
+        /// セッションのアドインマネージャ
+        /// </summary>
+        public AddInManager AddInManager
+        {
+            get { return _addinManager;  }
+        }        
+        
+        /// <summary>
+        /// ユーザの設定が保存されているディレクトリのパス
+        /// </summary>
+        public String UserConfigDirectory
+        {
+            get { return Path.Combine(ConfigBasePath, _username); }
+        }
+        
         /// <summary>
         /// セッションを開始します。
         /// </summary>
@@ -192,7 +219,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #region イベント実行メソッド
         protected virtual void OnMessageReceived(IRCMessage msg)
         {
-            FireEvent(MessageReceived, new MessageReceivedEventArgs(msg, _writer, _tcpClient));
+            Trace.WriteLine(msg.ToString());
+
+            if (FireEvent(PreMessageReceived, new MessageReceivedEventArgs(msg, _writer, _tcpClient)))
+            {
+                if (FireEvent(MessageReceived, new MessageReceivedEventArgs(msg, _writer, _tcpClient)))
+                {
+                    FireEvent(PostMessageReceived, new MessageReceivedEventArgs(msg, _writer, _tcpClient));
+                }
+            }
         }
         protected virtual void OnSessionStarted(String username)
         {
@@ -248,6 +283,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             catch (IOException ie)
             {
                 SendTwitterGatewayServerMessage("エラー: " + ie.Message);
+            }
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        public void SaveFilters()
+        {
+            lock (_filter)
+            {
+                String path = Path.Combine(ConfigBasePath, Path.Combine(_username, "Filters.xml"));
+                try
+                {
+                    _filter.Save(path);
+                }
+                catch (IOException ie)
+                {
+                    SendTwitterGatewayServerMessage("エラー: " + ie.Message);
+                }
             }
         }
         /// <summary>
@@ -331,7 +384,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
             }
         }
-
+ 
         #endregion
 
         private Group GetGroupByChannelName(String channelName)
@@ -349,7 +402,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #region メッセージ処理イベント
         private void MessageReceived_JOIN(object sender, MessageReceivedEventArgs e)
         {
-            Trace.WriteLine(e.Message.ToString());
             if (!(e.Message is JoinMessage)) return;
             if (String.IsNullOrEmpty(e.Message.CommandParams[0]))
             {
@@ -722,7 +774,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         // group
                         foreach (Group group in _groups.Values)
                         {
-                            if (group.IsJoined && !group.IgnoreEchoBack && String.Compare(message.Receiver, group.Name, true) != 0)
+                            if (group.IsJoined && !group.IsSpecial && !group.IgnoreEchoBack && String.Compare(message.Receiver, group.Name, true) != 0)
                             {
                                 if (_server.BroadcastUpdateMessageIsNotice)
                                 {
@@ -893,6 +945,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
+        void MessageReceived_PING(object sender, MessageReceivedEventArgs e)
+        {
+            if (String.Compare(e.Message.Command, "PING", true) != 0) return;
+            Send(IRCMessage.CreateMessage("PONG :" + e.Message.CommandParam));
+        }
+        
         void MessageReceived_TIGIMENABLE(object sender, MessageReceivedEventArgs e)
         {
             if (String.Compare(e.Message.Command, "TIGIMENABLE", true) != 0) return;
@@ -1268,7 +1326,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 // グループにも投げる
                 foreach (Group group in _groups.Values)
                 {
-                    if (!group.IsJoined)
+                    if (!group.IsJoined || group.IsSpecial)
                         continue;
 
                     Boolean isMatched = String.IsNullOrEmpty(group.Topic) ? true : Regex.IsMatch(line, group.Topic);
@@ -1362,6 +1420,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         #region ヘルパーメソッド
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TEventArgs"></typeparam>
+        /// <param name="hander"></param>
+        /// <param name="e"></param>
+        /// <returns>キャンセルされた場合にはfalseが返ります。</returns>
         private Boolean FireEvent<TEventArgs>(EventHandler<TEventArgs> hander, TEventArgs e) where TEventArgs:EventArgs
         {
             if (hander != null)

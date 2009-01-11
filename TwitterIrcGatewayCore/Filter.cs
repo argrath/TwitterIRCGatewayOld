@@ -132,6 +132,34 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
             }
             return new Filters();
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path"></param>
+        public void Save(String path)
+        {
+            Trace.WriteLine(String.Format("Save Filter: {0}", path));
+            try
+            {
+                String dir = Path.GetDirectoryName(path);
+                Directory.CreateDirectory(dir);
+                using (FileStream fs = new FileStream(path, FileMode.Create))
+                {
+                    try
+                    {
+                        Filters.Serializer.Serialize(fs, this);
+                    }
+                    catch (XmlException xe) { Trace.WriteLine(xe.Message); }
+                    catch (InvalidOperationException ioe) { Trace.WriteLine(ioe.Message); }
+                }
+            }
+            catch (IOException ie)
+            {
+                Trace.WriteLine(ie.Message);
+                throw;
+            }
+        }
     }
 
     public abstract class FilterItem

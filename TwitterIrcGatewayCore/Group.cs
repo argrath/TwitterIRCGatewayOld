@@ -130,6 +130,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public String Mode { get; set; }
         public List<String> Members { get; set; }
         public Boolean IsJoined { get; set; }
+        public Boolean IsSpecial { get; set; }
         public String Topic { get; set; }
         public List<ChannelMode> ChannelModes { get; set; }
 

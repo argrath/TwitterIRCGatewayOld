@@ -355,6 +355,45 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// 指定したユーザの timeline を取得します。
+        /// </summary>
+        /// <param name="screenName">スクリーンネーム</param>
+        /// <param name="since">最終更新日時</param>
+        /// <param name="count"></param>
+        /// <exception cref="WebException"></exception>
+        /// <exception cref="TwitterServiceException"></exception>
+        public Statuses GetTimelineByScreenName(String screenName, DateTime since, Int32 count)
+        {
+            return ExecuteRequest<Statuses>(() =>
+            {
+                StringBuilder sb = new StringBuilder();
+                if (since != new DateTime())
+                    sb.Append("since=").Append(Utility.UrlEncode(since.ToUniversalTime().ToString("r"))).Append("&");
+                if (count > 0)
+                    sb.Append("count=").Append(count).Append("&");
+
+                String responseBody = GET(String.Format("/statuses/user_timeline/{0}.xml?{1}", screenName, sb.ToString()));
+                Statuses statuses;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    statuses = new Statuses();
+                    statuses.Status = new Status[0];
+                }
+                else
+                {
+                    statuses = Statuses.Serializer.Deserialize(new StringReader(responseBody)) as Statuses;
+                    if (statuses == null || statuses.Status == null)
+                    {
+                        statuses = new Statuses();
+                        statuses.Status = new Status[0];
+                    }
+                }
+
+                return statuses;
+            });
+        }
+
+        /// <summary>
         /// メッセージをfavoritesに追加します。
         /// </summary>
         /// <param name="id"></param>
@@ -400,6 +439,49 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             });
         }
 
+        /// <summary>
+        /// ユーザをfollowします。
+        /// </summary>
+        /// <param name="screenName"></param>
+        /// <returns></returns>
+        public User CreateFriendship(String screenName)
+        {
+            return ExecuteRequest<User>(() =>
+            {
+                String responseBody = POST(String.Format("/friendships/create/{0}.xml", screenName), new byte[0]);
+                Status status;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    return User.Serializer.Deserialize(new StringReader(responseBody)) as User;
+                }
+            });
+        }
+
+        /// <summary>
+        /// ユーザをremoveします。
+        /// </summary>
+        /// <param name="screenName"></param>
+        /// <returns></returns>
+        public User DestroyFriendship(String screenName)
+        {
+            return ExecuteRequest<User>(() =>
+            {
+                String responseBody = POST(String.Format("/friendships/destroy/{0}.xml", screenName), new byte[0]);
+                Status status;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    return User.Serializer.Deserialize(new StringReader(responseBody)) as User;
+                }
+            });
+        }
         #region 内部タイマーイベント
         /// <summary>
         /// Twitter のタイムラインの受信を開始します。
