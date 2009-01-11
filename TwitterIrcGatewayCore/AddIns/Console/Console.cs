@@ -123,7 +123,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             sb.Append(CurrentContext.GetType().Name.Replace("Context", ""));
 
             Session.Send(new NoticeMessage(ConsoleChannelName, message)
-                             {SenderHost = Server.ServerName, SenderNick = sb.ToString()});
+                             {SenderHost = "twitter@" + Server.ServerName, SenderNick = sb.ToString()});
         }
 
         /// <summary>
