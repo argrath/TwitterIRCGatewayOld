@@ -75,7 +75,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// Ú‘±‚É—˜—p‚·‚éƒvƒƒLƒV‚ğİ’è‚µ‚Ü‚·B
+        /// æ¥ç¶šã«åˆ©ç”¨ã™ã‚‹ãƒ—ãƒ­ã‚­ã‚·ã‚’è¨­å®šã—ã¾ã™ã€‚
         /// </summary>
         public IWebProxy Proxy
         {
@@ -92,9 +92,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// Cookie‚ğ—˜—p‚µ‚ÄƒƒOƒCƒ“‚µ‚Äƒf[ƒ^‚ÉƒAƒNƒZƒX‚µ‚Ü‚·B
+        /// Cookieã‚’åˆ©ç”¨ã—ã¦ãƒ­ã‚°ã‚¤ãƒ³ã—ã¦ãƒ‡ãƒ¼ã‚¿ã«ã‚¢ã‚¯ã‚»ã‚¹ã—ã¾ã™ã€‚
         /// </summary>
-        [Obsolete("CookieƒƒOƒCƒ“‚É‚æ‚éƒf[ƒ^æ“¾‚Í§ŒÀ‚³‚ê‚Ü‚µ‚½BPOSTFetchMode‚ğ—˜—p‚µ‚Ä‚­‚¾‚³‚¢B")]
+        [Obsolete("Cookieãƒ­ã‚°ã‚¤ãƒ³ã«ã‚ˆã‚‹ãƒ‡ãƒ¼ã‚¿å–å¾—ã¯åˆ¶é™ã•ã‚Œã¾ã—ãŸã€‚POSTFetchModeã‚’åˆ©ç”¨ã—ã¦ãã ã•ã„ã€‚")]
         public Boolean CookieLoginMode
         {
             get { return _cookieLoginMode; }
@@ -102,7 +102,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
          
         /// <summary>
-        /// POST‚ğ—˜—p‚µ‚ÄƒƒOƒCƒ“‚µ‚Äƒf[ƒ^‚ÉƒAƒNƒZƒX‚µ‚Ü‚·B
+        /// POSTã‚’åˆ©ç”¨ã—ã¦ãƒ­ã‚°ã‚¤ãƒ³ã—ã¦ãƒ‡ãƒ¼ã‚¿ã«ã‚¢ã‚¯ã‚»ã‚¹ã—ã¾ã™ã€‚
         /// </summary>
         public Boolean POSTFetchMode
         {
@@ -111,7 +111,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
        
         /// <summary>
-        /// æ‚è‚±‚Ú‚µ–h~‚ğ—LŒø‚É‚·‚é‚©‚Ç‚¤‚©‚ğw’è‚µ‚Ü‚·B
+        /// å–ã‚Šã“ã¼ã—é˜²æ­¢ã‚’æœ‰åŠ¹ã«ã™ã‚‹ã‹ã©ã†ã‹ã‚’æŒ‡å®šã—ã¾ã™ã€‚
         /// </summary>
         public Boolean EnableDropProtection
         {
@@ -120,7 +120,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// ƒ^ƒCƒ€ƒ‰ƒCƒ“‚ğƒ`ƒFƒbƒN‚·‚éŠÔŠu‚ğw’è‚µ‚Ü‚·B
+        /// ã‚¿ã‚¤ãƒ ãƒ©ã‚¤ãƒ³ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹é–“éš”ã‚’æŒ‡å®šã—ã¾ã™ã€‚
         /// </summary>
         public Int32 Interval
         {
@@ -129,7 +129,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// ƒ_ƒCƒŒƒNƒgƒƒbƒZ[ƒW‚ğƒ`ƒFƒbƒN‚·‚éŠÔŠu‚ğw’è‚µ‚Ü‚·B
+        /// ãƒ€ã‚¤ãƒ¬ã‚¯ãƒˆãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹é–“éš”ã‚’æŒ‡å®šã—ã¾ã™ã€‚
         /// </summary>
         public Int32 IntervalDirectMessage
         {
@@ -138,7 +138,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// Replies‚ğƒ`ƒFƒbƒN‚·‚éŠÔŠu‚ğw’è‚µ‚Ü‚·B
+        /// Repliesã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹é–“éš”ã‚’æŒ‡å®šã—ã¾ã™ã€‚
         /// </summary>
         public Int32 IntervalReplies
         {
@@ -147,7 +147,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// Replies‚Ìƒ`ƒFƒbƒN‚ğÀs‚·‚é‚©‚Ç‚¤‚©‚ğw’è‚µ‚Ü‚·B
+        /// Repliesã®ãƒã‚§ãƒƒã‚¯ã‚’å®Ÿè¡Œã™ã‚‹ã‹ã©ã†ã‹ã‚’æŒ‡å®šã—ã¾ã™ã€‚
         /// </summary>
         public Boolean EnableRepliesCheck
         {
@@ -156,7 +156,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// ƒXƒe[ƒ^ƒX‚ğXV‚µ‚Ü‚·B
+        /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’æ›´æ–°ã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
@@ -166,7 +166,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// ƒXƒe[ƒ^ƒX‚ğXV‚µ‚Ü‚·B
+        /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’æ›´æ–°ã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="message"></param>
         /// <param name="inReplyToStatusId"></param>
@@ -189,7 +189,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// w’è‚³‚ê‚½ƒ†[ƒU‚Éƒ_ƒCƒŒƒNƒgƒƒbƒZ[ƒW‚ğ‘—M‚µ‚Ü‚·B
+        /// æŒ‡å®šã•ã‚ŒãŸãƒ¦ãƒ¼ã‚¶ã«ãƒ€ã‚¤ãƒ¬ã‚¯ãƒˆãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ä¿¡ã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="targetId"></param>
         /// <param name="message"></param>
@@ -203,7 +203,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// friends‚ğæ“¾‚µ‚Ü‚·B
+        /// friendsã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
         /// <exception cref="WebException"></exception>
         /// <exception cref="TwitterServiceException"></exception>
@@ -233,13 +233,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         }
                     }
                 }
-                // ‚ ‚Ü‚è‚É‘½‚¢ê‡‚Í‚»‚±‚Ü‚ÅB
+                // ã‚ã¾ã‚Šã«å¤šã„å ´åˆã¯ãã“ã¾ã§ã€‚
                 return usersList.ToArray();
             });
         }
 
         /// <summary>
-        /// user‚ğæ“¾‚µ‚Ü‚·B
+        /// userã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
         /// <exception cref="WebException"></exception>
         /// <exception cref="TwitterServiceException"></exception>
@@ -261,9 +261,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// timeline ‚ğæ“¾‚µ‚Ü‚·B
+        /// timeline ã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="since">ÅIXV“ú</param>
+        /// <param name="since">æœ€çµ‚æ›´æ–°æ—¥æ™‚</param>
         /// <exception cref="WebException"></exception>
         /// <exception cref="TwitterServiceException"></exception>
         public Statuses GetTimeline(DateTime since)
@@ -292,7 +292,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// replies ‚ğæ“¾‚µ‚Ü‚·B
+        /// replies ã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
         /// <exception cref="WebException"></exception>
         /// <exception cref="TwitterServiceException"></exception>
@@ -322,21 +322,21 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// direct messages ‚ğæ“¾‚µ‚Ü‚·B
+        /// direct messages ã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="since">ÅIXV“ú</param>
+        /// <param name="since">æœ€çµ‚æ›´æ–°æ—¥æ™‚</param>
         /// <exception cref="WebException"></exception>
         /// <exception cref="TwitterServiceException"></exception>
         public DirectMessages GetDirectMessages(DateTime since)
         {
             return ExecuteRequest<DirectMessages>(() =>
             {
-                // Cookie ‚Å‚Íƒ_ƒ
+                // Cookie ã§ã¯ãƒ€ãƒ¡
                 String responseBody = GET(String.Format("/direct_messages.xml?since={0}", Utility.UrlEncode(since.ToUniversalTime().ToString("r"))), false);
                 DirectMessages directMessages;
                 if (NilClasses.CanDeserialize(responseBody))
                 {
-                    // ‹ó
+                    // ç©º
                     directMessages = new DirectMessages();
                     directMessages.DirectMessage = new DirectMessage[0];
                 }
@@ -355,10 +355,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// w’è‚µ‚½ƒ†[ƒU‚Ì timeline ‚ğæ“¾‚µ‚Ü‚·B
+        /// æŒ‡å®šã—ãŸãƒ¦ãƒ¼ã‚¶ã® timeline ã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="screenName">ƒXƒNƒŠ[ƒ“ƒl[ƒ€</param>
-        /// <param name="since">ÅIXV“ú</param>
+        /// <param name="screenName">ã‚¹ã‚¯ãƒªãƒ¼ãƒ³ãƒãƒ¼ãƒ </param>
+        /// <param name="since">æœ€çµ‚æ›´æ–°æ—¥æ™‚</param>
         /// <param name="count"></param>
         /// <exception cref="WebException"></exception>
         /// <exception cref="TwitterServiceException"></exception>
@@ -394,7 +394,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// ƒƒbƒZ[ƒW‚ğfavorites‚É’Ç‰Á‚µ‚Ü‚·B
+        /// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’favoritesã«è¿½åŠ ã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -417,7 +417,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// ƒƒbƒZ[ƒW‚ğfavorites‚©‚çíœ‚µ‚Ü‚·B
+        /// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’favoritesã‹ã‚‰å‰Šé™¤ã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
@@ -440,7 +440,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// ƒ†[ƒU‚ğfollow‚µ‚Ü‚·B
+        /// ãƒ¦ãƒ¼ã‚¶ã‚’followã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="screenName"></param>
         /// <returns></returns>
@@ -462,7 +462,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// ƒ†[ƒU‚ğremove‚µ‚Ü‚·B
+        /// ãƒ¦ãƒ¼ã‚¶ã‚’removeã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="screenName"></param>
         /// <returns></returns>
@@ -482,9 +482,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
             });
         }
-        #region “à•”ƒ^ƒCƒ}[ƒCƒxƒ“ƒg
+        #region å†…éƒ¨ã‚¿ã‚¤ãƒãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆ
         /// <summary>
-        /// Twitter ‚Ìƒ^ƒCƒ€ƒ‰ƒCƒ“‚ÌóM‚ğŠJn‚µ‚Ü‚·B
+        /// Twitter ã®ã‚¿ã‚¤ãƒ ãƒ©ã‚¤ãƒ³ã®å—ä¿¡ã‚’é–‹å§‹ã—ã¾ã™ã€‚
         /// </summary>
         public void Start()
         {
@@ -497,7 +497,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// Twitter ‚Ìƒ^ƒCƒ€ƒ‰ƒCƒ“‚ÌóM‚ğ’â~‚µ‚Ü‚·B
+        /// Twitter ã®ã‚¿ã‚¤ãƒ ãƒ©ã‚¤ãƒ³ã®å—ä¿¡ã‚’åœæ­¢ã—ã¾ã™ã€‚
         /// </summary>
         public void Stop()
         {
@@ -534,14 +534,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// Šù‚ÉóM‚µ‚½status‚©‚Ç‚¤‚©‚ğƒ`ƒFƒbƒN‚µ‚Ü‚·BŠù‚É‘—MÏ‚İ‚Ìê‡false‚ğ•Ô‚µ‚Ü‚·B
+        /// æ—¢ã«å—ä¿¡ã—ãŸstatusã‹ã©ã†ã‹ã‚’ãƒã‚§ãƒƒã‚¯ã—ã¾ã™ã€‚æ—¢ã«é€ä¿¡æ¸ˆã¿ã®å ´åˆfalseã‚’è¿”ã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="statusBuffer"></param>
         /// <param name="status"></param>
         /// <returns></returns>
         private Boolean ProcessDropProtection(LinkedList<Status> statusBuffer, Status status)
         {
-            // ·•ªƒ`ƒFƒbƒN
+            // å·®åˆ†ãƒã‚§ãƒƒã‚¯
             if (_enableDropProtection)
             {
                 lock (statusBuffer)
@@ -552,7 +552,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     statusBuffer.AddLast(status);
                     if (statusBuffer.Count > _bufferSize)
                     {
-                        // ˆê”ÔŒÃ‚¢‚Ì‚ğÁ‚·
+                        // ä¸€ç•ªå¤ã„ã®ã‚’æ¶ˆã™
                         //Status oldStatus = null;
                         //foreach (Status statTmp in _statusBuffer)
                         //{
@@ -570,7 +570,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return true;
         }
         /// <summary>
-        /// ƒXƒe[ƒ^ƒX‚ª‚·‚Å‚É—¬‚³‚ê‚½‚©‚Ç‚¤‚©‚ğƒ`ƒFƒbƒN‚µ‚ÄA—¬‚³‚ê‚Ä‚¢‚È‚¢ê‡‚Éw’è‚³‚ê‚½ƒAƒNƒVƒ‡ƒ“‚ğÀs‚µ‚Ü‚·B
+        /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒã™ã§ã«æµã•ã‚ŒãŸã‹ã©ã†ã‹ã‚’ãƒã‚§ãƒƒã‚¯ã—ã¦ã€æµã•ã‚Œã¦ã„ãªã„å ´åˆã«æŒ‡å®šã•ã‚ŒãŸã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’å®Ÿè¡Œã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="status"></param>
         /// <param name="action"></param>
@@ -580,10 +580,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 action(status);
 
-                // ÅIXV
+                // æœ€çµ‚æ›´æ–°æ™‚åˆ»
                 if (_enableDropProtection)
                 {
-                    // æ‚è‚±‚Ú‚µ–h~‚µ‚Ä‚¢‚é‚Æ‚«‚Íˆê”ÔŒÃ‚¢“ú•t
+                    // å–ã‚Šã“ã¼ã—é˜²æ­¢ã—ã¦ã„ã‚‹ã¨ãã¯ä¸€ç•ªå¤ã„æ—¥ä»˜
                     if (status.CreatedAt < _lastAccessTimeline)
                     {
                         _lastAccessTimeline = status.CreatedAt;
@@ -599,7 +599,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
         /// <summary>
-        /// ƒXƒe[ƒ^ƒX‚ª‚·‚Å‚É—¬‚³‚ê‚½‚©‚Ç‚¤‚©‚ğƒ`ƒFƒbƒN‚µ‚ÄA—¬‚³‚ê‚Ä‚¢‚È‚¢ê‡‚Éw’è‚³‚ê‚½ƒAƒNƒVƒ‡ƒ“‚ğÀs‚µ‚Ü‚·B
+        /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒã™ã§ã«æµã•ã‚ŒãŸã‹ã©ã†ã‹ã‚’ãƒã‚§ãƒƒã‚¯ã—ã¦ã€æµã•ã‚Œã¦ã„ãªã„å ´åˆã«æŒ‡å®šã•ã‚ŒãŸã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’å®Ÿè¡Œã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="status"></param>
         /// <param name="action"></param>
@@ -612,10 +612,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 ProcessStatus(status, s =>
                 {
                     statusList.Add(status);
-                    // ÅIXV
+                    // æœ€çµ‚æ›´æ–°æ™‚åˆ»
                     if (_enableDropProtection)
                     {
-                        // æ‚è‚±‚Ú‚µ–h~‚µ‚Ä‚¢‚é‚Æ‚«‚Íˆê”ÔŒÃ‚¢“ú•t
+                        // å–ã‚Šã“ã¼ã—é˜²æ­¢ã—ã¦ã„ã‚‹ã¨ãã¯ä¸€ç•ªå¤ã„æ—¥ä»˜
                         if (status.CreatedAt < _lastAccessTimeline)
                         {
                             _lastAccessTimeline = status.CreatedAt;
@@ -637,7 +637,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             action(tmpStatuses);
         }
         /// <summary>
-        /// RepliesƒXƒe[ƒ^ƒX‚ª‚·‚Å‚É—¬‚³‚ê‚½‚©‚Ç‚¤‚©‚ğƒ`ƒFƒbƒN‚µ‚ÄA—¬‚³‚ê‚Ä‚¢‚È‚¢ê‡‚Éw’è‚³‚ê‚½ƒAƒNƒVƒ‡ƒ“‚ğÀs‚µ‚Ü‚·B
+        /// Repliesã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãŒã™ã§ã«æµã•ã‚ŒãŸã‹ã©ã†ã‹ã‚’ãƒã‚§ãƒƒã‚¯ã—ã¦ã€æµã•ã‚Œã¦ã„ãªã„å ´åˆã«æŒ‡å®šã•ã‚ŒãŸã‚¢ã‚¯ã‚·ãƒ§ãƒ³ã‚’å®Ÿè¡Œã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="status"></param>
         /// <param name="action"></param>
@@ -654,10 +654,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 {
                     statusList.Add(status);
 
-                    // ÅIXV
+                    // æœ€çµ‚æ›´æ–°æ™‚åˆ»
                     if (_enableDropProtection)
                     {
-                        // æ‚è‚±‚Ú‚µ–h~‚µ‚Ä‚¢‚é‚Æ‚«‚Íˆê”ÔŒÃ‚¢“ú•t
+                        // å–ã‚Šã“ã¼ã—é˜²æ­¢ã—ã¦ã„ã‚‹ã¨ãã¯ä¸€ç•ªå¤ã„æ—¥ä»˜
                         if (status.CreatedAt < _lastAccessTimeline)
                         {
                             _lastAccessTimeline = status.CreatedAt;
@@ -686,7 +686,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 Statuses statuses = GetTimeline(_lastAccessTimeline);
                 Array.Reverse(statuses.Status);
-                // ·•ªƒ`ƒFƒbƒN
+                // å·®åˆ†ãƒã‚§ãƒƒã‚¯
                 ProcessStatuses(statuses, (s) =>
                 {
                     OnTimelineStatusesReceived(new StatusesUpdatedEventArgs(s, _isFirstTime, friendsCheckRequired));
@@ -708,7 +708,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 Array.Reverse(directMessages.DirectMessage);
                 foreach (DirectMessage message in directMessages.DirectMessage)
                 {
-                    // ƒ`ƒFƒbƒN
+                    // ãƒã‚§ãƒƒã‚¯
                     if (message == null || String.IsNullOrEmpty(message.SenderScreenName))
                     {
                         continue;
@@ -716,7 +716,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     
                     OnDirectMessageReceived(new DirectMessageEventArgs(message));
                     
-                    // ÅIXV
+                    // æœ€çµ‚æ›´æ–°æ™‚åˆ»
                     if (message.CreatedAt > _lastAccessDirectMessage)
                     {
                         _lastAccessDirectMessage = message.CreatedAt;
@@ -734,7 +734,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 Array.Reverse(statuses.Status);
                 bool dummy = false;
                 
-                // ·•ªƒ`ƒFƒbƒN
+                // å·®åˆ†ãƒã‚§ãƒƒã‚¯
                 ProcessRepliesStatus(statuses, (s) =>
                 {
                     // Here I pass dummy, because no matter how the replier flags
@@ -753,7 +753,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         #endregion
 
-        #region ƒCƒxƒ“ƒg
+        #region ã‚¤ãƒ™ãƒ³ãƒˆ
         protected virtual void OnCheckError(ErrorEventArgs e)
         {
             FireEvent<ErrorEventArgs>(CheckError, e);
@@ -777,7 +777,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         #endregion
 
-        #region ƒ†[ƒeƒBƒŠƒeƒBƒƒ\ƒbƒh
+        #region ãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£ãƒ¡ã‚½ãƒƒãƒ‰
         /// <summary>
         /// 
         /// </summary>
@@ -843,9 +843,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// ƒ`ƒFƒbƒN‚ğÀs‚µ‚Ü‚·B—áŠO‚ª”­¶‚µ‚½ê‡‚É‚Í©“®“I‚ÉƒƒbƒZ[ƒW‚ğ‘—M‚µ‚Ü‚·B
+        /// ãƒã‚§ãƒƒã‚¯ã‚’å®Ÿè¡Œã—ã¾ã™ã€‚ä¾‹å¤–ãŒç™ºç”Ÿã—ãŸå ´åˆã«ã¯è‡ªå‹•çš„ã«ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’é€ä¿¡ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="proc">Às‚·‚éƒ`ƒFƒbƒNˆ—</param>
+        /// <param name="proc">å®Ÿè¡Œã™ã‚‹ãƒã‚§ãƒƒã‚¯å‡¦ç†</param>
         /// <returns></returns>
         private Boolean RunCheck(Procedure proc)
         {
@@ -857,7 +857,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 if (ex.Response == null || !(ex.Response is HttpWebResponse) || ((HttpWebResponse)(ex.Response)).StatusCode != HttpStatusCode.NotModified)
                 {
-                    // not-modified ˆÈŠO
+                    // not-modified ä»¥å¤–
                     OnCheckError(new ErrorEventArgs(ex));
                     return false;
                 }
@@ -872,13 +872,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// ƒ^ƒCƒ}[ƒR[ƒ‹ƒoƒbƒN‚Ìˆ—‚ğÀs‚µ‚Ü‚·B
+        /// ã‚¿ã‚¤ãƒãƒ¼ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã®å‡¦ç†ã‚’å®Ÿè¡Œã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="timer"></param>
         /// <param name="callbackProcedure"></param>
         private void RunCallback(Timer timer, Procedure callbackProcedure)
         {
-            // ‚ ‚Ü‚è‚Éˆ—‚ª’x‚ê‚é‚Æ“ñd‚É‚È‚é‰Â”\«‚ª‚ ‚é
+            // ã‚ã¾ã‚Šã«å‡¦ç†ãŒé…ã‚Œã‚‹ã¨äºŒé‡ã«ãªã‚‹å¯èƒ½æ€§ãŒã‚ã‚‹
             if (Monitor.TryEnter(timer))
             {
                 try
@@ -893,7 +893,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         #endregion
 
-        #region IDisposable ƒƒ“ƒo
+        #region IDisposable ãƒ¡ãƒ³ãƒ
 
         public void Dispose()
         {
@@ -933,7 +933,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
             protected override WebRequest GetWebRequest(Uri address)
             {
-                // ‚±‚ÌƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚Å HttpWebReqeust ˆÈŠO‚ª‚­‚é‚±‚Æ‚Í‚È‚¢
+                // ã“ã®ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã§ HttpWebReqeust ä»¥å¤–ãŒãã‚‹ã“ã¨ã¯ãªã„
                 HttpWebRequest webRequest = base.GetWebRequest(address) as HttpWebRequest;
                 webRequest.PreAuthenticate = true;
                 webRequest.Accept = "text/xml, application/xml";
@@ -948,9 +948,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// w’è‚³‚ê‚½URL‚©‚çƒf[ƒ^‚ğæ“¾‚µ•¶š—ñ‚Æ‚µ‚Ä•Ô‚µ‚Ü‚·BCookieLoginMode‚ª—LŒø‚È‚Æ‚«‚Í©“®“I‚ÉCookieƒƒOƒCƒ“ó‘Ô‚Åæ“¾‚µ‚Ü‚·B
+        /// æŒ‡å®šã•ã‚ŒãŸURLã‹ã‚‰ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—ã—æ–‡å­—åˆ—ã¨ã—ã¦è¿”ã—ã¾ã™ã€‚CookieLoginModeãŒæœ‰åŠ¹ãªã¨ãã¯è‡ªå‹•çš„ã«Cookieãƒ­ã‚°ã‚¤ãƒ³çŠ¶æ…‹ã§å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="url">ƒf[ƒ^‚ğæ“¾‚·‚éURL</param>
+        /// <param name="url">ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—ã™ã‚‹URL</param>
         /// <returns></returns>
         public String GET(String url)
         {
@@ -958,10 +958,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// w’è‚³‚ê‚½URL‚©‚çƒf[ƒ^‚ğæ“¾‚µ•¶š—ñ‚Æ‚µ‚Ä•Ô‚µ‚Ü‚·B
+        /// æŒ‡å®šã•ã‚ŒãŸURLã‹ã‚‰ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—ã—æ–‡å­—åˆ—ã¨ã—ã¦è¿”ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="url">ƒf[ƒ^‚ğæ“¾‚·‚éURL</param>
-        /// <param name="postFetchMode">POST‚Åæ“¾‚·‚é‚©‚Ç‚¤‚©</param>
+        /// <param name="url">ãƒ‡ãƒ¼ã‚¿ã‚’å–å¾—ã™ã‚‹URL</param>
+        /// <param name="postFetchMode">POSTã§å–å¾—ã™ã‚‹ã‹ã©ã†ã‹</param>
         /// <returns></returns>
         public String GET(String url, Boolean postFetchMode)
         {
@@ -1016,7 +1016,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return webRequest as HttpWebRequest;
         }
 
-        #region Cookie ƒAƒNƒZƒX
+        #region Cookie ã‚¢ã‚¯ã‚»ã‚¹
 
         private CookieCollection _cookies = null;
         public String GETWithCookie(String url)
@@ -1061,7 +1061,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
                 if (response.Cookies.Count == 0)
                 {
-                    throw new ApplicationException("ƒƒOƒCƒ“‚É¸”s‚µ‚Ü‚µ‚½Bƒ†[ƒU–¼‚Ü‚½‚ÍƒpƒXƒ[ƒh‚ªŠÔˆá‚Á‚Ä‚¢‚é‰Â”\«‚ª‚ ‚è‚Ü‚·B");
+                    throw new ApplicationException("ãƒ­ã‚°ã‚¤ãƒ³ã«å¤±æ•—ã—ã¾ã—ãŸã€‚ãƒ¦ãƒ¼ã‚¶åã¾ãŸã¯ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒé–“é•ã£ã¦ã„ã‚‹å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚");
                 }
 
                 foreach (Cookie cookie in response.Cookies)
@@ -1106,10 +1106,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
                 if (webClient.Cookies == null)
                 {
-                    throw new ApplicationException("ƒƒOƒCƒ“‚É¸”s‚µ‚Ü‚µ‚½Bƒ†[ƒU–¼‚Ü‚½‚ÍƒpƒXƒ[ƒh‚ªŠÔˆá‚Á‚Ä‚¢‚é‰Â”\«‚ª‚ ‚è‚Ü‚·B");
+                    throw new ApplicationException("ãƒ­ã‚°ã‚¤ãƒ³ã«å¤±æ•—ã—ã¾ã—ãŸã€‚ãƒ¦ãƒ¼ã‚¶åã¾ãŸã¯ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒé–“é•ã£ã¦ã„ã‚‹å¯èƒ½æ€§ãŒã‚ã‚Šã¾ã™ã€‚");
                 }
 
-                // XXX: .twitter.com ‚Æ‚È‚Á‚Ä‚¢‚é‚Æ twitter.com ‚É‘—‚ç‚ê‚È‚¢‚Ì‚Å‘‚«Š·‚¦‚é
+                // XXX: .twitter.com ã¨ãªã£ã¦ã„ã‚‹ã¨ twitter.com ã«é€ã‚‰ã‚Œãªã„ã®ã§æ›¸ãæ›ãˆã‚‹
                 foreach (Cookie cookie in webClient.Cookies)
                 {
                     cookie.Domain = "twitter.com";

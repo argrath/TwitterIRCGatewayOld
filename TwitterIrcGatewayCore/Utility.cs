@@ -16,10 +16,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// d•¡‚µ‚½––”ö‚Ì•¶š—ñ‚ğæ“¾‚µ‚Ü‚·B
+        /// é‡è¤‡ã—ãŸæœ«å°¾ã®æ–‡å­—åˆ—ã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="text">‘ÎÛ‚Ì•¶š—ñ</param>
-        /// <param name="hintTexts">ƒqƒ“ƒg‚Æ‚È‚é•¶š—ñ‚ÌƒRƒŒƒNƒVƒ‡ƒ“</param>
+        /// <param name="text">å¯¾è±¡ã®æ–‡å­—åˆ—</param>
+        /// <param name="hintTexts">ãƒ’ãƒ³ãƒˆã¨ãªã‚‹æ–‡å­—åˆ—ã®ã‚³ãƒ¬ã‚¯ã‚·ãƒ§ãƒ³</param>
         /// <returns></returns>
         public static String DetectRedundantSuffix(String text, ICollection<String> hintTexts)
         {
@@ -47,7 +47,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// “ú•t‚Ì•¶š—ñ‚ğDateTimeŒ^‚É•ÏŠ·‚µ‚Ü‚·B
+        /// æ—¥ä»˜ã®æ–‡å­—åˆ—ã‚’DateTimeå‹ã«å¤‰æ›ã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="dateTimeString"></param>
         /// <returns></returns>
@@ -63,10 +63,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// •¶’†‚Ì TinyURL ‚ğ“WŠJ‚µ‚Ü‚·B
-        /// ƒ^ƒCƒ€ƒAƒEƒg‚·‚é‚Ü‚Å‚ÌŠÔ‚Í1•b‚Å‚·B
+        /// æ–‡ä¸­ã® TinyURL ã‚’å±•é–‹ã—ã¾ã™ã€‚
+        /// ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã™ã‚‹ã¾ã§ã®æ™‚é–“ã¯1ç§’ã§ã™ã€‚
         /// </summary>
-        /// <param name="message">ƒƒbƒZ[ƒW</param>
+        /// <param name="message">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
         /// <returns></returns>
         public static String ResolveTinyUrlInMessage(String message)
         {
@@ -74,10 +74,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// •¶’†‚Ì TinyURL ‚ğ“WŠJ‚µ‚Ü‚·B
+        /// æ–‡ä¸­ã® TinyURL ã‚’å±•é–‹ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="message">ƒƒbƒZ[ƒW</param>
-        /// <param name="timeOut">ƒ^ƒCƒ€ƒAƒEƒg‚·‚é‚Ü‚Å‚ÌŠÔ</param>
+        /// <param name="message">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
+        /// <param name="timeOut">ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã™ã‚‹ã¾ã§ã®æ™‚é–“</param>
         /// <returns></returns>
         public static String ResolveTinyUrlInMessage(String message, Int32 timeOut)
         {
@@ -88,10 +88,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// TinyURL‚ğƒŠƒ_ƒCƒŒƒNƒgæ‚ÌURL‚É“WŠJ‚µ‚Ü‚·B
+        /// TinyURLã‚’ãƒªãƒ€ã‚¤ãƒ¬ã‚¯ãƒˆå…ˆã®URLã«å±•é–‹ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="url">TinyURL‚ÌURL</param>
-        /// <param name="timeOut">ƒ^ƒCƒ€ƒAƒEƒg‚·‚é‚Ü‚Å‚ÌŠÔ</param>
+        /// <param name="url">TinyURLã®URL</param>
+        /// <param name="timeOut">ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã™ã‚‹ã¾ã§ã®æ™‚é–“</param>
         /// <returns></returns>
         public static String ResolveTinyUrl(String url, Int32 timeOut)
         {
@@ -127,10 +127,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// •¶’†‚Ì URL ‚ğ TinyURL ‚É•ÏŠ·‚µ‚Ü‚·B
-        /// ƒ^ƒCƒ€ƒAƒEƒg‚·‚é‚Ü‚Å‚ÌŠÔ‚Í1•b‚Å‚·B
+        /// æ–‡ä¸­ã® URL ã‚’ TinyURL ã«å¤‰æ›ã—ã¾ã™ã€‚
+        /// ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã™ã‚‹ã¾ã§ã®æ™‚é–“ã¯1ç§’ã§ã™ã€‚
         /// </summary>
-        /// <param name="message">ƒƒbƒZ[ƒW</param>
+        /// <param name="message">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
         /// <returns></returns>
         public static String UrlToTinyUrlInMessage(String message)
         {
@@ -138,10 +138,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// •¶’†‚Ì URL ‚ğ TinyURL ‚É•ÏŠ·‚µ‚Ü‚·B
+        /// æ–‡ä¸­ã® URL ã‚’ TinyURL ã«å¤‰æ›ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="message">ƒƒbƒZ[ƒW</param>
-        /// <param name="timeOut">ƒ^ƒCƒ€ƒAƒEƒg‚·‚é‚Ü‚Å‚ÌŠÔ</param>
+        /// <param name="message">ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸</param>
+        /// <param name="timeOut">ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã™ã‚‹ã¾ã§ã®æ™‚é–“</param>
         /// <returns></returns>
         public static String UrlToTinyUrlInMessage(String message, Int32 timeOut)
         {
@@ -151,10 +151,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }, RegexOptions.IgnoreCase);
         }
         /// <summary>
-        /// URL‚ğTinyURL‚É‘—M‚µ‚Ä’Z‚¢URL‚É•ÏŠ·‚µ‚Ü‚·B
+        /// URLã‚’TinyURLã«é€ä¿¡ã—ã¦çŸ­ã„URLã«å¤‰æ›ã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="url">URL</param>
-        /// <param name="timeOut">ƒ^ƒCƒ€ƒAƒEƒg‚·‚é‚Ü‚Å‚ÌŠÔ</param>
+        /// <param name="timeOut">ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆã™ã‚‹ã¾ã§ã®æ™‚é–“</param>
         /// <returns></returns>
         public static String UrlToTinyUrl(String url, Int32 timeOut)
         {
@@ -188,10 +188,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
         /// <summary>
-        /// •¶š—ñ‚ğURLƒGƒ“ƒR[ƒh‚µ‚Ü‚·B
+        /// æ–‡å­—åˆ—ã‚’URLã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã—ã¾ã™ã€‚
         /// </summary>
-        /// <param name="s">URLƒGƒ“ƒR[ƒh‚·‚é•¶š—ñ</param>
-        /// <returns>URLƒGƒ“ƒR[ƒh‚³‚ê‚½•¶š—ñ</returns>
+        /// <param name="s">URLã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã™ã‚‹æ–‡å­—åˆ—</param>
+        /// <returns>URLã‚¨ãƒ³ã‚³ãƒ¼ãƒ‰ã•ã‚ŒãŸæ–‡å­—åˆ—</returns>
         public static String UrlEncode(String s)
         {
             StringBuilder sb = new StringBuilder();
@@ -205,7 +205,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// HTML ‚Ì”’l•¶šQÆEÀ‘ÔQÆ‚ğŒ³‚É–ß‚µ‚Ü‚·B
+        /// HTML ã®æ•°å€¤æ–‡å­—å‚ç…§ãƒ»å®Ÿæ…‹å‚ç…§ã‚’å…ƒã«æˆ»ã—ã¾ã™ã€‚
         /// </summary>
         /// <param name="s"></param>
         /// <returns></returns>
@@ -479,7 +479,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             if (m.Groups[1].Value[0] == '#')
             {
-                // ”’lQÆ
+                // æ•°å€¤å‚ç…§
                 try
                 {
                     Char c;
@@ -500,7 +500,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
             else
             {
-                // •¶šÀ‘ÌQÆ
+                // æ–‡å­—å®Ÿä½“å‚ç…§
                 if (_entityReferenceTable.ContainsKey(m.Groups["char"].Value))
                 {
                     return _entityReferenceTable[m.Groups["char"].Value];
