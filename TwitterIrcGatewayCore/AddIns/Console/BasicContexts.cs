@@ -210,7 +210,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         [Description("Search コマンドでの検索時のステータスの後ろにURLをつけるかどうかを指定します")]
-        public void ShowParmalinkAfterStatus(Boolean value)
+        public void ShowPermalinkAfterStatus(Boolean value)
         {
             ConsoleAddIn.Config.ShowPermalinkAfterStatus = value;
             ConsoleAddIn.NotifyMessage("ShowPermalinkAfterStatus = " + value);
