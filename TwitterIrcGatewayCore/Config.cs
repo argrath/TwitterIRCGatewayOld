@@ -24,8 +24,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public Boolean EnableRemoveRedundantSuffix { get; set; }
 
-        public Object[] Configurations { get; private set; }
-        
         public String GetIMPassword(String key)
         {
             StringBuilder sb = new StringBuilder();
