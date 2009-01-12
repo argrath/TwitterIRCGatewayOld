@@ -1329,12 +1329,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     if (!group.IsJoined || group.IsSpecial)
                         continue;
 
-                    Boolean isMatched = String.IsNullOrEmpty(group.Topic) ? true : Regex.IsMatch(line, group.Topic);
-                    
+                    Boolean isOrMatch = String.IsNullOrEmpty(group.Topic) ? false : group.Topic.StartsWith("|");
+                    Boolean isMatched = String.IsNullOrEmpty(group.Topic) ? true : Regex.IsMatch(line, (isOrMatch ? group.Topic.Substring(1) : group.Topic));
+                    Boolean isExistsInChannelOrNoMembers = (group.Exists(status.User.ScreenName) || group.Members.Count == 0);
+
                     // 0: self
                     // 1: member exists in channel && match regex
                     // 2: no members in channel(self only) && match regex
-                    if ((group.Exists(status.User.ScreenName) || group.Members.Count == 0) && isMatched)
+                    // 3: member exists in channel || match regex (StartsWith: "|")
+                    // 4: no members in channel(self only) || match regex (StartsWith: "|")
+                    if (isOrMatch ? (isExistsInChannelOrNoMembers || isMatched) : (isExistsInChannelOrNoMembers && isMatched))
                     {
                         if (_isFirstTime)
                         {
