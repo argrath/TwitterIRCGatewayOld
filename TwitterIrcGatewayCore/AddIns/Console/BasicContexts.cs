@@ -87,8 +87,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             {
                 try
                 {
-                    var retStatuses = Session.TwitterService.GetFavoritesByScreenName(screenName, 1, ConsoleAddIn.Config.FavoritesCount);
+                    var retStatuses = Session.TwitterService.GetFavoritesByScreenName(screenName, 1);
                     statuses.AddRange(retStatuses.Status);
+                    if (statuses.Count > ConsoleAddIn.Config.FavoritesCount)
+                        statuses.RemoveRange(10, statuses.Count - 10);
                 }
                 catch (TwitterServiceException te)
                 {
