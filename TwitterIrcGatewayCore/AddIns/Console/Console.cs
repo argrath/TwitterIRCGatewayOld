@@ -15,15 +15,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         public String ConsoleChannelName { get { return "#Console";  } }
         public GeneralConfig Config { get; private set; }
 
+        internal List<Type> Contexts { get; private set; }
+
         public override void Initialize()
         {
             Session.PreMessageReceived += new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
             Session.PostMessageReceived += new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
 
             // Default Context
-            CurrentContext = Context.GetContext<RootContext>(Server, Session);
+            CurrentContext = this.GetContext<RootContext>(Server, Session);
             ContextStack = new Stack<Context>();
             Config = Session.AddInManager.GetConfig<GeneralConfig>();
+            Contexts = new List<Type>();
+
+            RegisterContext<RootContext>();
+            RegisterContext<ConfigContext>();
+            RegisterContext<FilterContext>();
+            RegisterContext<GroupContext>();
         }
 
         /// <summary>
@@ -70,6 +78,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             if (args.Length == 0)
                 return;
 
+            // コンテキスト
+            foreach (var ctx in CurrentContext.Contexts)
+            {
+                if (ctx == typeof(RootContext))
+                    continue;
+
+                if (String.Compare(ctx.Name.Replace("Context", ""), args[0], true) == 0)
+                {
+                    this.PushContext(this.GetContext(ctx, Server, Session));
+                    return;
+                }
+            }
+            
+            // コマンドを探す
             MethodInfo methodInfo = CurrentContext.GetType().GetMethod(args[0].Replace(":", ""),
                                                                          BindingFlags.Instance | BindingFlags.Public |
                                                                          BindingFlags.IgnoreCase);
@@ -78,7 +100,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
             if (methodInfo == null || methodInfo.IsFinal || methodInfo.IsConstructor || methodInfo.IsSpecialName || (attrs.Length != 0 && !((BrowsableAttribute)attrs[0]).Browsable))
             {
-                NotifyMessage("そのコマンドはこのコンテキストに存在しません。");
+                NotifyMessage("指定された名前はこのコンテキストのコマンド、またはサブコンテキストにも見つかりません。");
                 return;
             }
 
@@ -132,7 +154,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             StringBuilder sb = new StringBuilder();
             foreach (Context ctx in ContextStack)
-                sb.Append(ctx.GetType().Name.Replace("Context", "")).Append(@"\");
+                sb.Insert(0, ctx.GetType().Name.Replace("Context", "") + "\\");
 
             sb.Append(CurrentContext.GetType().Name.Replace("Context", ""));
 
@@ -173,7 +195,36 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             Session.SendNumericReply(NumericReply.RPL_NAMREPLY, "=", ConsoleChannelName, "@"+Session.Nick+" "+ String.Join(" ", users.ToArray()));
             Session.SendNumericReply(NumericReply.RPL_ENDOFNAMES, ConsoleChannelName, "End of NAMES list");
         }
+        
+        /// <summary>
+        /// コンテキストを追加します。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void RegisterContext<T>() where T : Context, new()
+        {
+            RegisterContext(typeof(T));
+        }
+        public void RegisterContext(Type contextType)
+        {
+            if (!Contexts.Contains(contextType))
+                Contexts.Add(contextType);
+        }
 
+        public Context GetContext<T>(Server server, Session session) where T : Context, new()
+        {
+            Context ctx = new T { Server = server, Session = session };
+            ctx.Initialize();
+            return ctx;
+        }
+        
+        public Context GetContext(Type t, Server server, Session session)
+        {
+            Context ctx = Activator.CreateInstance(t) as Context;
+            ctx.Server = server;
+            ctx.Session = session;
+            ctx.Initialize();
+            return ctx;
+        }
         #region Context Helpers
         public void ChangeContext(Context ctx)
         {

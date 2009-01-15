@@ -13,8 +13,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     /// <summary>
     /// 
     /// </summary>
+    [Browsable(false)]
     public class RootContext : Context
     {
+        public override Type[] Contexts { get { return ConsoleAddIn.Contexts.ToArray(); } }
+
         [Description("Twitter 検索を利用して検索します")]
         public void Search(String keywords)
         {
@@ -119,24 +122,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             FollowOrRemove(false, screenNames);
         }
 
-        [Description("フィルタの設定を行うコンテキストに切り替えます")]
-        public void Filter()
-        {
-            ConsoleAddIn.PushContext(Context.GetContext<FilterContext>(Server, Session));
-        }
-
-        [Description("設定を行うコンテキストに切り替えます")]
-        public void Config()
-        {
-            ConsoleAddIn.PushContext(Context.GetContext<ConfigContext>(Server, Session));
-        }
-
-        [Description("グループの設定を行うコンテキストに切り替えます")]
-        public void Group()
-        {
-            ConsoleAddIn.PushContext(Context.GetContext<GroupContext>(Server, Session));
-        }
-
         //
         [Browsable(false)]
         private void FollowOrRemove(Boolean follow, String[] screenNames)
@@ -183,6 +168,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     /// <summary>
     /// 
     /// </summary>
+    [Description("フィルタの設定を行うコンテキストに切り替えます")]
     public class FilterContext : Context
     {
         [Description("存在するフィルタをすべて表示します")]
@@ -234,6 +220,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     /// <summary>
     /// 
     /// </summary>
+    [Description("グループの設定を行うコンテキストに切り替えます")]
     public class GroupContext : Context
     {
         [Description("指定したグループ(チャンネル)にユーザを追加します")]
@@ -278,6 +265,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     /// <summary>
     /// 
     /// </summary>
+    [Description("設定を行うコンテキストに切り替えます")]
     public class ConfigContext : Context
     {
         [Description("Search コマンドでの検索時の表示件数を指定します")]
