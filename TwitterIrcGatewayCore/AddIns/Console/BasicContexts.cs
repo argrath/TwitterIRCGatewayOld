@@ -87,7 +87,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             {
                 try
                 {
-                    var retStatuses = Session.TwitterService.GetFavoritesByScreenName(screenName, 1);
+                    var retStatuses = Session.TwitterService.GetFavoritesByScreenName(screenName, 1, ConsoleAddIn.Config.FavoritesCount);
                     statuses.AddRange(retStatuses.Status);
                 }
                 catch (TwitterServiceException te)
@@ -294,11 +294,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             Session.AddInManager.SaveConfig(ConsoleAddIn.Config);
         }
 
-        [Description("Search コマンドでの検索時のステータスの後ろにURLをつけるかどうかを指定します")]
+        [Description("Timeline, Search, Favorites コマンドでのステータスの後ろにURLをつけるかどうかを指定します")]
         public void ShowPermalinkAfterStatus(Boolean value)
         {
             ConsoleAddIn.Config.ShowPermalinkAfterStatus = value;
             ConsoleAddIn.NotifyMessage("ShowPermalinkAfterStatus = " + value);
+            Session.AddInManager.SaveConfig(ConsoleAddIn.Config);
+        }
+
+        [Description("Favorites コマンドでのステータス取得時の表示件数を指定します")]
+        public void FavoritesCount(Int32 value)
+        {
+            ConsoleAddIn.Config.FavoritesCount = value;
+            ConsoleAddIn.NotifyMessage("FavoritesCount = " + value);
             Session.AddInManager.SaveConfig(ConsoleAddIn.Config);
         }
     }
