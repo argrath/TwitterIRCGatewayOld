@@ -43,8 +43,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     if (ConsoleAddIn.Config.ShowPermalinkAfterStatus)
                         sb.Append(" ").Append(link);
 
-                    Session.Send(new NoticeMessage(ConsoleAddIn.ConsoleChannelName, sb.ToString()) { SenderHost = Server.ServerName, SenderNick = screenName });
-
+                    ConsoleAddIn.NotifyMessage(screenName, sb.ToString());
                 }
             }
             catch (WebException we)
@@ -77,11 +76,33 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 }
             }
 
-            statuses.Sort((a, b) => ((a.Id == b.Id) ? 0 : ((a.Id > b.Id) ? 1 : -1)));
-            foreach (var status in statuses)
+            ShowStatuses(statuses);
+        }
+
+        [Description("指定したユーザの Favorites を取得します")]
+        public void Favorites(params String[] screenNames)
+        {
+            List<Status> statuses = new List<Status>();
+            foreach (var screenName in screenNames)
             {
-                Session.Send(new NoticeMessage(ConsoleAddIn.ConsoleChannelName, String.Format("{0}: {1}", status.CreatedAt.ToString("HH:mm"), status.Text)) { SenderHost = Server.ServerName, SenderNick = status.User.ScreenName });
+                try
+                {
+                    var retStatuses = Session.TwitterService.GetFavoritesByScreenName(screenName, 1);
+                    statuses.AddRange(retStatuses.Status);
+                }
+                catch (TwitterServiceException te)
+                {
+                    ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} の Favorites を取得中にエラーが発生しました:", screenName));
+                    ConsoleAddIn.NotifyMessage(te.Message);
+                }
+                catch (WebException we)
+                {
+                    ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} の Favorites を取得中にエラーが発生しました:", screenName));
+                    ConsoleAddIn.NotifyMessage(we.Message);
+                }
             }
+
+            ShowStatuses(statuses);
         }
 
         [Description("指定したユーザを follow します")]
@@ -139,6 +160,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} を {1} する際にエラーが発生しました:", screenName, action));
                     ConsoleAddIn.NotifyMessage(we.Message);
                 }
+            }
+        }
+
+        private void ShowStatuses(List<Status> statuses)
+        {
+            statuses.Sort((a, b) => ((a.Id == b.Id) ? 0 : ((a.Id > b.Id) ? 1 : -1)));
+            foreach (var status in statuses)
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.AppendFormat("{0}: {1}", status.CreatedAt.ToString("HH:mm"), status.Text);
+                if (ConsoleAddIn.Config.ShowPermalinkAfterStatus)
+                    sb.AppendFormat(" http://twitter.com/{0}/status/{1}", status.User.ScreenName, status.Id);
+
+                ConsoleAddIn.NotifyMessage(status.User.ScreenName, sb.ToString());
             }
         }
     }

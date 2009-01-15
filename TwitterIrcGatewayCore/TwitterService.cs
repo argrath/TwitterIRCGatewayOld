@@ -394,6 +394,42 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// 指定したユーザの favorites を取得します。
+        /// </summary>
+        /// <param name="screenName">スクリーンネーム</param>
+        /// <param name="page">ページ</param>
+        /// <exception cref="WebException"></exception>
+        /// <exception cref="TwitterServiceException"></exception>
+        public Statuses GetFavoritesByScreenName(String screenName, Int32 page)
+        {
+            return ExecuteRequest<Statuses>(() =>
+            {
+                StringBuilder sb = new StringBuilder();
+                if (page > 0)
+                    sb.Append("page=").Append(page).Append("&");
+
+                String responseBody = GET(String.Format("/favorites/{0}.xml?{1}", screenName, sb.ToString()));
+                Statuses statuses;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    statuses = new Statuses();
+                    statuses.Status = new Status[0];
+                }
+                else
+                {
+                    statuses = Statuses.Serializer.Deserialize(new StringReader(responseBody)) as Statuses;
+                    if (statuses == null || statuses.Status == null)
+                    {
+                        statuses = new Statuses();
+                        statuses.Status = new Status[0];
+                    }
+                }
+
+                return statuses;
+            });
+        }
+        
+        /// <summary>
         /// メッセージをfavoritesに追加します。
         /// </summary>
         /// <param name="id"></param>

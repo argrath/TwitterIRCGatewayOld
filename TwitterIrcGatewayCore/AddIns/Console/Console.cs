@@ -26,6 +26,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             Config = Session.AddInManager.GetConfig<GeneralConfig>();
         }
 
+        /// <summary>
+        /// IRCメッセージを受け取ってTIG本体に処理が渡る前の処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void Session_PreMessageReceived(object sender, MessageReceivedEventArgs e)
         {
             PrivMsgMessage privMsg = e.Message as PrivMsgMessage;
@@ -38,12 +43,21 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             e.Cancel = true;
         }
         
+        /// <summary>
+        /// IRCメッセージを受け取ってTIG本体が処理を終えた後の処理
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         void Session_PostMessageReceived(object sender, MessageReceivedEventArgs e)
         {
             JoinMessage joinMsg = e.Message as JoinMessage;
             if (joinMsg == null || String.Compare(joinMsg.Channel, ConsoleChannelName, true) != 0)
                 return;
             
+            // ここに来るのは初回#Consoleを作成してJOINしたときのみ。
+            // 二回目以降はサーバ側がJOINを送り出すのでこない。
+
+            // IsSpecial を True にすることでチャンネルにタイムラインが流れないようにする
             Session.Groups[ConsoleChannelName].IsSpecial = true;
 
             ShowCommandsAsUsers();
@@ -111,19 +125,28 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         /// <summary>
-        /// クライアントにメッセージをNOTICEで送信します。
+        /// クライアントにメッセージをコンテキスト名からのNOTICEで送信します。
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">メッセージ</param>
         public void NotifyMessage(String message)
         {
             StringBuilder sb = new StringBuilder();
             foreach (Context ctx in ContextStack)
                 sb.Append(ctx.GetType().Name.Replace("Context", "")).Append(@"\");
-            
+
             sb.Append(CurrentContext.GetType().Name.Replace("Context", ""));
 
+            NotifyMessage(sb.ToString(), message);
+        }
+        /// <summary>
+        /// クライアントにメッセージをNOTICEで送信します。
+        /// </summary>
+        /// <param name="senderNick">送信者のニックネーム</param>
+        /// <param name="message">メッセージ</param>
+        public void NotifyMessage(String senderNick, String message)
+        {
             Session.Send(new NoticeMessage(ConsoleChannelName, message)
-                             {SenderHost = "twitter@" + Server.ServerName, SenderNick = sb.ToString()});
+                             {SenderHost = "twitter@" + Server.ServerName, SenderNick = senderNick});
         }
 
         /// <summary>
