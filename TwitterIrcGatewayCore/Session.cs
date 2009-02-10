@@ -1275,7 +1275,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             });
         }
 
-        private void ProcessTimelineStatus (Status status, ref Boolean friendsCheckRequired)
+        public void ProcessTimelineStatus (Status status, ref Boolean friendsCheckRequired)
         {
             TimelineStatusEventArgs eventArgs = new TimelineStatusEventArgs(status, status.Text, "PRIVMSG");
             if (!FireEvent(PreProcessTimelineStatus, eventArgs)) return;

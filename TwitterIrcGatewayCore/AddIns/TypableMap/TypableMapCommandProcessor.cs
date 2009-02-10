@@ -76,7 +76,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
             foreach (var key in _commands.Keys)
                 keys.Add(Regex.Escape(key));
 
-            _matchRE = new Regex(@"^\s*(?<cmd>" + (String.Join("|", keys.ToArray())) + @")\s+(?<tid>([aiueokgsztdnhbpmyrwjvlq][aiueo])+)(\s*|\s+(?<args>.*))$", RegexOptions.IgnoreCase);
+            //_matchRE = new Regex(@"^\s*(?<cmd>" + (String.Join("|", keys.ToArray())) + @")\s+(?<tid>([aiueokgsztdnhbpmyrwjvlq][aiueo])+)(\s*|\s+(?<args>.*))$", RegexOptions.IgnoreCase);
+            _matchRE = new Regex(@"^\s*(?<cmd>" + (String.Join("|", keys.ToArray())) + @")\s+(?<tid>[^\s]+)(\s*|\s+(?<args>.*))$", RegexOptions.IgnoreCase);
         }
 
         public Boolean Process(PrivMsgMessage message)
@@ -90,9 +91,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                 Status status;
                 if (TypableMap.TryGetValue(m.Groups["tid"].Value, out status))
                 {
-                    return _commands[m.Groups["cmd"].Value].Process(this, message, status, m.Groups["args"].Value);
+                    _commands[m.Groups["cmd"].Value].Process(this, message, status, m.Groups["args"].Value);
                 }
+                else
+                {
+                    Session.SendServer(new NoticeMessage
+                    {
+                        Receiver = message.Receiver,
+                        Content = "エラー: 指定された TypableMap の ID は存在しません。"
+                    });
+                }
+                return true; // 握りつぶす
             }
+
             return false;
         }
 
@@ -203,7 +214,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                 processor.Session.RunCheck(() =>
                                                {
                                                    String replyMsg = String.Format("@{0} {1}", status.User.ScreenName, args);
-                                                   processor.Session.TwitterService.UpdateStatus(replyMsg, status.Id);
+                                                   Status updatedStatus = processor.Session.TwitterService.UpdateStatus(replyMsg, status.Id);
+                                                   processor.Session.TwitterService.ProcessStatus(updatedStatus, (s) =>
+                                                                                                                     {
+                                                                                                                         Boolean requireFriendsUpdate = false;
+                                                                                                                         processor.Session.ProcessTimelineStatus(s, ref requireFriendsUpdate);
+                                                                                                                     });
+                                                   
                                                });
                 return true;
             }
