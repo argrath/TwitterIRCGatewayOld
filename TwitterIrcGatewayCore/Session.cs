@@ -1065,7 +1065,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #region Twitter Service イベント
         void twitter_CheckError(object sender, ErrorEventArgs e)
         {
-            if (e.Exception.InnerException != null && e.Exception.InnerException is XmlException)
+            if (e.Exception.InnerException != null && e.Exception.InnerException is InvalidOperationException)
             {
                 Trace.WriteLine("XMLエラー: " + e.Exception.Message);
             }
