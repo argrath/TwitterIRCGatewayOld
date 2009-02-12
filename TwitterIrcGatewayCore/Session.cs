@@ -1361,9 +1361,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     // 4: no members in channel(self only) || match regex (StartsWith: "|")
                     if (isMessageFromSelf || (isOrMatch ? (isExistsInChannelOrNoMembers || isMatched) : (isExistsInChannelOrNoMembers && isMatched)))
                     {
-                        if (_isFirstTime)
+                        if (_isFirstTime || (isMessageFromSelf && _server.BroadcastUpdateMessageIsNotice))
                         {
-                            // 初回はNOTICE
+                            // 初回または自分からのメッセージでBroadcastUpdateMessageIsNoticeがTrueのときはNOTICE
                             Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", group.Name, String.Format("{0}: {1}", status.CreatedAt.ToString("HH:mm"), line)));
                         }
                         else
