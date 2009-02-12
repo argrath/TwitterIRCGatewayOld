@@ -1065,7 +1065,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #region Twitter Service イベント
         void twitter_CheckError(object sender, ErrorEventArgs e)
         {
-            SendServerErrorMessage(e.Exception.Message);
+            if (e.Exception.InnerException != null && e.Exception.InnerException is XmlException)
+            {
+                Trace.WriteLine("XMLエラー: " + e.Exception.Message);
+            }
+            else
+            {
+                SendServerErrorMessage(e.Exception.Message);
+            }
         }
 
         void twitter_DirectMessageReceived(object sender, DirectMessageEventArgs e)
@@ -1237,7 +1244,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 User[] friends = _twitter.GetFriends(10);
                 _nickNames = new List<string>(Array.ConvertAll<User, String>(friends, u => u.ScreenName));
 
-                SendNumericReply(NumericReply.RPL_NAMREPLY, "=", _server.ChannelName, String.Join(" ", _nickNames.ToArray()));
+                for (var i = 0; i < ((_nickNames.Count / 100) + 1); i++)
+                {
+                    Int32 count = Math.Min(_nickNames.Count - (i*100), 100);
+                    SendNumericReply(NumericReply.RPL_NAMREPLY, "=", _server.ChannelName, String.Join(" ", _nickNames.GetRange(i * 100, count).ToArray()));
+                }
                 SendNumericReply(NumericReply.RPL_ENDOFNAMES, _server.ChannelName, "End of NAMES list");
             });
         }
