@@ -1328,7 +1328,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
     }
 
-    [XmlRoot("nil-classes")]
+    [XmlRoot("nilclasses")]
     public class NilClasses
     {
         private static Object _syncObject = new object();
