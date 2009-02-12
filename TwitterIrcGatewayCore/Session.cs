@@ -1234,7 +1234,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             RunCheck(delegate
             {
-                User[] friends = _twitter.GetFriends();
+                User[] friends = _twitter.GetFriends(10);
                 _nickNames = new List<string>(Array.ConvertAll<User, String>(friends, u => u.ScreenName));
 
                 SendNumericReply(NumericReply.RPL_NAMREPLY, "=", _server.ChannelName, String.Join(" ", _nickNames.ToArray()));

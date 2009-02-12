@@ -231,11 +231,21 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <exception cref="TwitterServiceException"></exception>
         public User[] GetFriends()
         {
+            return GetFriends(1);
+        }
+
+        /// <summary>
+        /// friendsを取得します。
+        /// </summary>
+        /// <exception cref="WebException"></exception>
+        /// <exception cref="TwitterServiceException"></exception>
+        public User[] GetFriends(Int32 maxPage)
+        {
             List<User> usersList = new List<User>();
             Int32 page = 0;
             return ExecuteRequest<User[]>(() =>
             {
-                while (page++ != 1 /*10*/)
+                while (page++ != maxPage)
                 {
                     String responseBody = GET(String.Format("/statuses/friends.xml?page={0}&lite=true", page));
                     if (NilClasses.CanDeserialize(responseBody))
@@ -245,13 +255,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     else
                     {
                         Users users = Users.Serializer.Deserialize(new StringReader(responseBody)) as Users;
-                        if (users == null || users.User == null)
+                        if (users == null || users.User == null || users.User.Length == 0)
                         {
                             return usersList.ToArray();
                         }
                         else
                         {
                             usersList.AddRange(users.User);
+                            if (users.User.Length < 100)
+                                break;
                         }
                     }
                 }
