@@ -44,6 +44,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private String _username;
         private String _password;
         private String _nick;
+        private User _twitterUser;
         
         #region Events
         public event EventHandler<MessageReceivedEventArgs> PreMessageReceived;
@@ -176,6 +177,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public String UserConfigDirectory
         {
             get { return Path.Combine(ConfigBasePath, _username); }
+        }
+
+        /// <summary>
+        /// 接続に利用しているTwitterのアカウントのユーザ情報
+        /// </summary>
+        public User TwitterUser
+        {
+            get { return _twitterUser; }
         }
         
         /// <summary>
@@ -1089,6 +1098,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 CheckFriends();
             }
+
+            // IRC接続のUSER メッセージがきたときに処理して認証に失敗してたら切断とかしたいが、
+            // サーバが落ちている時のことを考えると残念な感じなのでここで適当に何とかする
+            if (_twitterUser == null)
+            {
+                RunCheck(() =>
+                             {
+                                 Trace.WriteLine("VerifyCredential");
+                                 _twitterUser = _twitter.VerifyCredential();
+                             });
+            }
             
             Boolean friendsCheckRequired = e.FriendsCheckRequired;
             foreach (Status status in e.Statuses.Status)
@@ -1332,13 +1352,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     Boolean isOrMatch = String.IsNullOrEmpty(group.Topic) ? false : group.Topic.StartsWith("|");
                     Boolean isMatched = String.IsNullOrEmpty(group.Topic) ? true : Regex.IsMatch(line, (isOrMatch ? group.Topic.Substring(1) : group.Topic));
                     Boolean isExistsInChannelOrNoMembers = (group.Exists(status.User.ScreenName) || group.Members.Count == 0);
+                    Boolean isMessageFromSelf = (_twitterUser != null) ? (status.User.Id == _twitterUser.Id && !group.IgnoreEchoBack) : false;
 
-                    // 0: self
+                    // 0: self && !IgnoreEchoback
                     // 1: member exists in channel && match regex
                     // 2: no members in channel(self only) && match regex
                     // 3: member exists in channel || match regex (StartsWith: "|")
                     // 4: no members in channel(self only) || match regex (StartsWith: "|")
-                    if (isOrMatch ? (isExistsInChannelOrNoMembers || isMatched) : (isExistsInChannelOrNoMembers && isMatched))
+                    if (isMessageFromSelf || (isOrMatch ? (isExistsInChannelOrNoMembers || isMatched) : (isExistsInChannelOrNoMembers && isMatched)))
                     {
                         if (_isFirstTime)
                         {

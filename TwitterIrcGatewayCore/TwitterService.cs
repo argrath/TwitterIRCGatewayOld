@@ -156,6 +156,28 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// 認証情報を問い合わせます。
+        /// </summary>
+        /// <return cref="User">ユーザー情報</returns>
+        /// <exception cref="WebException"></exception>
+        /// <exception cref="TwitterServiceException"></exception>
+        public User VerifyCredential()
+        {
+            return ExecuteRequest<User>(() =>
+            {
+                String responseBody = GET("/account/verify_credentials.xml", false);
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    User user = User.Serializer.Deserialize(new StringReader(responseBody)) as User;
+                    return user;
+                }
+            });
+        }
+        /// <summary>
         /// ステータスを更新します。
         /// </summary>
         /// <param name="message"></param>
