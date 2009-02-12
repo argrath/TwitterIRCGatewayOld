@@ -1107,6 +1107,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                              {
                                  Trace.WriteLine("VerifyCredential");
                                  _twitterUser = _twitter.VerifyCredential();
+                                 Trace.WriteLine(String.Format("User: Id={0}, ScreenName={1}, Name={2}", _twitterUser.Id, _twitterUser.ScreenName, _twitterUser.Name));
                              });
             }
             
