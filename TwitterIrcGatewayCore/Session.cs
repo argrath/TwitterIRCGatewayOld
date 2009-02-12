@@ -1372,10 +1372,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     // 4: no members in channel(self only) || match regex (StartsWith: "|")
                     if (isMessageFromSelf || (isOrMatch ? (isExistsInChannelOrNoMembers || isMatched) : (isExistsInChannelOrNoMembers && isMatched)))
                     {
-                        if (_isFirstTime || (isMessageFromSelf && _server.BroadcastUpdateMessageIsNotice))
+                        if (_isFirstTime)
                         {
-                            // 初回または自分からのメッセージでBroadcastUpdateMessageIsNoticeがTrueのときはNOTICE
+                            // 初回のときはNOTICE+時間
                             Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", group.Name, String.Format("{0}: {1}", status.CreatedAt.ToString("HH:mm"), line)));
+                        }
+                        else if (isMessageFromSelf && _server.BroadcastUpdateMessageIsNotice)
+                        {
+                            // 自分からのメッセージでBroadcastUpdateMessageIsNoticeがTrueのときはNOTICE
+                            Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", group.Name, line));
                         }
                         else
                         {
