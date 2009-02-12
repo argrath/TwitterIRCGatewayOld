@@ -12,11 +12,25 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         public override void Initialize()
         {
             Session.PreSendUpdateStatus += new EventHandler<StatusUpdateEventArgs>(Session_PreSendUpdateStatus);
-            Session.PostFilterProcessTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PostFilterProcessTimelineStatus);
+            Session.PreSendMessageTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PreSendMessageTimelineStatus);
             Session.ConfigChanged += new EventHandler<EventArgs>(Session_ConfigChanged);
 
             if (Session.Config.EnableTypableMap)
                 _typableMapCommands = new TypableMapCommandProcessor(Session.TwitterService, Session, Session.Config.TypableMapKeySize);
+        }
+
+        void Session_PreSendMessageTimelineStatus(object sender, TimelineStatusEventArgs e)
+        {
+            // TypableMap
+            if (Session.Config.EnableTypableMap)
+            {
+                String typableMapId = _typableMapCommands.TypableMap.Add(e.Status);
+                // TypableMapKeyColorNumber = -1 の場合には色がつかなくなる
+                if (Session.Config.TypableMapKeyColorNumber < 0)
+                    e.Text = String.Format("{0} ({1})", e.Text, typableMapId);
+                else
+                    e.Text = String.Format("{0} \x0003{1}({2})", e.Text, Session.Config.TypableMapKeyColorNumber, typableMapId);
+            }
         }
 
         void Session_PreSendUpdateStatus(object sender, StatusUpdateEventArgs e)
@@ -44,20 +58,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
             else
             {
                 _typableMapCommands = null;
-            }
-        }
-
-        void Session_PostFilterProcessTimelineStatus(object sender, TimelineStatusEventArgs e)
-        {
-            // TypableMap
-            if (Session.Config.EnableTypableMap)
-            {
-                String typableMapId = _typableMapCommands.TypableMap.Add(e.Status);
-                // TypableMapKeyColorNumber = -1 の場合には色がつかなくなる
-                if (Session.Config.TypableMapKeyColorNumber < 0)
-                    e.Text = String.Format("{0} ({1})", e.Text, typableMapId);
-                else
-                    e.Text = String.Format("{0} \x0003{1}({2})", e.Text, Session.Config.TypableMapKeyColorNumber, typableMapId);
             }
         }
     }
