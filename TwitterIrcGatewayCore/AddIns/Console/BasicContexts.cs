@@ -30,6 +30,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
                 XmlNodeList entries = xmlDoc.SelectNodes("//a:entry", nsMgr);
 
+                if (entries.Count == 0)
+                {
+                    ConsoleAddIn.NotifyMessage("検索結果は見つかりませんでした。");
+                    return;
+                }
+
                 for (var i = (Math.Min(entries.Count, ConsoleAddIn.Config.SearchCount)); i > 0; i--)
                 {
                     // 後ろから取っていく
