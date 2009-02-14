@@ -12,11 +12,26 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
             Session.AddInsLoadCompleted += (sender, e) =>
                                                {
                                                    TypableMapCommandProcessor typableMapCmd = Session.AddInManager.GetAddIn<TypableMapSupport>().TypableMapCommands;
-                                                   typableMapCmd.AddCommand(new BlockCommand());
-                                                   typableMapCmd.AddCommand(new UnblockCommand());
-                                                   typableMapCmd.AddCommand(new RemoveCommand());
-                                                   typableMapCmd.AddCommand(new FollowCommand());
+                                                   if (typableMapCmd != null)
+                                                   {
+                                                       typableMapCmd.AddCommand(new BlockCommand());
+                                                       typableMapCmd.AddCommand(new UnblockCommand());
+                                                       typableMapCmd.AddCommand(new RemoveCommand());
+                                                       typableMapCmd.AddCommand(new FollowCommand());
+                                                   }
                                                };
+            Session.ConfigChanged += (sender, e) =>
+                                         {
+                                             // 手抜き
+                                             TypableMapCommandProcessor typableMapCmd = Session.AddInManager.GetAddIn<TypableMapSupport>().TypableMapCommands;
+                                             if (typableMapCmd != null)
+                                             {
+                                                 typableMapCmd.AddCommand(new BlockCommand());
+                                                 typableMapCmd.AddCommand(new UnblockCommand());
+                                                 typableMapCmd.AddCommand(new RemoveCommand());
+                                                 typableMapCmd.AddCommand(new FollowCommand());
+                                             }
+                                         };
         }
     }
 
