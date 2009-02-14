@@ -8,6 +8,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
     class TypableMapSupport : AddInBase
     {
         private TypableMapCommandProcessor _typableMapCommands;
+        public TypableMapCommandProcessor TypableMapCommands { get { return _typableMapCommands; } }
         
         public override void Initialize()
         {
