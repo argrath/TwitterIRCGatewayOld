@@ -5,7 +5,7 @@ using Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 {
-    class TypableMapSupport : AddInBase
+    public class TypableMapSupport : AddInBase
     {
         private TypableMapCommandProcessor _typableMapCommands;
         public TypableMapCommandProcessor TypableMapCommands { get { return _typableMapCommands; } }

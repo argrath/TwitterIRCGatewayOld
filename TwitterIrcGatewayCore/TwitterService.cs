@@ -552,6 +552,50 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
             });
         }
+
+        /// <summary>
+        /// ユーザをblockします。
+        /// </summary>
+        /// <param name="screenName"></param>
+        /// <returns></returns>
+        public User CreateBlock(String screenName)
+        {
+            return ExecuteRequest<User>(() =>
+            {
+                String responseBody = POST(String.Format("/blocks/create/{0}.xml", screenName), new byte[0]);
+                Status status;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    return User.Serializer.Deserialize(new StringReader(responseBody)) as User;
+                }
+            });
+        }
+
+        /// <summary>
+        /// ユーザへのblockを解除します。
+        /// </summary>
+        /// <param name="screenName"></param>
+        /// <returns></returns>
+        public User DestroyBlock(String screenName)
+        {
+            return ExecuteRequest<User>(() =>
+            {
+                String responseBody = POST(String.Format("/blocks/destroy/{0}.xml", screenName), new byte[0]);
+                Status status;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    return User.Serializer.Deserialize(new StringReader(responseBody)) as User;
+                }
+            });
+        }
         #region 内部タイマーイベント
         /// <summary>
         /// Twitter のタイムラインの受信を開始します。
