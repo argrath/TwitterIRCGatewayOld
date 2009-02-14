@@ -32,6 +32,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             RegisterContext<ConfigContext>();
             RegisterContext<FilterContext>();
             RegisterContext<GroupContext>();
+            RegisterContext<SystemContext>();
         }
 
         /// <summary>

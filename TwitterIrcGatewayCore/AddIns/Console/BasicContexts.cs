@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using Misuzilla.Applications.TwitterIrcGateway.Filter;
 using Misuzilla.Net.Irc;
+using System.Reflection;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {
@@ -304,6 +306,53 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             ConsoleAddIn.Config.FavoritesCount = value;
             ConsoleAddIn.NotifyMessage("FavoritesCount = " + value);
             Session.AddInManager.SaveConfig(ConsoleAddIn.Config);
+        }
+    }
+
+    [Description("システムに関連するコンテキストに切り替えます")]
+    public class SystemContext : Context
+    {
+        [Description("バージョン情報を表示します")]
+        public void Version()
+        {
+            Assembly asm = typeof (Server).Assembly;
+            AssemblyName asmName = asm.GetName();
+            ConsoleAddIn.NotifyMessage(String.Format("TwitterIrcGateway {0}", asmName.Version));
+        }
+
+        [Description("システム情報を表示します")]
+        public void ShowInfo()
+        {
+            Assembly asm = typeof(Server).Assembly;
+            AssemblyName asmName = asm.GetName();
+
+            ConsoleAddIn.NotifyMessage("[Core]");
+            ConsoleAddIn.NotifyMessage(String.Format("TwitterIrcGateway {0}", asmName.Version));
+            ConsoleAddIn.NotifyMessage(String.Format("Location: {0}", asm.Location));
+            ConsoleAddIn.NotifyMessage(String.Format("BaseDirectory: {0}", Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
+
+            ConsoleAddIn.NotifyMessage("[System]");
+            ConsoleAddIn.NotifyMessage(String.Format("Operating System: {0}", Environment.OSVersion));
+            ConsoleAddIn.NotifyMessage(String.Format("Runtime Version: {0}", Environment.Version));
+
+            ConsoleAddIn.NotifyMessage("[Session]");
+            ConsoleAddIn.NotifyMessage(String.Format("ConfigDirectory: {0}", Session.UserConfigDirectory));
+            if (Session.TwitterUser != null)
+            {
+                ConsoleAddIn.NotifyMessage(String.Format("TwitterUser: {0} ({1})", Session.TwitterUser.ScreenName,
+                                                         Session.TwitterUser.Id));
+            }
+
+            ConsoleAddIn.NotifyMessage("[AddIns]");
+            foreach (IAddIn addIn in Session.AddInManager.AddIns)
+            {
+                Assembly addinAsm = addIn.GetType().Assembly;
+                if (addinAsm != asm)
+                {
+                    ConsoleAddIn.NotifyMessage(String.Format("{0} {1}", addIn.GetType().FullName,
+                                                             addinAsm.GetName().Version));
+                }
+            }
         }
     }
 }

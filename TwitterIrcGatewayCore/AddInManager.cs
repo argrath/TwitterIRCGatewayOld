@@ -16,7 +16,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private List<Type> _configurationTypes = new List<Type>();
         private XmlSerializer _xmlSerializer;
         private Session _session;
-        
+
+        public ICollection<IAddIn> AddIns { get { return _addIns.AsReadOnly(); } }
+
         /// <summary>
         /// 
         /// </summary>
