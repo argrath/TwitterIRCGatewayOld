@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 {
     class RemoveRedundantSuffix : AddInBase
     {
+        private static readonly Regex _suffixMatchRE = new Regex(@"^(\s*(\(.{2,}\)|\【.{2,}\】|\[.{2,}\]|\*.{2,}\*|lang:ja)+)$");
         private Dictionary<Int32, LinkedList<String>> _lastStatusFromFriends;
         
         public override void Initialize()
@@ -40,7 +42,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                     _lastStatusFromFriends[e.Status.User.Id] = new LinkedList<string>();
                 }
                 LinkedList<String> lastStatusTextsByUId = _lastStatusFromFriends[e.Status.User.Id];
-                String suffix = Utility.DetectRedundantSuffix(e.Text, lastStatusTextsByUId);
+                String suffix = DetectRedundantSuffix(e.Text, lastStatusTextsByUId);
                 lastStatusTextsByUId.AddLast(e.Text);
                 if (lastStatusTextsByUId.Count > 5)
                 {
@@ -53,5 +55,37 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                 }
             }
         }
+
+        /// <summary>
+        /// 重複した末尾の文字列を取得します。
+        /// </summary>
+        /// <param name="text">対象の文字列</param>
+        /// <param name="hintTexts">ヒントとなる文字列のコレクション</param>
+        /// <returns></returns>
+        public static String DetectRedundantSuffix(String text, ICollection<String> hintTexts)
+        {
+            String redundantSuffix = null;
+            String a1 = text;
+            foreach (var a2 in hintTexts)
+            {
+                for (var i = 0; i < a1.Length; i++)
+                {
+                    var pos = a2.LastIndexOf(a1.Substring(i));
+                    if (pos > -1)
+                    {
+                        var suffix = a1.Substring(i);
+                        var matches = _suffixMatchRE.Matches(suffix);
+                        if (matches.Count > 0)
+                        {
+                            redundantSuffix = a1 = suffix;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return redundantSuffix;
+        }
+
     }
 }

@@ -14,37 +14,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             InitializeCharEntityReferenceTable();
         }
-        
-        /// <summary>
-        /// 重複した末尾の文字列を取得します。
-        /// </summary>
-        /// <param name="text">対象の文字列</param>
-        /// <param name="hintTexts">ヒントとなる文字列のコレクション</param>
-        /// <returns></returns>
-        public static String DetectRedundantSuffix(String text, ICollection<String> hintTexts)
-        {
-            String redundantSuffix = null;
-            String a1 = text;
-            foreach (var a2 in hintTexts)
-            {
-                for (var i = 0; i < a1.Length; i++)
-                {
-                    var pos = a2.LastIndexOf(a1.Substring(i));
-                    if (pos > -1)
-                    {
-                        var suffix = a1.Substring(i);
-                        var matches = Regex.Matches(suffix, @"^(\s*(\(.{2,}\)|\[.{2,}\]|\*.{2,}\*|lang:ja)+)$");
-                        if (matches.Count > 0)
-                        {
-                            redundantSuffix = a1 = suffix;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return redundantSuffix;
-        }
 
         /// <summary>
         /// 日付の文字列をDateTime型に変換します。
