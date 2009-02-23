@@ -8,7 +8,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 {
     class RemoveRedundantSuffix : AddInBase
     {
-        private static readonly Regex _suffixMatchRE = new Regex(@"^(\s*(\(.{2,}\)|\【.{2,}\】|\[.{2,}\]|\*.{2,}\*|lang:ja)+)$");
+        private static readonly Regex _suffixMatchRE = new Regex(@"^(\s*(\(.{2,}\)|\《.{2,}\》|\【.{2,}\】|\[.{2,}\]|\*.{2,}\*|lang:ja)+)$");
         private Dictionary<Int32, LinkedList<String>> _lastStatusFromFriends;
         
         public override void Initialize()
