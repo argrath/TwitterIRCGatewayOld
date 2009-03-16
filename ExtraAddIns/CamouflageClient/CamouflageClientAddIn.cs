@@ -45,7 +45,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.CamouflageClient
         [Description("偽装を解除します")]
         public void ResetClientSource()
         {
-            ClientSource(String.Empty);
+            Configuration config = Session.AddInManager.GetConfig<Configuration>();
+            config.ClientSource = String.Empty;
+            ConsoleAddIn.NotifyMessage("ClientSource = " + config.ClientSource);
+            Session.AddInManager.SaveConfig(config);
             Session.AddInManager.GetAddIn<CamouflageClientAddIn>().UpdateClientSource();
         }
     }
