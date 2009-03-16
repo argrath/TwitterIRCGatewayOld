@@ -20,7 +20,7 @@ using Misuzilla.Applications.TwitterIrcGateway.AddIns;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
-    public class Session : IDisposable
+    public class Session : MarshalByRefObject, IDisposable
     {
         private readonly static String ConfigBasePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Configs");
 
@@ -99,7 +99,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _tcpClient = tcpClient;
             _lastStatusIdsFromGateway = new LinkedList<int>();
             
-            _addinManager = new AddInManager();
+            _addinManager = new AddInManager(_server, this);
+            //_addinManager = AddInManager.CreateInstanceWithAppDomain(_server, this);
         }
 
         ~Session()
@@ -209,15 +210,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                             IRCMessage msg = IRCMessage.CreateMessage(line);
                             OnMessageReceived(msg);
                         }
-                        catch (IRCException)
-                        {}
+                        catch (IRCException ircE)
+                        {
+                            Trace.WriteLine(ircE.ToString());
+                        }
                     }
                 }
             }
-            catch (IOException)
-            {}
-            catch (NullReferenceException)
-            {}
+            //catch (IOException)
+            //{}
+            //catch (NullReferenceException)
+            //{}
             finally
             {
                 OnSessionEnded();
@@ -251,7 +254,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 ConnectToIMService(true);
             }
 
-            _addinManager.Load(_server, this);
+            _addinManager.Load();
             FireEvent(AddInsLoadCompleted, EventArgs.Empty);
             
             FireEvent(SessionStarted, new SessionStartedEventArgs(username));

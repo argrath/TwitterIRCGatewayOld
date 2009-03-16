@@ -312,6 +312,88 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     [Description("システムに関連するコンテキストに切り替えます")]
     public class SystemContext : Context
     {
+        [Description("アドインの一覧を表示します")]
+        public void ShowAddIns()
+        {
+            foreach (Type addInType in Session.AddInManager.AddInTypes)
+            {
+                Assembly addinAsm = addInType.Assembly;
+                if (addinAsm == Assembly.GetExecutingAssembly())
+                    continue;
+                
+                ConsoleAddIn.NotifyMessage(String.Format("{0} {1} {2}",
+                                                         addInType.FullName,
+                                                         addinAsm.GetName().Version,
+                                                         (Session.AddInManager.GetAddIn(addInType) == null
+                                                              ? "(Disabled)"
+                                                              : "")
+                                               ));
+            }
+        }
+
+        [Description("アドインを無効にします")]
+        public void DisableAddIn(String addInName)
+        {
+            if (String.IsNullOrEmpty(addInName))
+            {
+                ConsoleAddIn.NotifyMessage("アドインの名前を指定する必要があります。");
+                return;
+            }
+
+            try
+            {
+                Type t = Type.GetType(addInName);
+                if (typeof(IAddIn).IsAssignableFrom(t) && !t.IsAbstract && t.IsClass)
+                {
+                    if (!Session.Config.DisabledAddInsList.Contains(t.FullName))
+                    {
+                        Session.Config.DisabledAddInsList.Add(t.FullName);
+                        Session.SaveConfig();
+                        ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は無効化されました。次回接続時まで設定は反映されません。", t.FullName));
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
+            }
+        }
+
+        [Description("アドインを有効にします")]
+        public void EnableAddIn(String addInName)
+        {
+            if (String.IsNullOrEmpty(addInName))
+            {
+                ConsoleAddIn.NotifyMessage("アドインの名前を指定する必要があります。");
+                return;
+            }
+
+            Type t = Type.GetType(addInName, false, true);
+            if (t != null)
+            {
+                if (typeof(IAddIn).IsAssignableFrom(t) && !t.IsAbstract && t.IsClass)
+                {
+                    if (Session.Config.DisabledAddInsList.Contains(t.FullName))
+                    {
+                        Session.Config.DisabledAddInsList.Remove(t.FullName);
+                        Session.SaveConfig();
+                        ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は有効化されました。次回接続時まで設定は反映されません。", t.FullName));
+                    }
+                }
+            }
+            else
+            {
+                ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
+            }
+        }
+
+        [Description("アドインを再読込します")]
+        [Browsable(false)]
+        public void ReloadAddIns()
+        {
+            Session.AddInManager.RestartAddIns();
+        }
+
         [Description("バージョン情報を表示します")]
         public void Version()
         {

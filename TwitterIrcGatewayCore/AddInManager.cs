@@ -10,27 +10,53 @@ using System.Xml.Serialization;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
-    public class AddInManager
+    public class AddInManager : MarshalByRefObject
     {
-        private List<IAddIn> _addIns = new List<IAddIn>();
-        private List<Type> _configurationTypes = new List<Type>();
+        private List<IAddIn> _addIns;
+        private List<Type> _addInTypes;
+        private List<Type> _configurationTypes;
         private XmlSerializer _xmlSerializer;
         private Session _session;
+        private Server _server;
+        private AppDomain _addInDomain;
 
         public ICollection<IAddIn> AddIns { get { return _addIns.AsReadOnly(); } }
+        public ICollection<Type> AddInTypes { get { return _addInTypes.AsReadOnly(); } }
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="server"></param>
         /// <param name="session"></param>
-        public void Load(Server server, Session session)
+        public AddInManager(Server server, Session session)
         {
             _session = session;
-            
+            _server = server;
+        }
+
+        //public static AddInManager CreateInstanceWithAppDomain(Server server, Session session)
+        //{
+        //    AppDomain addInDomain = AppDomain.CreateDomain("AddInDomain-" + session.GetHashCode());
+        //    AddInManager addInManager = addInDomain.CreateInstanceAndUnwrap(typeof(AddInManager).Assembly.FullName, typeof(AddInManager).FullName, false,
+        //                               BindingFlags.Public | BindingFlags.CreateInstance | BindingFlags.Instance, null, new object[] {server, session}, null, null, null) as AddInManager;
+        //    addInDomain.UnhandledException += (sender, e) => {
+        //        Trace.WriteLine(e.ExceptionObject.ToString());
+        //    };
+        //    return addInManager;
+        //}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Load()
+        {
+            _addInTypes = new List<Type>();
+            _addIns = new List<IAddIn>();
+            _configurationTypes = new List<Type>();
+
             LoadAddInFromAssembly(Assembly.GetExecutingAssembly());
             
-            String addinsBase = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "AddIns");
+            String addinsBase = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AddIns");
             if (Directory.Exists(addinsBase))
             {
                 foreach (String fileName in Directory.GetFiles(addinsBase, "*.dll"))
@@ -46,10 +72,34 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
             }
 
+            Initialize();
+        }
+
+        public void Initialize()
+        {
+            foreach (Type addInType in _addInTypes)
+            {
+                if (_session.Config.DisabledAddInsList.Contains(addInType.FullName))
+                {
+                    Trace.WriteLine(String.Format("AddIn[Disabled]: {0}", addInType.FullName));
+                    continue;
+                }
+
+                Trace.WriteLine(String.Format("AddIn: {0}", addInType.FullName));
+                _addIns.Add(Activator.CreateInstance(addInType) as IAddIn);
+            }
             _xmlSerializer = new XmlSerializer(typeof(Object), _configurationTypes.ToArray());
 
             foreach (IAddIn addIn in _addIns)
-                addIn.Initialize(server, session);
+                addIn.Initialize(_server, _session);
+        }
+
+        public void Uninitialize()
+        {
+            foreach (IAddIn addIn in _addIns)
+                addIn.Uninitialize();
+
+            _addIns = new List<IAddIn>();
         }
         
         /// <summary>
@@ -134,10 +184,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         catch (XmlException xe)
                         {
                             Trace.WriteLine(xe.Message);
+                            throw;
                         }
                         catch (InvalidOperationException ioe)
                         {
                             Trace.WriteLine(ioe.Message);
+                            throw;
                         }
                     }
                 }
@@ -149,6 +201,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
+        /// <summary>
+        /// 指定した型の設定をリセットします
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void ResetConfig<T>() where T : class, IConfiguration, new()
+        {
+            T newObj = new T();
+            SaveConfig(newObj);
+        }
+        
         /// <summary>
         /// アドインを取得します
         /// </summary>
@@ -173,8 +235,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return GetAddIn(typeof(T)) as T;
         }
-        
-        
+
+        /// <summary>
+        /// アドインを初期化して実行し直します。ファイルからの読み込みは行われません。
+        /// </summary>
+        public void RestartAddIns()
+        {
+            throw new NotImplementedException();
+            Uninitialize();
+            Initialize();
+        }
+
+        #region Helper Methods
+
         private void LoadAddInFromAssembly(Assembly asm)
         {
             Type addinType = typeof(IAddIn);
@@ -183,10 +256,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 if (addinType.IsAssignableFrom(t) && !t.IsAbstract && t.IsClass)
                 {
-                    Trace.WriteLine(String.Format("Load AddIn: {0}", t));
-                    IAddIn addIn = Activator.CreateInstance(t) as IAddIn;
-
-                    _addIns.Add(addIn);
+                    // IAddIn
+                    _addInTypes.Add(t);
                 }
                 else if (configurationType.IsAssignableFrom(t) && !t.IsAbstract && t.IsClass)
                 {
@@ -195,5 +266,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
             }
         }
+
+        #endregion
     }
 }

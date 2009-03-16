@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
-    public class Config
+    public class Config : MarshalByRefObject
     {
         public String IMServiceServerName { get; set; }
         public String IMServerName { get; set; }
@@ -23,6 +23,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public Boolean EnableTrace { get; set; }
 
         public Boolean EnableRemoveRedundantSuffix { get; set; }
+
+        public List<String> DisabledAddInsList { get; set; }
 
         public String GetIMPassword(String key)
         {
@@ -51,6 +53,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             TypableMapKeyColorNumber = 14;
             TypableMapKeySize = 2;
             EnableRemoveRedundantSuffix = false;
+            DisabledAddInsList = new List<string>();
         }
 
         #region XML Serialize

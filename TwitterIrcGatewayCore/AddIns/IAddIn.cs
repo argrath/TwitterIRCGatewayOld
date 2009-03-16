@@ -7,13 +7,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
     public interface IAddIn
     {
         void Initialize(Server server, Session session);
+        void Uninitialize();
     }
 
     public interface IConfiguration
     {
     }
 
-    public abstract class AddInBase : IAddIn
+    public abstract class AddInBase : MarshalByRefObject, IAddIn
     {
         protected Server Server { get; private set; }
         protected Session Session { get; private set; }
@@ -31,6 +32,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         public virtual void Initialize()
         {
         }
+
+        public virtual void Uninitialize()
+        {
+        }
+
         #endregion
     }
 }

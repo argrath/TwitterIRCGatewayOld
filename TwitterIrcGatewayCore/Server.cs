@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
-    public class Server
+    public class Server : MarshalByRefObject
     {
         private TcpListener _tcpListener;
         private List<Session> _sessions;

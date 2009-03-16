@@ -31,13 +31,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Description("コマンドの一覧を表示します")]
         public void Help(String commandName)
         {
-            ConsoleAddIn.NotifyMessage("[Contexts]");
-            foreach (var ctx in this.Contexts)
+            if (this.Contexts.Length > 0)
             {
-                if (IsBrowsable(ctx))
-                    ConsoleAddIn.NotifyMessage(String.Format("{0} - {1}", ctx.Name.Replace("Context", ""), GetDescription(ctx)));
+                ConsoleAddIn.NotifyMessage("[Contexts]");
+                foreach (var ctx in this.Contexts)
+                {
+                    if (IsBrowsable(ctx))
+                        ConsoleAddIn.NotifyMessage(String.Format("{0} - {1}", ctx.Name.Replace("Context", ""),
+                                                                 GetDescription(ctx)));
+                }
             }
-            
+
             ConsoleAddIn.NotifyMessage("[Commands]");
             MethodInfo[] methodInfoArr = this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
             Type t = typeof(Context);
