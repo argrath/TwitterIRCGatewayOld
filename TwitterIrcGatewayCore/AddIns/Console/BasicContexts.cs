@@ -374,24 +374,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 ConsoleAddIn.NotifyMessage("アドインの名前を指定する必要があります。");
                 return;
             }
-
-            try
+            foreach (var t in Session.AddInManager.AddInTypes)
             {
-                Type t = Type.GetType(addInName);
-                if (typeof(IAddIn).IsAssignableFrom(t) && !t.IsAbstract && t.IsClass)
+                if ((String.Compare(t.FullName, addInName, true) == 0) && typeof (IAddIn).IsAssignableFrom(t) &&
+                    !t.IsAbstract && t.IsClass)
                 {
                     if (!Session.Config.DisabledAddInsList.Contains(t.FullName))
                     {
                         Session.Config.DisabledAddInsList.Add(t.FullName);
                         Session.SaveConfig();
-                        ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は無効化されました。次回接続時まで設定は反映されません。", t.FullName));
                     }
+                    ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は無効化されました。次回接続時まで設定は反映されません。", t.FullName));
+                    return;
                 }
             }
-            catch (Exception e)
-            {
-                ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
-            }
+
+            ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
         }
 
         [Description("アドインを有効にします")]
@@ -403,23 +401,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 return;
             }
 
-            Type t = Type.GetType(addInName, false, true);
-            if (t != null)
+            foreach (var t in Session.AddInManager.AddInTypes)
             {
-                if (typeof(IAddIn).IsAssignableFrom(t) && !t.IsAbstract && t.IsClass)
+                if ((String.Compare(t.FullName, addInName, true) == 0) && typeof (IAddIn).IsAssignableFrom(t) && !t.IsAbstract && t.IsClass)
                 {
                     if (Session.Config.DisabledAddInsList.Contains(t.FullName))
                     {
                         Session.Config.DisabledAddInsList.Remove(t.FullName);
                         Session.SaveConfig();
-                        ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は有効化されました。次回接続時まで設定は反映されません。", t.FullName));
                     }
+                    ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は有効化されました。次回接続時まで設定は反映されません。", t.FullName));
+                    return;
                 }
             }
-            else
-            {
-                ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
-            }
+            ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
         }
 
         [Description("アドインを再読込します")]
