@@ -307,6 +307,41 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             ConsoleAddIn.NotifyMessage("FavoritesCount = " + value);
             Session.AddInManager.SaveConfig(ConsoleAddIn.Config);
         }
+
+        #region Core Configurations
+        [Description("冗長な末尾削除を有効化または無効化します")]
+        public void EnableRemoveRedundantSuffix(Boolean value)
+        {
+            Session.Config.EnableRemoveRedundantSuffix = value;
+            ConsoleAddIn.NotifyMessage("EnableRemoveRedundantSuffix = " + value);
+            Session.SaveConfig();
+            Session.OnConfigChanged();
+        }
+        [Description("TypableMapを有効化または無効化します")]
+        public void EnableTypableMap(Boolean value)
+        {
+            Session.Config.EnableTypableMap = value;
+            ConsoleAddIn.NotifyMessage("EnableTypableMap = " + value);
+            Session.SaveConfig();
+            Session.OnConfigChanged();
+        }
+        [Description("TypableMapのキーサイズを変更します")]
+        public void TypableMapKeySize(Int32 value)
+        {
+            Session.Config.TypableMapKeySize = value;
+            ConsoleAddIn.NotifyMessage("TypableMapKeySize = " + value);
+            Session.SaveConfig();
+            Session.OnConfigChanged();
+        }
+        [Description("TypableMapの色番号を変更します")]
+        public void TypableMapKeyColorNumber(Int32 value)
+        {
+            Session.Config.TypableMapKeyColorNumber = value;
+            ConsoleAddIn.NotifyMessage("TypableMapKeyColorNumber = " + value);
+            Session.SaveConfig();
+            Session.OnConfigChanged();
+        }
+        #endregion
     }
 
     [Description("システムに関連するコンテキストに切り替えます")]

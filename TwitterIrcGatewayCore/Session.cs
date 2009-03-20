@@ -268,7 +268,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             FireEvent(SessionEnded, EventArgs.Empty);
         }
-        protected virtual void OnConfigChanged()
+        internal virtual void OnConfigChanged()
         {
             if (ConfigChanged != null)
                 ConfigChanged(this, EventArgs.Empty);
