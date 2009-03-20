@@ -28,29 +28,62 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
         }
 
-        [Description("コマンドの一覧を表示します")]
+        [Description("コマンドの一覧または説明を表示します")]
         public void Help(String commandName)
         {
-            if (this.Contexts.Length > 0)
+            if (String.IsNullOrEmpty(commandName))
             {
-                ConsoleAddIn.NotifyMessage("[Contexts]");
-                foreach (var ctx in this.Contexts)
+                // コマンドの一覧
+                if (this.Contexts.Length > 0)
                 {
-                    if (IsBrowsable(ctx))
-                        ConsoleAddIn.NotifyMessage(String.Format("{0} - {1}", ctx.Name.Replace("Context", ""),
-                                                                 GetDescription(ctx)));
+                    ConsoleAddIn.NotifyMessage("[Contexts]");
+                    foreach (var ctx in this.Contexts)
+                    {
+                        if (IsBrowsable(ctx))
+                            ConsoleAddIn.NotifyMessage(String.Format("{0} - {1}", ctx.Name.Replace("Context", ""),
+                                                                     GetDescription(ctx)));
+                    }
+                }
+
+                ConsoleAddIn.NotifyMessage("[Commands]");
+                MethodInfo[] methodInfoArr = this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
+                Type t = typeof(Context);
+                foreach (var methodInfo in methodInfoArr)
+                {
+                    if (t.IsAssignableFrom(methodInfo.DeclaringType) && !methodInfo.IsConstructor && !methodInfo.IsFinal &&
+                        !methodInfo.IsSpecialName)
+                    {
+                        if (IsBrowsable(methodInfo))
+                            ConsoleAddIn.NotifyMessage(String.Format("{0} - {1}", methodInfo.Name,
+                                                                     GetDescription(methodInfo)));
+                    }
                 }
             }
-
-            ConsoleAddIn.NotifyMessage("[Commands]");
-            MethodInfo[] methodInfoArr = this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
-            Type t = typeof(Context);
-            foreach (var methodInfo in methodInfoArr)
+            else
             {
-                if (t.IsAssignableFrom(methodInfo.DeclaringType) && !methodInfo.IsConstructor && !methodInfo.IsFinal && !methodInfo.IsSpecialName)
+                // コマンドの説明
+                MethodInfo methodInfo = GetCommand(commandName);
+                if (methodInfo == null)
                 {
-                    if (IsBrowsable(methodInfo))
-                        ConsoleAddIn.NotifyMessage(String.Format("{0} - {1}", methodInfo.Name, GetDescription(methodInfo)));
+                    ConsoleAddIn.NotifyMessage("指定された名前はこのコンテキストのコマンドに見つかりません。");
+                    return;
+                }
+
+                String desc = GetDescription(methodInfo);
+                if (!String.IsNullOrEmpty(desc))
+                    ConsoleAddIn.NotifyMessage(desc);
+                
+                ParameterInfo[] paramInfo = methodInfo.GetParameters();
+                if (paramInfo.Length > 0)
+                {
+                    ConsoleAddIn.NotifyMessage("引数:");
+                    foreach (var paramInfoItem in paramInfo)
+                    {
+                        desc = GetDescription(paramInfoItem);
+                        ConsoleAddIn.NotifyMessage(String.Format("- {0}: {1}",
+                                                                 (String.IsNullOrEmpty(desc) ? paramInfoItem.Name : desc),
+                                                                 paramInfoItem.ParameterType));
+                    }
                 }
             }
         }
@@ -62,14 +95,34 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         #region Context Helpers
+
+        /// <summary>
+        /// コマンドを名前で取得します。
+        /// </summary>
+        /// <param name="commandName"></param>
+        [Browsable(false)]
+        public MethodInfo GetCommand(String commandName)
+        {
+            MethodInfo methodInfo = this.GetType().GetMethod(commandName,
+                                                                 BindingFlags.Instance | BindingFlags.Public |
+                                                                 BindingFlags.IgnoreCase);
+
+            if (methodInfo != null &&(methodInfo.IsFinal || methodInfo.IsConstructor || methodInfo.IsSpecialName || IsBrowsable(methodInfo)))
+            {
+                return methodInfo;
+            }
+
+            return null;
+        }
+        
         private Boolean IsBrowsable(Type t)
         {
             Object[] attrs = t.GetCustomAttributes(typeof(BrowsableAttribute), true);
             return !(attrs.Length != 0 && !((BrowsableAttribute)attrs[0]).Browsable);
         }
-        private Boolean IsBrowsable(MethodInfo mi)
+        private Boolean IsBrowsable(ICustomAttributeProvider customAttributeProvider)
         {
-            Object[] attrs = mi.GetCustomAttributes(typeof(BrowsableAttribute), true);
+            Object[] attrs = customAttributeProvider.GetCustomAttributes(typeof(BrowsableAttribute), true);
             return !(attrs.Length != 0 && !((BrowsableAttribute)attrs[0]).Browsable);
         }
         private String GetDescription(Type t)
@@ -77,9 +130,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             Object[] attrs = t.GetCustomAttributes(typeof(DescriptionAttribute), true);
             return (attrs.Length == 0) ? "" : ((DescriptionAttribute)attrs[0]).Description;
         }
-        private String GetDescription(MethodInfo mi)
+        private String GetDescription(ICustomAttributeProvider customAttributeProvider)
         {
-            Object[] attrs = mi.GetCustomAttributes(typeof(DescriptionAttribute), true);
+            Object[] attrs = customAttributeProvider.GetCustomAttributes(typeof(DescriptionAttribute), true);
             return (attrs.Length == 0) ? "" : ((DescriptionAttribute)attrs[0]).Description;
         }
         #endregion

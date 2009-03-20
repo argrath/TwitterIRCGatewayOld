@@ -93,13 +93,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             }
             
             // コマンドを探す
-            MethodInfo methodInfo = CurrentContext.GetType().GetMethod(args[0].Replace(":", ""),
-                                                                         BindingFlags.Instance | BindingFlags.Public |
-                                                                         BindingFlags.IgnoreCase);
-
-            Object[] attrs = (methodInfo == null) ? new object[0] : methodInfo.GetCustomAttributes(typeof(BrowsableAttribute), true);
-
-            if (methodInfo == null || methodInfo.IsFinal || methodInfo.IsConstructor || methodInfo.IsSpecialName || (attrs.Length != 0 && !((BrowsableAttribute)attrs[0]).Browsable))
+            MethodInfo methodInfo = CurrentContext.GetCommand(args[0].Replace(":", ""));
+            if (methodInfo == null)
             {
                 NotifyMessage("指定された名前はこのコンテキストのコマンド、またはサブコンテキストにも見つかりません。");
                 return;
@@ -122,14 +117,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 else
                 {
                     List<Object> convertedArgs = new List<object>();
-                    Int32 i = 1;
-                    foreach (var pi in paramInfo)
+                    for (var i = 0; i < paramInfo.Length && i < (args.Length - 1); i++)
                     {
-                        if (i == args.Length)
-                            break;
+                        var pi = paramInfo[i];
                         
                         TypeConverter typeConv = TypeDescriptor.GetConverter(pi.ParameterType);
-                        convertedArgs.Add(typeConv.ConvertFromString(args[i++]));
+                        if (i == paramInfo.Length-1)
+                        {
+                            // 最後のパラメータ(受け取る引数が2個とかで3つ指定されていたら合体させて押し込む)
+                            convertedArgs.Add(typeConv.ConvertFromString(String.Join(" ", args, i + 1, (args.Length - (i + 1)))));
+                        }
+                        else
+                        {
+                            convertedArgs.Add(typeConv.ConvertFromString(args[i+1]));
+                        }
                     }
                     methodInfo.Invoke(CurrentContext, ((convertedArgs.Count != 0) ? convertedArgs.ToArray() : null));
                 }
@@ -146,6 +147,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 }
             }
         }
+
 
         /// <summary>
         /// クライアントにメッセージをコンテキスト名からのNOTICEで送信します。

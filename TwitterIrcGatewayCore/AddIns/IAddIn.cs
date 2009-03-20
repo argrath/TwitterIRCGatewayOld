@@ -19,12 +19,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         protected Server Server { get; private set; }
         protected Session Session { get; private set; }
         
+        protected EventMangedProxy<Session> SessionProxy;
+        protected EventMangedProxy<Server> ServerProxy;
+        
         #region IAddIn メンバ
 
         public void Initialize(Server server, Session session)
         {
-            Server = server;
-            Session = session;
+            SessionProxy = new EventMangedProxy<Session>(session);
+            ServerProxy = new EventMangedProxy<Server>(server);
+
+            Server = (Server)ServerProxy.GetTransparentProxy();
+            Session = (Session)SessionProxy.GetTransparentProxy();
 
             Initialize();
         }
@@ -35,6 +41,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 
         public virtual void Uninitialize()
         {
+            SessionProxy.RemoveAllEvents();
+            ServerProxy.RemoveAllEvents();
         }
 
         #endregion

@@ -388,7 +388,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         [Description("アドインを再読込します")]
-        [Browsable(false)]
         public void ReloadAddIns()
         {
             Session.AddInManager.RestartAddIns();

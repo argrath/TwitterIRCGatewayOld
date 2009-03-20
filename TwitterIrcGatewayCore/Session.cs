@@ -229,6 +229,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         #region イベント実行メソッド
+        internal virtual void OnAddInsLoadCompleted()
+        {
+            FireEvent(AddInsLoadCompleted, EventArgs.Empty);
+        }
+
         protected virtual void OnMessageReceived(IRCMessage msg)
         {
             Trace.WriteLine(msg.ToString());
@@ -1467,9 +1472,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <returns>キャンセルされた場合にはfalseが返ります。</returns>
         private Boolean FireEvent<TEventArgs>(EventHandler<TEventArgs> hander, TEventArgs e) where TEventArgs:EventArgs
         {
-            if (hander != null)
-                hander(this, e);
-            
+            try
+            {
+                if (hander != null)
+                    hander(this, e);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex.ToString());
+            }
+
             if (e is CancelableEventArgs)
             {
                 return !((e as CancelableEventArgs).Cancel);

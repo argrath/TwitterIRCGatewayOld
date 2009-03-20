@@ -54,6 +54,7 @@
     <Compile Include="AddIns\TypableMapSupport.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="EventArgs.cs" />
+    <Compile Include="EventManagedProxy.cs" />
     <Compile Include="Filter.cs" />
     <Compile Include="Group.cs" />
     <Compile Include="IRCClient\ChannelMode.cs" />

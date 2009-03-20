@@ -241,9 +241,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public void RestartAddIns()
         {
-            throw new NotImplementedException();
             Uninitialize();
             Initialize();
+            
+            _session.OnAddInsLoadCompleted();
         }
 
         #region Helper Methods
