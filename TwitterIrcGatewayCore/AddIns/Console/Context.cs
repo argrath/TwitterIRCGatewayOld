@@ -43,7 +43,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
         #region Context Base Implementation
         [Description("コマンドの一覧または説明を表示します")]
-        public void Help(String commandName)
+        public void Help([Description("コマンド名")]String commandName)
         {
             if (String.IsNullOrEmpty(commandName))
             {
@@ -103,7 +103,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         [Description("設定を表示します")]
-        public void Show(String configName)
+        public void Show([Description("設定項目名(指定しない場合にはすべて表示)")]String configName)
         {
             foreach (var config in Configurations)
             {
@@ -143,7 +143,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
         
         [Description("設定を変更します")]
-        public void Set(String configName, String value)
+        public void Set([Description("設定項目名")]String configName, [Description("設定する値")]String value)
         {
             if (String.IsNullOrEmpty(configName))
             {
