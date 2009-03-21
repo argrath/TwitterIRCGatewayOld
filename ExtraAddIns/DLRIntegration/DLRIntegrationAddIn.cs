@@ -112,7 +112,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                                                                                    }
                                                                                });
         }
-    
+#if DEBUG
         [Description("現在のスクリプトスコープでスクリプトを評価します")]
         public void Eval([Description("言語名またはスクリプトエンジンの名前")]
                          String languageName,
@@ -122,5 +122,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             Object retVal = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>().Eval(languageName, expression);
             ConsoleAddIn.NotifyMessage(retVal == null ? "(null)" : retVal.ToString());
         }
+#endif
     }
 }
