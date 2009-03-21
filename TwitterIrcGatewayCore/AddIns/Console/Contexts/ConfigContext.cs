@@ -22,6 +22,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             {
                 Session.SaveConfig();
                 Session.OnConfigChanged();
+
+                // 取得間隔またはチェックの必要性が変更になったらタイマーを再起動する
+                if (memberInfo.Name.StartsWith("Interval") || memberInfo.Name == "EnableRepliesCheck")
+                {
+                    Session.TwitterService.Stop();
+                    Session.TwitterService.Start();
+                }
             }
         }
     }
