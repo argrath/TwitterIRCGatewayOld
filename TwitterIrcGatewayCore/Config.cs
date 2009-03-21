@@ -33,6 +33,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         [Description("冗長な末尾削除を有効化または無効化します")]
         public Boolean EnableRemoveRedundantSuffix { get; set; }
+        [Description("@で返信した際に最後に受信したステータスに対して返すかどうかを指定します")]
+        public Boolean EnableOldStyleReply { get; set; }
 
         /// <summary>
         /// チェックする間隔
@@ -122,6 +124,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             TypableMapKeySize = 2;
             EnableRemoveRedundantSuffix = false;
             DisabledAddInsList = new List<string>();
+            EnableOldStyleReply = false;
 
             if (Default != null)
             {

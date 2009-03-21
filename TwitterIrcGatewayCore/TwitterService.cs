@@ -713,7 +713,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// ステータスがすでに流されたかどうかをチェックして、流されていない場合に指定されたアクションを実行します。
         /// </summary>
-        /// <param name="status"></param>
+        /// <param name="statuses"></param>
         /// <param name="action"></param>
         public void ProcessStatuses(Statuses statuses, Action<Statuses> action)
         {
@@ -751,7 +751,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// Repliesステータスがすでに流されたかどうかをチェックして、流されていない場合に指定されたアクションを実行します。
         /// </summary>
-        /// <param name="status"></param>
+        /// <param name="statuses"></param>
         /// <param name="action"></param>
         public void ProcessRepliesStatus(Statuses statuses, Action<Statuses> action)
         {
@@ -861,7 +861,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 _isFirstTimeReplies = false;
             });
         }
-
         #endregion
 
         #region イベント

@@ -31,6 +31,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private TwitterService _twitter;
         private TwitterIMService _twitterIm;
         private LinkedList<Int32> _lastStatusIdsFromGateway;
+        private Dictionary<String, Int32> _lastStatusIdsByScreenName;
         private Groups _groups;
         private Filters _filter;
         private Config _config;
@@ -98,6 +99,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _server = server;
             _tcpClient = tcpClient;
             _lastStatusIdsFromGateway = new LinkedList<int>();
+            _lastStatusIdsByScreenName = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
             
             _addinManager = new AddInManager(_server, this);
             //_addinManager = AddInManager.CreateInstanceWithAppDomain(_server, this);
@@ -735,7 +737,21 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 {
                     try
                     {
-                        Status status = _twitter.UpdateStatus(message.Content);
+                        Status status;
+                        // 送信(もし以前のスタイルのReplyが有効の場合には対象のユーザの最後に受信したIDにくっつける)
+                        if (_config.EnableOldStyleReply)
+                        {
+                            Match match = Regex.Match(message.Content, "^@([A-Za-z0-9_]+)");
+                            if (match.Success && _lastStatusIdsByScreenName.ContainsKey(match.Groups[1].Value))
+                                status = _twitter.UpdateStatus(message.Content, _lastStatusIdsByScreenName[match.Groups[1].Value]);
+                            else
+                                status = _twitter.UpdateStatus(message.Content);
+                        }
+                        else
+                        {
+                            status = _twitter.UpdateStatus(message.Content);
+                        }
+                        
                         if (status != null)
                         {
                             Trace.WriteLineIf(status != null, String.Format("Status Update: {0} (ID:{1}, CreatedAt:{2})", status.Text, status.Id.ToString(), status.CreatedAt.ToString()));
@@ -1189,7 +1205,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public void SendTwitterGatewayServerMessage(String message)
         {
             NoticeMessage noticeMsg = new NoticeMessage();
-            noticeMsg.Sender = "";
+            noticeMsg.Sender = "TwitterIrcGateway";
             noticeMsg.Receiver = _nick;
             noticeMsg.Content = message.Replace("\n", " ");
             Send(noticeMsg);
@@ -1317,6 +1333,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (status.User == null || String.IsNullOrEmpty(status.User.ScreenName) || _lastStatusIdsFromGateway.Contains(status.Id))
             {
                 return;
+            }
+            
+            // @だけのReplyにIDをつけるモードがオンの時はStatusのIDを記録する
+            if (_config.EnableOldStyleReply)
+            {
+                _lastStatusIdsByScreenName[status.User.ScreenName] = status.Id;
             }
 
             // friends チェックが必要かどうかを確かめる
