@@ -37,79 +37,79 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public Boolean EnableOldStyleReply { get; set; }
 
         /// <summary>
-        /// チェックする間隔
+        /// チェックする間隔を指定します。
         /// </summary>
-        [Description("チェックする間隔")]
+        [Description("チェックする間隔を指定します。")]
         public Int32 Interval { get; set; }
         /// <summary>
-        /// ダイレクトメッセージをチェックする間隔
+        /// ダイレクトメッセージをチェックする間隔を指定します。
         /// </summary>
-        [Description("ダイレクトメッセージをチェックする間隔")]
+        [Description("ダイレクトメッセージをチェックする間隔を指定します。")]
         public Int32 IntervalDirectMessage { get; set; }
         /// <summary>
-        /// Repliesをチェックするかどうか
+        /// Repliesをチェックするかどうかを指定します。
         /// </summary>
-        [Description("Repliesをチェックするかどうか")]
+        [Description("Repliesをチェックするかどうかを指定します。")]
         public Boolean EnableRepliesCheck { get; set; }
         /// <summary>
-        /// Repliesチェックする間隔
+        /// Repliesチェックする間隔を指定します。
         /// </summary>
-        [Description("Repliesチェックする間隔")]
+        [Description("Repliesチェックする間隔を指定します。")]
         public Int32 IntervalReplies { get; set; }
         /// <summary>
-        /// エラーを無視するかどうか
+        /// エラーを無視するかどうかを指定します。
         /// </summary>
-        [Description("エラーを無視するかどうか")]
+        [Description("エラーを無視するかどうかを指定します。")]
         public Boolean IgnoreWatchError { get; set; }
         /// <summary>
-        /// TinyURLを展開するかどうか
+        /// TinyURLを展開するかどうかを指定します。
         /// </summary>
-        [Description("TinyURLを展開するかどうか")]
+        [Description("TinyURLを展開するかどうかを指定します。")]
         public Boolean ResolveTinyUrl { get; set; }
         /// <summary>
-        /// 取りこぼし防止を利用するかどうか
+        /// 取りこぼし防止を利用するかどうかを指定します。
         /// </summary>
-        [Description("取りこぼし防止を利用するかどうか")]
+        [Description("取りこぼし防止を利用するかどうかを指定します。")]
         public Boolean EnableDropProtection { get; set; }
         /// <summary>
-        /// ステータスを更新したときにトピックを変更するかどうか
+        /// ステータスを更新したときにトピックを変更するかどうかを指定します。
         /// </summary>
-        [Description("ステータスを更新したときにトピックを変更するかどうか")]
+        [Description("ステータスを更新したときにトピックを変更するかどうかを指定します。")]
         public Boolean SetTopicOnStatusChanged { get; set; }
         /// <summary>
-        /// トレースを有効にするかどうか
+        /// トレースを有効にするかどうかを指定します。
         /// </summary>
-        [Description("トレースを有効にするかどうか")]
+        [Description("トレースを有効にするかどうかを指定します。")]
         public Boolean EnableTrace { get; set; }
         /// <summary>
-        /// Twitterのステータスが流れるチャンネル名
+        /// Twitterのステータスが流れるチャンネル名を指定します。
         /// </summary>
-        [Description("Twitterのステータスが流れるチャンネル名")]
+        [Description("Twitterのステータスが流れるチャンネル名を指定します。")]
         public String ChannelName { get; set; }
         /// <summary>
-        /// ユーザ一覧を取得するかどうか
+        /// ユーザ一覧を取得するかどうかを指定します。
         /// </summary>
-        [Description("ユーザ一覧を取得するかどうか")]
+        [Description("ユーザ一覧を取得するかどうかを指定します。")]
         public Boolean DisableUserList { get; set; }
         /// <summary>
-        /// アップデートをすべてのチャンネルに投げるかどうか
+        /// アップデートをすべてのチャンネルに投げるかどうかを指定します。
         /// </summary>
-        [Description("アップデートをすべてのチャンネルに投げるかどうか")]
+        [Description("アップデートをすべてのチャンネルに投げるかどうかを指定します。")]
         public Boolean BroadcastUpdate { get; set; }
         /// <summary>
-        /// クライアントにメッセージを送信するときのウェイト
+        /// クライアントにメッセージを送信するときのウェイトを指定します。
         /// </summary>
-        [Description("クライアントにメッセージを送信するときのウェイト")]
+        [Description("クライアントにメッセージを送信するときのウェイトを指定します。")]
         public Int32 ClientMessageWait { get; set; }
         /// <summary>
-        /// アップデートをすべてのチャンネルに投げるときNOTICEにするかどうか
+        /// アップデートをすべてのチャンネルに投げるときNOTICEにするかどうかを指定します。
         /// </summary>
-        [Description("アップデートをすべてのチャンネルに投げるときNOTICEにするかどうか")]
+        [Description("アップデートをすべてのチャンネルに投げるときNOTICEにするかどうかを指定します。")]
         public Boolean BroadcastUpdateMessageIsNotice { get; set; }
         /// <summary>
-        /// データの取得にPOSTメソッドを利用するかどうか
+        /// データの取得にPOSTメソッドを利用するかどうかを指定します。
         /// </summary>
-        [Description("データの取得にPOSTメソッドを利用するかどうか")]
+        [Description("データの取得にPOSTメソッドを利用するかどうかを指定します。")]
         public Boolean POSTFetchMode { get; set; }
 
         /// <summary>
