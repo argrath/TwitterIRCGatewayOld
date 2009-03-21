@@ -16,6 +16,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         private ScriptRuntime _scriptRuntime;
         private ScriptScope _scriptScope;
 
+        public event EventHandler BeforeUnload;
+
         public override void Initialize()
         {
             Session.AddInsLoadCompleted += (sender, e) =>
@@ -27,15 +29,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
         public override void Uninitialize()
         {
-            _scriptRuntime.Shutdown();
+            Shutdown();
         }
         
         private void Shutdown()
         {
             if (_scriptRuntime != null)
             {
+                if (BeforeUnload != null)
+                    BeforeUnload(this, EventArgs.Empty);
+
                 _scriptRuntime.Shutdown();
                 _scriptRuntime = null;
+                BeforeUnload = null;
             }
         }
         

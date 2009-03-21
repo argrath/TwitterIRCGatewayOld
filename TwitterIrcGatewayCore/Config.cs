@@ -130,6 +130,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 Interval = Default.Interval;
                 IntervalDirectMessage = Default.IntervalDirectMessage;
+                EnableRepliesCheck = Default.EnableRepliesCheck;
+                IntervalReplies = Default.IntervalReplies;
                 IgnoreWatchError = Default.IgnoreWatchError;
                 ResolveTinyUrl = Default.ResolveTinyUrl;
                 EnableDropProtection = Default.EnableDropProtection;
