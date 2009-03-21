@@ -72,20 +72,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             _scriptRuntime.Globals.SetVariable("Session", Session);
             _scriptRuntime.Globals.SetVariable("Server", Server);
 
-            foreach (var path in Directory.GetFiles(Path.Combine(Session.UserConfigDirectory, "Scripts"), "*.*", SearchOption.AllDirectories))
+            if (Directory.Exists(Path.Combine(Session.UserConfigDirectory, "Scripts")))
             {
-                ScriptEngine engine;
-                _scriptRuntime.TryGetEngineByFileExtension(Path.GetExtension(path), out engine);
-                if (engine != null)
+                foreach (var path in Directory.GetFiles(Path.Combine(Session.UserConfigDirectory, "Scripts"), "*.*", SearchOption.AllDirectories))
                 {
-                    try
+                    ScriptEngine engine;
+                    if (_scriptRuntime.TryGetEngineByFileExtension(Path.GetExtension(path), out engine))
                     {
-                        engine.ExecuteFile(path, _scriptScope);
-                        scriptExecutionCallback(path, null);
-                    }
-                    catch (Exception ex)
-                    {
-                        scriptExecutionCallback(path, ex);
+                        try
+                        {
+                            engine.ExecuteFile(path, _scriptScope);
+                            scriptExecutionCallback(path, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            scriptExecutionCallback(path, ex);
+                        }
                     }
                 }
             }
