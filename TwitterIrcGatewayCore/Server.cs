@@ -12,91 +12,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private TcpListener _tcpListener;
         private List<Session> _sessions;
         private Encoding _encoding = Encoding.GetEncoding("ISO-2022-JP");
-        
-        /// <summary>
-        /// チェックする間隔
-        /// </summary>
-        public Int32 Interval = 60;
-
-        /// <summary>
-        /// ダイレクトメッセージをチェックする間隔
-        /// </summary>
-        public Int32 IntervalDirectMessage = 60 * 5;
-
-        /// <summary>
-        /// Repliesをチェックするかどうか
-        /// </summary>
-        public Boolean EnableRepliesCheck = false;
-        
-        /// <summary>
-        /// Repliesチェックする間隔
-        /// </summary>
-        public Int32 IntervalReplies = 60 * 5;
-
-        /// <summary>
-        /// エラーを無視するかどうか
-        /// </summary>
-        public Boolean IgnoreWatchError = false;
-
-        /// <summary>
-        /// TinyURLを展開するかどうか
-        /// </summary>
-        public Boolean ResolveTinyUrl = true;
-
-        /// <summary>
-        /// 取りこぼし防止を利用するかどうか
-        /// </summary>
-        public Boolean EnableDropProtection = true;
-
-        /// <summary>
-        /// ステータスを更新したときにトピックを変更するかどうか
-        /// </summary>
-        public Boolean SetTopicOnStatusChanged = false;
-
-        /// <summary>
-        /// トレースを有効にするかどうか
-        /// </summary>
-        public Boolean EnableTrace = false;
-
-        /// <summary>
-        /// Cookie ログインでタイムラインを取得するかどうか
-        /// </summary>
-        public Boolean CookieLoginMode = false;
-
-        /// <summary>
-        /// Twitterのステータスが流れるチャンネル名
-        /// </summary>
-        public String ChannelName = "#twitter";
-
-        /// <summary>
-        /// ユーザ一覧を取得するかどうか
-        /// </summary>
-        public Boolean DisableUserList = false;
-
-        /// <summary>
-        /// アップデートをすべてのチャンネルに投げるかどうか
-        /// </summary>
-        public Boolean BroadcastUpdate = false;
-
-        /// <summary>
-        /// クライアントにメッセージを送信するときのウェイト
-        /// </summary>
-        public Int32 ClientMessageWait = 0;
-
-        /// <summary>
-        /// アップデートをすべてのチャンネルに投げるときNOTICEにするかどうか
-        /// </summary>
-        public Boolean BroadcastUpdateMessageIsNotice = false;
 
         /// <summary>
         /// APIアクセスに利用するプロクシサーバの設定
         /// </summary>
         public IWebProxy Proxy = null;
-
-        /// <summary>
-        /// データの取得にPOSTメソッドを利用するかどうか
-        /// </summary>
-        public Boolean POSTFetchMode = false;
 
         public const String ServerName = "localhost";
         public const String ServerNick = "$TwitterIrcGatewayServer$";

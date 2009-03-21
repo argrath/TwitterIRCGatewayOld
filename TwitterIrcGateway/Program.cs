@@ -45,23 +45,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _notifyIcon.ContextMenu = ctxMenu;
             _notifyIcon.Icon = Resource.ApplicationIcon;
 
+            Config.Default.EnableTrace = _settings.EnableTrace;
+            Config.Default.IgnoreWatchError = _settings.IgnoreWatchError;
+            Config.Default.Interval = _settings.Interval;
+            Config.Default.ResolveTinyUrl = _settings.ResolveTinyUrl;
+            Config.Default.EnableDropProtection = _settings.EnableDropProtection;
+            Config.Default.SetTopicOnStatusChanged = _settings.SetTopicOnStatusChanged;
+            Config.Default.IntervalDirectMessage = _settings.IntervalDirectMessage;
+            //Config.Default.CookieLoginMode = _settings.CookieLoginMode;
+            Config.Default.ChannelName = "#"+_settings.TwitterChannelName;
+            Config.Default.EnableRepliesCheck = _settings.EnableRepliesCheck;
+            Config.Default.IntervalReplies = _settings.IntervalReplies;
+            Config.Default.DisableUserList = _settings.DisableUserList;
+            Config.Default.BroadcastUpdate = _settings.BroadcastUpdate;
+            Config.Default.ClientMessageWait = _settings.ClientMessageWait;
+            Config.Default.BroadcastUpdateMessageIsNotice = _settings.BroadcastUpdateMessageIsNotice;
+            Config.Default.POSTFetchMode = _settings.POSTFetchMode;
             _server = new Server();
-            _server.EnableTrace = _settings.EnableTrace;
-            _server.IgnoreWatchError = _settings.IgnoreWatchError;
-            _server.Interval = _settings.Interval;
-            _server.ResolveTinyUrl = _settings.ResolveTinyUrl;
-            _server.EnableDropProtection = _settings.EnableDropProtection;
-            _server.SetTopicOnStatusChanged = _settings.SetTopicOnStatusChanged;
-            _server.IntervalDirectMessage = _settings.IntervalDirectMessage;
-            _server.CookieLoginMode = _settings.CookieLoginMode;
-            _server.ChannelName = "#"+_settings.TwitterChannelName;
-            _server.EnableRepliesCheck = _settings.EnableRepliesCheck;
-            _server.IntervalReplies = _settings.IntervalReplies;
-            _server.DisableUserList = _settings.DisableUserList;
-            _server.BroadcastUpdate = _settings.BroadcastUpdate;
-            _server.ClientMessageWait = _settings.ClientMessageWait;
-            _server.BroadcastUpdateMessageIsNotice = _settings.BroadcastUpdateMessageIsNotice;
-            _server.POSTFetchMode = _settings.POSTFetchMode;
             _server.SessionStartedReceived += new EventHandler<SessionStartedEventArgs>(_server_SessionStartedReceived);
             try
             {

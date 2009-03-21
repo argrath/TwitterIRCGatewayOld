@@ -563,7 +563,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return ExecuteRequest<User>(() =>
             {
                 String responseBody = POST(String.Format("/blocks/create/{0}.xml", screenName), new byte[0]);
-                Status status;
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -585,7 +584,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return ExecuteRequest<User>(() =>
             {
                 String responseBody = POST(String.Format("/blocks/destroy/{0}.xml", screenName), new byte[0]);
-                Status status;
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -846,7 +844,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 Statuses statuses = GetReplies();
                 Array.Reverse(statuses.Status);
-                bool dummy = false;
                 
                 // 差分チェック
                 ProcessRepliesStatus(statuses, (s) =>

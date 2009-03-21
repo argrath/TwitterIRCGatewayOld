@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using System.Text;
 using Misuzilla.Net.Irc;
+using System.Collections;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {
@@ -16,9 +18,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Browsable(false)]
         public Server Server { get; set; }
         [Browsable(false)]
-        public ConsoleAddIn ConsoleAddIn { get { return Session.AddInManager.GetAddIn<Console.ConsoleAddIn>(); } }
+        public ConsoleAddIn ConsoleAddIn { get { return Session.AddInManager.GetAddIn<ConsoleAddIn>(); } }
 
         public virtual Type[] Contexts { get { return new Type[0]; } }
+        public virtual IConfiguration[] Configurations { get { return new IConfiguration[0]; } }
         
         /// <summary>
         /// 
@@ -28,6 +31,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
         }
 
+        /// <summary>
+        /// 設定が変更された際に行う処理
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="memberInfo"></param>
+        /// <param name="value"></param>
+        protected virtual void OnConfigurationChanged(IConfiguration config, MemberInfo memberInfo, Object value)
+        {
+        }
+
+        #region Context Base Implementation
         [Description("コマンドの一覧または説明を表示します")]
         public void Help(String commandName)
         {
@@ -88,13 +102,147 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             }
         }
 
+        [Description("設定を表示します")]
+        public void Show(String configName)
+        {
+            foreach (var config in Configurations)
+            {
+                MemberInfo[] memberInfoArr;
+                
+                // プロパティ一覧または一つだけ
+                if (String.IsNullOrEmpty(configName))
+                    memberInfoArr = config.GetType().GetMembers(BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance);
+                else
+                    memberInfoArr = config.GetType().GetMember(configName, BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance);
+                
+                foreach (var memberInfo in memberInfoArr)
+                {
+                    if (!IsBrowsable(memberInfo))
+                        continue;
+
+                    PropertyInfo pi = memberInfo as PropertyInfo;
+                    FieldInfo fi = memberInfo as FieldInfo;
+
+                    if (pi != null && pi.CanWrite)
+                        ConsoleAddIn.NotifyMessage(String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.Name, Inspect(pi.GetValue(config, null))));
+                    else if (fi != null && !fi.IsInitOnly)
+                        ConsoleAddIn.NotifyMessage(String.Format("{0} ({1}) = {2}", fi.Name, fi.FieldType.Name, Inspect(fi.GetValue(config))));
+
+                    // さがしているのが一個の時は説明を出して終わり
+                    if (!String.IsNullOrEmpty(configName))
+                    {
+                        String desc = GetDescription(memberInfo);
+                        if (!String.IsNullOrEmpty(desc))
+                            ConsoleAddIn.NotifyMessage(desc);
+                        return;
+                    }
+                }
+            }
+            if (!String.IsNullOrEmpty(configName))
+                ConsoleAddIn.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
+        }
+        
+        [Description("設定を変更します")]
+        public void Set(String configName, String value)
+        {
+            if (String.IsNullOrEmpty(configName))
+            {
+                ConsoleAddIn.NotifyMessage("設定名が指定されていません。");
+                return;
+            }
+            if (String.IsNullOrEmpty(value))
+            {
+                ConsoleAddIn.NotifyMessage("値が指定されていません。");
+                return;
+            }
+            
+            foreach (var config in Configurations)
+            {
+                MemberInfo[] memberInfoArr = config.GetType().GetMember(configName, BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance);
+                
+                foreach (var memberInfo in memberInfoArr)
+                {
+                    if (!IsBrowsable(memberInfo))
+                        continue;
+
+                    PropertyInfo pi = memberInfo as PropertyInfo;
+                    FieldInfo fi = memberInfo as FieldInfo;
+                    
+                    if (pi == null && fi == null)
+                        continue;
+                    
+                    // TypeConverterで文字列から変換する
+                    Type type = (pi != null) ? pi.PropertyType : fi.FieldType;
+                    TypeConverter tConv = TypeDescriptor.GetConverter(type);
+                    if (!tConv.CanConvertFrom(typeof(String)))
+                    {
+                        ConsoleAddIn.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" には適切な TypeConverter がないため、このコマンドで設定することはできません。", configName, type.FullName));
+                        return;
+                    }
+
+                    try
+                    {
+                        Object convertedValue = tConv.ConvertFromString(value);
+                        if (pi != null && pi.CanWrite)
+                        {
+                            pi.SetValue(config, convertedValue, null);
+                            ConsoleAddIn.NotifyMessage(String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.Name, Inspect(pi.GetValue(config, null))));
+                        }
+                        else if (fi != null && !fi.IsInitOnly)
+                        {
+                            fi.SetValue(config, value);
+                            ConsoleAddIn.NotifyMessage(String.Format("{0} ({1}) = {2}", fi.Name, fi.FieldType.Name, Inspect(fi.GetValue(config))));
+                        }
+                        OnConfigurationChanged(config, memberInfo, value);
+                    }
+                    catch (Exception ex)
+                    {
+                        ConsoleAddIn.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" に値を変換し設定する際にエラーが発生しました({2})。", configName, type.FullName, ex.GetType().Name));
+                        foreach (var line in ex.Message.Split('\n'))
+                            ConsoleAddIn.NotifyMessage(line);
+                    }
+
+                    // 見つかったので値をセットして終わり
+                    return;
+                }
+            }
+            
+            ConsoleAddIn.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
+        }
+
         [Description("コンテキストを一つ前のものに戻します")]
         public void Exit()
         {
             ConsoleAddIn.PopContext();
         }
+        #endregion
 
         #region Context Helpers
+        
+        [Browsable(false)]
+        private String Inspect(Object o)
+        {
+            if (o == null)
+                return "(null)";
+            if (o is String)
+                return o.ToString();
+            
+            if (o is IEnumerable)
+            {
+                StringBuilder sb = new StringBuilder();
+                foreach (var item in (IEnumerable)o)
+                {
+                    sb.Append(o.ToString()).Append(", ");
+                }
+                if (sb.Length > 0)
+                    sb.Length += 2;
+                return sb.ToString();
+            }
+            else
+            {
+                return o.ToString();
+            }
+        }
 
         /// <summary>
         /// コマンドを名前で取得します。
@@ -144,5 +292,4 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
         #endregion
     }
-
 }

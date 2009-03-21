@@ -15,8 +15,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         void Session_PostSendMessageTimelineStatus(object sender, TimelineStatusEventArgs e)
         {
             // ウェイト
-            if (Server.ClientMessageWait > 0)
-                Thread.Sleep(Server.ClientMessageWait);
+            if (Session.Config.ClientMessageWait > 0)
+                Thread.Sleep(Session.Config.ClientMessageWait);
         }
     }
 }

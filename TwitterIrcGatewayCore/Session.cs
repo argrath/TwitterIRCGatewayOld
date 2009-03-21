@@ -273,12 +273,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (ConfigChanged != null)
                 ConfigChanged(this, EventArgs.Empty);
 
-            if (_traceListener == null && (_config.EnableTrace || _server.EnableTrace))
+            if (_traceListener == null && _config.EnableTrace)
             {
                 _traceListener = new IrcTraceListener(this);
                 Trace.Listeners.Add(_traceListener);
             }
-            else if ((_traceListener != null) && !_config.EnableTrace && !_server.EnableTrace)
+            else if ((_traceListener != null) && !_config.EnableTrace)
             {
                 Trace.Listeners.Remove(_traceListener);
                 _traceListener = null;
@@ -431,7 +431,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             String[] channelNames = joinMsg.Channel.Split(new Char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (String channelName in channelNames)
             {
-                if (!channelName.StartsWith("#") || channelName.Length < 3 || String.Compare(channelName, _server.ChannelName, true) == 0)
+                if (!channelName.StartsWith("#") || channelName.Length < 3 || String.Compare(channelName, _config.ChannelName, true) == 0)
                 {
                     Trace.WriteLine(String.Format("No nick/such channel: {0}", channelName));
                     SendErrorReply(ErrorReply.ERR_NOSUCHCHANNEL, "No such nick/channel");
@@ -482,7 +482,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             String[] channelNames = partMsg.Channel.Split(new Char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (String channelName in channelNames)
             {
-                if (!channelName.StartsWith("#") || channelName.Length < 3 || String.Compare(channelName, _server.ChannelName, true) == 0)
+                if (!channelName.StartsWith("#") || channelName.Length < 3 || String.Compare(channelName, _config.ChannelName, true) == 0)
                 {
                     SendErrorReply(ErrorReply.ERR_NOSUCHCHANNEL, "No such nick/channel");
                     continue;
@@ -605,7 +605,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             String userName = e.Message.CommandParams[0];
             String channelName = e.Message.CommandParams[1];
             Trace.WriteLine(String.Format("Invite: {0} -> {1}", userName, channelName));
-            if (!channelName.StartsWith("#") || channelName.Length < 3 || String.Compare(channelName, _server.ChannelName, true) == 0)
+            if (!channelName.StartsWith("#") || channelName.Length < 3 || String.Compare(channelName, _config.ChannelName, true) == 0)
             {
                 SendErrorReply(ErrorReply.ERR_NOSUCHCHANNEL, "No such nick/channel");
                 return;
@@ -658,11 +658,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             SendNumericReply(NumericReply.RPL_MYINFO
                 , String.Format("{0} {1}-{2} {3} {4}", Environment.MachineName, t.FullName, t.Assembly.GetName().Version, "", ""));
 
-            JoinMessage joinMsg = new JoinMessage(_server.ChannelName, "");
+            JoinMessage joinMsg = new JoinMessage(_config.ChannelName, "");
             PrivMsgMessage autoMsg = new PrivMsgMessage();
             autoMsg.SenderNick = Server.ServerNick;
             autoMsg.SenderHost = "twitter@" + Server.ServerName;
-            autoMsg.Receiver = _server.ChannelName;
+            autoMsg.Receiver = _config.ChannelName;
             autoMsg.Content = "Twitter IRC Gateway Server Connected.";
 
             SendServer(joinMsg);
@@ -672,12 +672,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             // Twitte Service Setup
             //
             _twitter = new TwitterService(_username, _password);
-            _twitter.CookieLoginMode = _server.CookieLoginMode;
-            _twitter.Interval = _server.Interval;
-            _twitter.IntervalDirectMessage = _server.IntervalDirectMessage;
-            _twitter.IntervalReplies = _server.IntervalReplies;
-            _twitter.EnableRepliesCheck = _server.EnableRepliesCheck;
-            _twitter.POSTFetchMode = _server.POSTFetchMode;
+            _twitter.Interval = _config.Interval;
+            _twitter.IntervalDirectMessage = _config.IntervalDirectMessage;
+            _twitter.IntervalReplies = _config.IntervalReplies;
+            _twitter.EnableRepliesCheck = _config.EnableRepliesCheck;
+            _twitter.POSTFetchMode = _config.POSTFetchMode;
             _twitter.RepliesReceived += new EventHandler<StatusesUpdatedEventArgs>(twitter_RepliesReceived);
             _twitter.TimelineStatusesReceived += new EventHandler<StatusesUpdatedEventArgs>(twitter_TimelineStatusesReceived);
             _twitter.CheckError += new EventHandler<ErrorEventArgs>(twitter_CheckError);
@@ -732,7 +731,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             try
             {
                 // チャンネル宛は自分のメッセージを書き換え
-                if ((String.Compare(message.Receiver, _server.ChannelName, true) == 0) || message.Receiver.StartsWith("#"))
+                if ((String.Compare(message.Receiver, _config.ChannelName, true) == 0) || message.Receiver.StartsWith("#"))
                 {
                     try
                     {
@@ -754,26 +753,26 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
 
                     // topic にする
-                    if (_server.SetTopicOnStatusChanged)
+                    if (_config.SetTopicOnStatusChanged)
                     {
-                        TopicMessage topicMsg = new TopicMessage(_server.ChannelName, message.Content);
+                        TopicMessage topicMsg = new TopicMessage(_config.ChannelName, message.Content);
                         topicMsg.Sender = _clientHost;
                         Send(topicMsg);
                     }
 
                     // 他のチャンネルにも投げる
-                    if (_server.BroadcastUpdate)
+                    if (_config.BroadcastUpdate)
                     {
                         // #Twitter
-                        if (String.Compare(message.Receiver, _server.ChannelName, true) != 0)
+                        if (String.Compare(message.Receiver, _config.ChannelName, true) != 0)
                         {
                             // XXX: 例によってIRCライブラリのバージョンアップでどうにかしたい
-                            if (_server.BroadcastUpdateMessageIsNotice)
+                            if (_config.BroadcastUpdateMessageIsNotice)
                             {
                                 Send(new NoticeMessage()
                                 {
                                     Sender = _clientHost,
-                                    Receiver = _server.ChannelName,
+                                    Receiver = _config.ChannelName,
                                     Content = message.Content
                                 });
                             }
@@ -782,7 +781,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                                 Send(new PrivMsgMessage()
                                 {
                                     Sender = _clientHost,
-                                    Receiver = _server.ChannelName,
+                                    Receiver = _config.ChannelName,
                                     Content = message.Content
                                 });
                             }
@@ -793,7 +792,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         {
                             if (group.IsJoined && !group.IsSpecial && !group.IgnoreEchoBack && String.Compare(message.Receiver, group.Name, true) != 0)
                             {
-                                if (_server.BroadcastUpdateMessageIsNotice)
+                                if (_config.BroadcastUpdateMessageIsNotice)
                                 {
                                     Send(new NoticeMessage()
                                     {
@@ -900,7 +899,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             TopicMessage topicMsg = e.Message as TopicMessage;
 
             // client -> server (TOPIC #Channel :Topic Msg) && channel name != server primary channel(ex.#Twitter)
-            if (!String.IsNullOrEmpty(topicMsg.Topic) && (String.Compare(topicMsg.Channel, _server.ChannelName, true) != 0))
+            if (!String.IsNullOrEmpty(topicMsg.Topic) && (String.Compare(topicMsg.Channel, _config.ChannelName, true) != 0))
             {
                 // Set channel topic
                 Group group = GetGroupByChannelName(topicMsg.Channel);
@@ -920,7 +919,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             ModeMessage modeMsg = e.Message as ModeMessage;
 
             // チャンネルターゲットかつタイムラインチャンネル以外のみ
-            if (modeMsg.Target.StartsWith("#") && (String.Compare(modeMsg.Target, _server.ChannelName, true) != 0))
+            if (modeMsg.Target.StartsWith("#") && (String.Compare(modeMsg.Target, _config.ChannelName, true) != 0))
             {
                 String channel = modeMsg.Target;
                 String modeArgs = modeMsg.ModeArgs;
@@ -1079,7 +1078,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         void twitter_DirectMessageReceived(object sender, DirectMessageEventArgs e)
         {
             DirectMessage message = e.DirectMessage;
-            String text = (_server.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(message.Text) : message.Text;
+            String text = (_config.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(message.Text) : message.Text;
             String[] lines = text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
             foreach (String line in lines)
@@ -1126,7 +1125,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
             
             // Friendsをチェックするのは成功して、チェックが必要となったとき
-            if (e.FriendsCheckRequired && !_server.DisableUserList)
+            if (e.FriendsCheckRequired && !_config.DisableUserList)
             {
                 CheckFriends();
             }
@@ -1202,7 +1201,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="message"></param>
         public void SendServerErrorMessage(String message)
         {
-            if (!_server.IgnoreWatchError)
+            if (!_config.IgnoreWatchError)
             {
                 SendTwitterGatewayServerMessage("エラー: " + message);
             }
@@ -1249,9 +1248,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 for (var i = 0; i < ((_nickNames.Count / 100) + 1); i++)
                 {
                     Int32 count = Math.Min(_nickNames.Count - (i*100), 100);
-                    SendNumericReply(NumericReply.RPL_NAMREPLY, "=", _server.ChannelName, String.Join(" ", _nickNames.GetRange(i * 100, count).ToArray()));
+                    SendNumericReply(NumericReply.RPL_NAMREPLY, "=", _config.ChannelName, String.Join(" ", _nickNames.GetRange(i * 100, count).ToArray()));
                 }
-                SendNumericReply(NumericReply.RPL_ENDOFNAMES, _server.ChannelName, "End of NAMES list");
+                SendNumericReply(NumericReply.RPL_ENDOFNAMES, _config.ChannelName, "End of NAMES list");
             });
         }
 
@@ -1285,7 +1284,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 {
                     if (!_nickNames.Contains(screenName))
                     {
-                        JoinMessage joinMsg = new JoinMessage(_server.ChannelName, "");
+                        JoinMessage joinMsg = new JoinMessage(_config.ChannelName, "");
                         joinMsg.SenderNick = screenName;
                         joinMsg.SenderHost = String.Format("{0}@{1}", "twitter", Server.ServerName);
                         Send(joinMsg);
@@ -1296,7 +1295,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 {
                     if (!screenNames.Contains(screenName))
                     {
-                        PartMessage partMsg = new PartMessage(_server.ChannelName, "");
+                        PartMessage partMsg = new PartMessage(_config.ChannelName, "");
                         partMsg.SenderNick = screenName;
                         partMsg.SenderHost = String.Format("{0}@{1}", "twitter", Server.ServerName);
                         Send(partMsg);
@@ -1347,13 +1346,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     {
                         SenderNick = status.User.ScreenName,
                         SenderHost = "twitter@" + Server.ServerName,
-                        Receiver   = _server.ChannelName,
+                        Receiver   = _config.ChannelName,
                         Content    = String.Format("{0}: {1}", status.CreatedAt.ToString("HH:mm"), line)
                     });
                 }
                 else
                 {
-                    Send(CreateIRCMessageFromStatusAndType(status, eventArgs.IRCMessageType, _server.ChannelName, line));
+                    Send(CreateIRCMessageFromStatusAndType(status, eventArgs.IRCMessageType, _config.ChannelName, line));
                 }
 
                 // グループにも投げる
@@ -1379,7 +1378,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                             // 初回のときはNOTICE+時間
                             Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", group.Name, String.Format("{0}: {1}", status.CreatedAt.ToString("HH:mm"), line)));
                         }
-                        else if (isMessageFromSelf && _server.BroadcastUpdateMessageIsNotice)
+                        else if (isMessageFromSelf && _config.BroadcastUpdateMessageIsNotice)
                         {
                             // 自分からのメッセージでBroadcastUpdateMessageIsNoticeがTrueのときはNOTICE
                             Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", group.Name, line));
@@ -1498,7 +1497,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             if (!_isDisposed)
             {
-                if (_server.EnableTrace)
+                if (_config.EnableTrace)
                 {
                     Trace.Listeners.Remove(_traceListener);
                 }

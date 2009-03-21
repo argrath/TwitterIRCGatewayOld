@@ -43,9 +43,13 @@
   <ItemGroup>
     <Compile Include="AddInManager.cs" />
     <Compile Include="AddIns\ClientMessageWait.cs" />
-    <Compile Include="AddIns\Console\BasicContexts.cs" />
+    <Compile Include="AddIns\Console\Contexts\RootContext.cs" />
+    <Compile Include="AddIns\Console\Contexts\ConfigContext.cs" />
     <Compile Include="AddIns\Console\Console.cs" />
     <Compile Include="AddIns\Console\Context.cs" />
+    <Compile Include="AddIns\Console\Contexts\FilterContext.cs" />
+    <Compile Include="AddIns\Console\Contexts\GroupContext.cs" />
+    <Compile Include="AddIns\Console\Contexts\SystemContext.cs" />
     <Compile Include="AddIns\Console\GenericConfig.cs" />
     <Compile Include="AddIns\ExtensionCommands.cs" />
     <Compile Include="AddIns\IAddIn.cs" />

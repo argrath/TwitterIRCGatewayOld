@@ -1,51 +1,119 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Text;
 using System.Xml;
 using System.IO;
 using System.Xml.Serialization;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using Misuzilla.Applications.TwitterIrcGateway.AddIns;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
-    public class Config : MarshalByRefObject
+    public class Config : MarshalByRefObject, IConfiguration
     {
+        [Browsable(false)]
         public String IMServiceServerName { get; set; }
+        [Browsable(false)]
         public String IMServerName { get; set; }
+        [Browsable(false)]
         public String IMUserName { get; set; }
+        [Browsable(false)]
         public String IMEncryptoPassword { get; set; }
-
-        public Boolean EnableTypableMap { get; set; }
-        public Int32 TypableMapKeyColorNumber { get; set; }
-        public Int32 TypableMapKeySize { get; set; }
-        
-        public Boolean EnableTrace { get; set; }
-
-        public Boolean EnableRemoveRedundantSuffix { get; set; }
-
+        [Browsable(false)]
         public List<String> DisabledAddInsList { get; set; }
 
-        public String GetIMPassword(String key)
-        {
-            StringBuilder sb = new StringBuilder();
-            String passwordDecoded = Encoding.UTF8.GetString(Convert.FromBase64String(IMEncryptoPassword));
-            for (var i = 0; i < passwordDecoded.Length; i++)
-            {
-                sb.Append((Char)(passwordDecoded[i] ^ key[i % key.Length]));
-            }
-            return sb.ToString();
-        }
+        [Description("TypableMapを有効化または無効化します")]
+        public Boolean EnableTypableMap { get; set; }
+        [Description("TypableMapのキーサイズを変更します")]
+        public Int32 TypableMapKeyColorNumber { get; set; }
+        [Description("TypableMapの色番号を変更します")]
+        public Int32 TypableMapKeySize { get; set; }
 
-        public void SetIMPassword(String key, String password)
-        {
-            StringBuilder sb = new StringBuilder();
-            for (var i = 0; i < password.Length; i++)
-            {
-                sb.Append((Char)(password[i] ^ key[i % key.Length]));
-            }
-            IMEncryptoPassword = Convert.ToBase64String(Encoding.UTF8.GetBytes(sb.ToString()));
-        }
+        [Description("冗長な末尾削除を有効化または無効化します")]
+        public Boolean EnableRemoveRedundantSuffix { get; set; }
+
+        /// <summary>
+        /// チェックする間隔
+        /// </summary>
+        [Description("チェックする間隔")]
+        public Int32 Interval { get; set; }
+        /// <summary>
+        /// ダイレクトメッセージをチェックする間隔
+        /// </summary>
+        [Description("ダイレクトメッセージをチェックする間隔")]
+        public Int32 IntervalDirectMessage { get; set; }
+        /// <summary>
+        /// Repliesをチェックするかどうか
+        /// </summary>
+        [Description("Repliesをチェックするかどうか")]
+        public Boolean EnableRepliesCheck { get; set; }
+        /// <summary>
+        /// Repliesチェックする間隔
+        /// </summary>
+        [Description("Repliesチェックする間隔")]
+        public Int32 IntervalReplies { get; set; }
+        /// <summary>
+        /// エラーを無視するかどうか
+        /// </summary>
+        [Description("エラーを無視するかどうか")]
+        public Boolean IgnoreWatchError { get; set; }
+        /// <summary>
+        /// TinyURLを展開するかどうか
+        /// </summary>
+        [Description("TinyURLを展開するかどうか")]
+        public Boolean ResolveTinyUrl { get; set; }
+        /// <summary>
+        /// 取りこぼし防止を利用するかどうか
+        /// </summary>
+        [Description("取りこぼし防止を利用するかどうか")]
+        public Boolean EnableDropProtection { get; set; }
+        /// <summary>
+        /// ステータスを更新したときにトピックを変更するかどうか
+        /// </summary>
+        [Description("ステータスを更新したときにトピックを変更するかどうか")]
+        public Boolean SetTopicOnStatusChanged { get; set; }
+        /// <summary>
+        /// トレースを有効にするかどうか
+        /// </summary>
+        [Description("トレースを有効にするかどうか")]
+        public Boolean EnableTrace { get; set; }
+        /// <summary>
+        /// Twitterのステータスが流れるチャンネル名
+        /// </summary>
+        [Description("Twitterのステータスが流れるチャンネル名")]
+        public String ChannelName { get; set; }
+        /// <summary>
+        /// ユーザ一覧を取得するかどうか
+        /// </summary>
+        [Description("ユーザ一覧を取得するかどうか")]
+        public Boolean DisableUserList { get; set; }
+        /// <summary>
+        /// アップデートをすべてのチャンネルに投げるかどうか
+        /// </summary>
+        [Description("アップデートをすべてのチャンネルに投げるかどうか")]
+        public Boolean BroadcastUpdate { get; set; }
+        /// <summary>
+        /// クライアントにメッセージを送信するときのウェイト
+        /// </summary>
+        [Description("クライアントにメッセージを送信するときのウェイト")]
+        public Int32 ClientMessageWait { get; set; }
+        /// <summary>
+        /// アップデートをすべてのチャンネルに投げるときNOTICEにするかどうか
+        /// </summary>
+        [Description("アップデートをすべてのチャンネルに投げるときNOTICEにするかどうか")]
+        public Boolean BroadcastUpdateMessageIsNotice { get; set; }
+        /// <summary>
+        /// データの取得にPOSTメソッドを利用するかどうか
+        /// </summary>
+        [Description("データの取得にPOSTメソッドを利用するかどうか")]
+        public Boolean POSTFetchMode { get; set; }
+
+        /// <summary>
+        /// デフォルトの設定
+        /// </summary>
+        public static Config Default = new Config();
         
         public Config()
         {
@@ -54,6 +122,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             TypableMapKeySize = 2;
             EnableRemoveRedundantSuffix = false;
             DisabledAddInsList = new List<string>();
+
+            if (Default != null)
+            {
+                Interval = Default.Interval;
+                IntervalDirectMessage = Default.IntervalDirectMessage;
+                IgnoreWatchError = Default.IgnoreWatchError;
+                ResolveTinyUrl = Default.ResolveTinyUrl;
+                EnableDropProtection = Default.EnableDropProtection;
+                SetTopicOnStatusChanged = Default.SetTopicOnStatusChanged;
+                EnableTrace = Default.EnableTrace;
+                ChannelName = Default.ChannelName;
+                DisableUserList = Default.DisableUserList;
+                BroadcastUpdate = Default.BroadcastUpdate;
+                ClientMessageWait = Default.ClientMessageWait;
+                BroadcastUpdateMessageIsNotice = Default.BroadcastUpdateMessageIsNotice;
+                POSTFetchMode = Default.POSTFetchMode;
+            }
         }
 
         #region XML Serialize
@@ -90,6 +175,27 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return _serializer.Deserialize(stream) as Config;
         }
         #endregion
+
+        public String GetIMPassword(String key)
+        {
+            StringBuilder sb = new StringBuilder();
+            String passwordDecoded = Encoding.UTF8.GetString(Convert.FromBase64String(IMEncryptoPassword));
+            for (var i = 0; i < passwordDecoded.Length; i++)
+            {
+                sb.Append((Char)(passwordDecoded[i] ^ key[i % key.Length]));
+            }
+            return sb.ToString();
+        }
+
+        public void SetIMPassword(String key, String password)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (var i = 0; i < password.Length; i++)
+            {
+                sb.Append((Char)(password[i] ^ key[i % key.Length]));
+            }
+            IMEncryptoPassword = Convert.ToBase64String(Encoding.UTF8.GetBytes(sb.ToString()));
+        }
 
         /// <summary>
         /// 

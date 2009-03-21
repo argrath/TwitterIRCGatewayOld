@@ -20,7 +20,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         void Session_PostFilterProcessTimelineStatus(object sender, TimelineStatusEventArgs e)
         {
             // TinyURL
-            e.Text = (Server.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(e.Text) : e.Text;
+            e.Text = (Session.Config.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(e.Text) : e.Text;
         }
     }
 }
