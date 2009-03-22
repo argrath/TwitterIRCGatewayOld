@@ -84,7 +84,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                     {
                         try
                         {
-                            engine.ExecuteFile(path, _scriptScope);
+                            String expression = File.ReadAllText(path, Encoding.UTF8);
+                            engine.Execute(expression, _scriptScope);
                             scriptExecutionCallback(path, null);
                         }
                         catch (Exception ex)
