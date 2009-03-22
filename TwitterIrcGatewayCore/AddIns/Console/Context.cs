@@ -190,10 +190,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                         }
                         else if (fi != null && !fi.IsInitOnly)
                         {
-                            fi.SetValue(config, value);
+                            fi.SetValue(config, convertedValue);
                             ConsoleAddIn.NotifyMessage(String.Format("{0} ({1}) = {2}", fi.Name, fi.FieldType.Name, Inspect(fi.GetValue(config))));
                         }
-                        OnConfigurationChanged(config, memberInfo, value);
+                        OnConfigurationChanged(config, memberInfo, convertedValue);
                     }
                     catch (Exception ex)
                     {
