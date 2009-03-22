@@ -1,20 +1,20 @@
-# ƒXƒe[ƒ^ƒXXV’¼‘O‚ÌƒCƒxƒ“ƒg
+# ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹æ›´æ–°ç›´å‰ã®ã‚¤ãƒ™ãƒ³ãƒˆ
 Session.pre_send_update_status do |sender, e|
-	# CLR String -> Ruby String ‚É•ÏŠ·‚·‚é•K—v‚ª‚ ‚é‚Á‚Û‚¢
-	if e.text.to_s.include?("‚Í‚¤‚Í‚¤")
-		Session.send_server(Misuzilla::Net::Irc::NoticeMessage.new(e.received_message.receiver, "‚Í‚¤‚Í‚¤Å‚ğ’¥û‚·‚é!‚»‚ê‚Ü‚Å‚Í‚Í‚¤‚Í‚¤‚³‚¹‚È‚¢!"))
+	# CLR String -> Ruby String ã«å¤‰æ›ã™ã‚‹å¿…è¦ãŒã‚ã‚‹ã£ã½ã„
+	if e.text.to_s.include?("ã¯ã†ã¯ã†")
+		Session.send_server(Misuzilla::Net::Irc::NoticeMessage.new(e.received_message.receiver, "ã¯ã†ã¯ã†ç¨ã‚’å¾´åã™ã‚‹!ãã‚Œã¾ã§ã¯ã¯ã†ã¯ã†ã•ã›ãªã„!"))
 
-		# ƒLƒƒƒ“ƒZƒ‹‚·‚é‚±‚Æ‚Å‘—M‚³‚¹‚È‚¢
+		# ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã™ã‚‹ã“ã¨ã§é€ä¿¡ã•ã›ãªã„
 		e.cancel = true
 	end
 end
 
-# ƒ^ƒCƒ€ƒ‰ƒCƒ“‚ÌˆêƒXƒe[ƒ^ƒX‚ğóM‚µ‚ÄƒNƒ‰ƒCƒAƒ“ƒg‚É‘—M‚·‚é’¼‘O‚ÌƒCƒxƒ“ƒg
+# ã‚¿ã‚¤ãƒ ãƒ©ã‚¤ãƒ³ã®ä¸€ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’å—ä¿¡ã—ã¦ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã«é€ä¿¡ã™ã‚‹ç›´å‰ã®ã‚¤ãƒ™ãƒ³ãƒˆ
 Session.pre_send_message_timeline_status do |sender, e|
 	e.text = "#{e.text} (by #{e.status.user.name})"
 end
 
-# IRCƒƒbƒZ[ƒW‚ğó‚¯æ‚Á‚½‚Æ‚«‚ÌƒCƒxƒ“ƒg
+# IRCãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å—ã‘å–ã£ãŸã¨ãã®ã‚¤ãƒ™ãƒ³ãƒˆ
 Session.message_received do |sender, e|
 	if e.message.command.to_s == "HAUHAU"
 		Session.send_server_error_message("Hauhau!")
