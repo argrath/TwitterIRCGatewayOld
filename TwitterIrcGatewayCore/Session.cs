@@ -1488,21 +1488,25 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// 
         /// </summary>
         /// <typeparam name="TEventArgs"></typeparam>
-        /// <param name="hander"></param>
+        /// <param name="handlers"></param>
         /// <param name="e"></param>
         /// <returns>キャンセルされた場合にはfalseが返ります。</returns>
-        private Boolean FireEvent<TEventArgs>(EventHandler<TEventArgs> hander, TEventArgs e) where TEventArgs:EventArgs
+        private Boolean FireEvent<TEventArgs>(EventHandler<TEventArgs> handlers, TEventArgs e) where TEventArgs:EventArgs
         {
-            try
+            if (handlers != null)
             {
-                if (hander != null)
-                    hander(this, e);
+                foreach (EventHandler<TEventArgs> eventHandler in handlers.GetInvocationList())
+                {
+                    try
+                    {
+                        eventHandler(this, e);
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.WriteLine(ex.ToString());
+                    }
+                }
             }
-            catch (Exception ex)
-            {
-                Trace.WriteLine(ex.ToString());
-            }
-
             if (e is CancelableEventArgs)
             {
                 return !((e as CancelableEventArgs).Cancel);
