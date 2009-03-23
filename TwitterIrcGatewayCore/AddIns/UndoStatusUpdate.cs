@@ -24,33 +24,44 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                                             };
             Session.PreSendUpdateStatus += (sender, e) =>
                                            {
-                                            if (String.Compare(e.Text.Trim(), UndoCommandString, true) == 0)
-                                            {
-                                                e.Cancel = true;
+                                               if (String.Compare(e.Text.Trim(), UndoCommandString, true) == 0)
+                                               {
+                                                   e.Cancel = true;
 
-                                                if (_lastUpdateStatusList.Count == 0)
-                                                {
-                                                    Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver, "ステータスアップデートの取り消しできません。"));
-                                                    return;
-                                                }
+                                                   if (_lastUpdateStatusList.Count == 0)
+                                                   {
+                                                       Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
+                                                                                            "ステータスアップデートの取り消しできません。"));
+                                                       return;
+                                                   }
 
-                                                // 削除する
-                                                try
-                                                {
-                                                    Status status = _lastUpdateStatusList[_lastUpdateStatusList.Count - 1];
-                                                    Session.TwitterService.DestroyStatus(status.Id);
-                                                    Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver, String.Format("ステータス \"{0}\" ({1}) を削除しました。", status.Text, status.Id)));
-                                                    _lastUpdateStatusList.Remove(status);
-                                                }
-                                                catch (TwitterServiceException te)
-                                                {
-                                                    Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver, String.Format("ステータスの削除に失敗しました: {0}", te.Message)));
-                                                }
-                                                catch (WebException we)
-                                                {
-                                                    Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver, String.Format("ステータスの削除に失敗しました: {0}", we.Message)));
-                                                }
-                                            }
+                                                   // 削除する
+                                                   try
+                                                   {
+                                                       Status status =
+                                                           _lastUpdateStatusList[_lastUpdateStatusList.Count - 1];
+                                                       Session.TwitterService.DestroyStatus(status.Id);
+                                                       Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
+                                                                                            String.Format(
+                                                                                                "ステータス \"{0}\" ({1}) を削除しました。",
+                                                                                                status.Text, status.Id)));
+                                                       _lastUpdateStatusList.Remove(status);
+                                                   }
+                                                   catch (TwitterServiceException te)
+                                                   {
+                                                       Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
+                                                                                            String.Format(
+                                                                                                "ステータスの削除に失敗しました: {0}",
+                                                                                                te.Message)));
+                                                   }
+                                                   catch (WebException we)
+                                                   {
+                                                       Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
+                                                                                            String.Format(
+                                                                                                "ステータスの削除に失敗しました: {0}",
+                                                                                                we.Message)));
+                                                   }
+                                               }
                                            };
         }
     }
