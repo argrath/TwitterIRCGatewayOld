@@ -210,6 +210,43 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             ConsoleAddIn.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
         }
 
+        [Description("コマンドのエイリアスを設定します")]
+        public void Alias([Description("[エイリアス名] [設定するコマンド]")]String value)
+        {
+            String[] values = value.Trim().Split(new char[] {' '}, 2, StringSplitOptions.RemoveEmptyEntries);
+            if (values.Length == 0)
+            {
+                // 一覧
+                foreach (var alias in ConsoleAddIn.GetAliasesByType(this.GetType()))
+                {
+                    ConsoleAddIn.NotifyMessage(alias.Key + " = " + alias.Value);
+                }
+            }
+            else if (values.Length == 1)
+            {
+                // 表示
+                var aliasesByType = ConsoleAddIn.GetAliasesByType(this.GetType());
+                if (aliasesByType.ContainsKey(values[0]))
+                {
+                    ConsoleAddIn.NotifyMessage(values[0] + " = " + aliasesByType[values[0]]);
+                }
+                else
+                {
+                    ConsoleAddIn.NotifyMessage("エイリアスは見つかりません。");
+                }
+            }
+            else if (values[1] == "-")
+            {
+                ConsoleAddIn.UnregisterAliasByType(this.GetType(), values[0]);
+                ConsoleAddIn.NotifyMessage("エイリアス \"" + values[0] + "\" を削除しました。");
+            }
+            else
+            {
+                ConsoleAddIn.RegisterAliasByType(this.GetType(), values[0], values[1]);
+                ConsoleAddIn.NotifyMessage("エイリアス \"" + values[0] + "\" を登録しました。");
+            }
+        }
+
         [Description("コンテキストを一つ前のものに戻します")]
         public void Exit()
         {

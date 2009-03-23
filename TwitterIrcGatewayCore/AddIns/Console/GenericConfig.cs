@@ -16,12 +16,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Description("Favorites コマンドでのステータス取得時の表示件数を指定します")]
         public Boolean ShowPermalinkAfterStatus;
 
+        [Browsable(false)]
+        public List<String> ConsoleAliases { get; set; }
+
         public GeneralConfig()
         {
             SearchCount = 10;
             TimelineCount = 10;
             FavoritesCount = 10;
             ShowPermalinkAfterStatus = false;
+        
+            ConsoleAliases = new List<string>();
         }
     }
 }
