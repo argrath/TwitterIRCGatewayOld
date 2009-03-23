@@ -68,6 +68,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public event EventHandler<TimelineStatusesEventArgs> PostProcessTimelineStatuses;
 
         public event EventHandler<StatusUpdateEventArgs> PreSendUpdateStatus;
+        public event EventHandler<TimelineStatusEventArgs> PostSendUpdateStatus;
         #endregion
 
         private Boolean _requireIMReconnect = false;
@@ -762,6 +763,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                                 _lastStatusIdsFromGateway.RemoveFirst();
                             }
                         }
+                        if (!FireEvent(PostSendUpdateStatus, new TimelineStatusEventArgs(status))) return;
                     }
                     catch (TwitterServiceException tse)
                     {

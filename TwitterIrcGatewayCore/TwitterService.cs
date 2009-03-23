@@ -510,6 +510,28 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// メッセージを削除します。
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Status DestroyStatus(Int32 id)
+        {
+            return ExecuteRequest<Status>(() =>
+            {
+                String responseBody = POST(String.Format("/statuses/destroy/{0}.xml", id), new byte[0]);
+                Status status;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    status = Status.Serializer.Deserialize(new StringReader(responseBody)) as Status;
+                    return status;
+                }
+            });
+        }
+        /// <summary>
         /// ユーザをfollowします。
         /// </summary>
         /// <param name="screenName"></param>
