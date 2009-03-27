@@ -16,13 +16,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         {
             Session.PostSendUpdateStatus += (sender, e) =>
                                             {
-                                                _lastUpdateStatusList.Add(e.Status);
+                                                _lastUpdateStatusList.Add(e.CreatedStatus);
                                                 if (_lastUpdateStatusList.Count > MaxUndoCount)
                                                 {
                                                     _lastUpdateStatusList.RemoveAt(0);
                                                 }
                                             };
-            Session.PreSendUpdateStatus += (sender, e) =>
+            Session.UpdateStatusRequestReceived += (sender, e) =>
                                            {
                                                if (String.Compare(e.Text.Trim(), UndoCommandString, true) == 0)
                                                {

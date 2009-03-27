@@ -116,16 +116,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                                                                                    }
                                                                                });
         }
-#if DEBUG
+
         [Description("現在のスクリプトスコープでスクリプトを評価します")]
         public void Eval([Description("言語名またはスクリプトエンジンの名前")]
                          String languageName,
                          [Description("評価する式")]
                          String expression)
         {
-            Object retVal = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>().Eval(languageName, expression);
-            ConsoleAddIn.NotifyMessage(retVal == null ? "(null)" : retVal.ToString());
+            if (File.Exists(Path.Combine(Session.UserConfigDirectory, "EnableDLRDebug")))
+            {
+                Object retVal = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>().Eval(languageName, expression);
+                ConsoleAddIn.NotifyMessage(retVal == null ? "(null)" : retVal.ToString());
+            }
+            else
+            {
+                ConsoleAddIn.NotifyMessage("Eval コマンドは現在無効化されています。");
+                //ConsoleAddIn.NotifyMessage("ユーザ設定ディレクトリに EnableDLRDebug ファイルを作成することで有効になります。");
+            }
         }
-#endif
     }
 }

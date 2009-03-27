@@ -12,7 +12,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         
         public override void Initialize()
         {
-            Session.PreSendUpdateStatus += new EventHandler<StatusUpdateEventArgs>(Session_PreSendUpdateStatus);
+            Session.UpdateStatusRequestReceived += new EventHandler<StatusUpdateEventArgs>(Session_UpdateStatusRequestReceived);
             Session.PreSendMessageTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PreSendMessageTimelineStatus);
             Session.ConfigChanged += new EventHandler<EventArgs>(Session_ConfigChanged);
 
@@ -34,7 +34,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
             }
         }
 
-        void Session_PreSendUpdateStatus(object sender, StatusUpdateEventArgs e)
+        void Session_UpdateStatusRequestReceived(object sender, StatusUpdateEventArgs e)
         {
             // Typable Map コマンド?
             if (Session.Config.EnableTypableMap)

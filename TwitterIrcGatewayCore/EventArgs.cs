@@ -67,7 +67,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     {
         public PrivMsgMessage ReceivedMessage { get; set; }
         public String Text { get; set; }
+        public Int32 InReplyToStatusId { get; set; }
         public Status CreatedStatus { get; set; }
+
+        public StatusUpdateEventArgs(String text, Int32 inReplyToStatusId)
+        {
+            Text = text;
+            InReplyToStatusId = inReplyToStatusId;
+        }
         
         public StatusUpdateEventArgs(PrivMsgMessage receivedMessage, String text)
         {

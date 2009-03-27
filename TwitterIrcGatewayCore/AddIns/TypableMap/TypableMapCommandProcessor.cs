@@ -214,7 +214,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                 processor.Session.RunCheck(() =>
                                                {
                                                    String replyMsg = String.Format("@{0} {1}", status.User.ScreenName, args);
-                                                   Status updatedStatus = processor.Session.TwitterService.UpdateStatus(replyMsg, status.Id);
+                                                   Status updatedStatus = processor.Session.UpdateStatus(replyMsg, status.Id);
                                                    processor.Session.TwitterService.ProcessStatus(updatedStatus, (s) =>
                                                                                                                      {
                                                                                                                          Boolean requireFriendsUpdate = false;

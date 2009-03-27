@@ -67,8 +67,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public event EventHandler<TimelineStatusEventArgs> PostProcessTimelineStatus;
         public event EventHandler<TimelineStatusesEventArgs> PostProcessTimelineStatuses;
 
+        // IRCクライアントからのステータス更新要求を受信
+        public event EventHandler<StatusUpdateEventArgs> UpdateStatusRequestReceived;
+        // Twitterのステータス更新を行う直前
         public event EventHandler<StatusUpdateEventArgs> PreSendUpdateStatus;
-        public event EventHandler<TimelineStatusEventArgs> PostSendUpdateStatus;
+        // Twitterのステータス更新を行った直後
+        public event EventHandler<StatusUpdateEventArgs> PostSendUpdateStatus;
+        // IRCクライアントからのステータス更新要求が完了
+        public event EventHandler<TimelineStatusEventArgs> UpdateStatusRequestCommited;
         #endregion
 
         private Boolean _requireIMReconnect = false;
@@ -727,7 +733,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (message == null) return;
 
             StatusUpdateEventArgs eventArgs = new StatusUpdateEventArgs(message, message.Content);
-            if (!FireEvent(PreSendUpdateStatus, eventArgs)) return;
+            if (!FireEvent(UpdateStatusRequestReceived, eventArgs)) return;
 
             Boolean isRetry = false;
             Retry:
@@ -738,32 +744,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 {
                     try
                     {
-                        Status status;
-                        // 送信(もし以前のスタイルのReplyが有効の場合には対象のユーザの最後に受信したIDにくっつける)
-                        if (_config.EnableOldStyleReply)
-                        {
-                            Match match = Regex.Match(message.Content, "^@([A-Za-z0-9_]+)");
-                            if (match.Success && _lastStatusIdsByScreenName.ContainsKey(match.Groups[1].Value))
-                                status = _twitter.UpdateStatus(message.Content, _lastStatusIdsByScreenName[match.Groups[1].Value]);
-                            else
-                                status = _twitter.UpdateStatus(message.Content);
-                        }
-                        else
-                        {
-                            status = _twitter.UpdateStatus(message.Content);
-                        }
-                        
-                        if (status != null)
-                        {
-                            Trace.WriteLineIf(status != null, String.Format("Status Update: {0} (ID:{1}, CreatedAt:{2})", status.Text, status.Id.ToString(), status.CreatedAt.ToString()));
-
-                            _lastStatusIdsFromGateway.AddLast(status.Id);
-                            if (_lastStatusIdsFromGateway.Count > 100)
-                            {
-                                _lastStatusIdsFromGateway.RemoveFirst();
-                            }
-                        }
-                        if (!FireEvent(PostSendUpdateStatus, new TimelineStatusEventArgs(status))) return;
+                        Status status = UpdateStatus(message.Content);
+                        if (!FireEvent(UpdateStatusRequestCommited, new TimelineStatusEventArgs(status))) return;
                     }
                     catch (TwitterServiceException tse)
                     {
@@ -863,6 +845,58 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     goto Retry;
                 }
             }
+        }
+
+        /// <summary>
+        /// Twitterのステータスを更新します。
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public Status UpdateStatus(String message)
+        {
+            // 送信(もし以前のスタイルのReplyが有効の場合には対象のユーザの最後に受信したIDにくっつける)
+            if (_config.EnableOldStyleReply)
+            {
+                Match match = Regex.Match(message, "^@([A-Za-z0-9_]+)");
+                if (match.Success && _lastStatusIdsByScreenName.ContainsKey(match.Groups[1].Value))
+                    return UpdateStatus(message, _lastStatusIdsByScreenName[match.Groups[1].Value]);
+                else
+                    return UpdateStatus(message, 0);
+            }
+            else
+            {
+                return UpdateStatus(message, 0);
+            }
+        }
+        
+        /// <summary>
+        /// Twitterのステータスを更新します。
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inReplyToStatusId"></param>
+        /// <returns></returns>
+        public Status UpdateStatus(String message, Int32 inReplyToStatusId)
+        {
+            StatusUpdateEventArgs eventArgs = new StatusUpdateEventArgs(message, inReplyToStatusId);
+            if (!FireEvent(PreSendUpdateStatus, eventArgs)) return null;
+
+            Status status = _twitter.UpdateStatus(message, inReplyToStatusId);
+                        
+            if (status != null)
+            {
+                Trace.WriteLineIf(status != null, String.Format("Status Update: {0} (ID:{1}, CreatedAt:{2}; InReplyToStatusId:{3})", status.Text, status.Id.ToString(), status.CreatedAt.ToString(), inReplyToStatusId));
+
+                _lastStatusIdsFromGateway.AddLast(status.Id);
+                if (_lastStatusIdsFromGateway.Count > 100)
+                {
+                    _lastStatusIdsFromGateway.RemoveFirst();
+                }
+            }
+
+            eventArgs.CreatedStatus = status;
+            if (!FireEvent(PostSendUpdateStatus, eventArgs)) return null;
+
+            return status;
         }
 
         void MessageReceived_WHOIS(object sender, MessageReceivedEventArgs e)
