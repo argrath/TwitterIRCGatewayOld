@@ -218,7 +218,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                                                    processor.Session.TwitterService.ProcessStatus(updatedStatus, (s) =>
                                                                                                                      {
                                                                                                                          Boolean requireFriendsUpdate = false;
-                                                                                                                         processor.Session.ProcessTimelineStatus(s, ref requireFriendsUpdate);
+                                                                                                                         processor.Session.ProcessTimelineStatus(s, ref requireFriendsUpdate, true);
                                                                                                                      });
                                                    
                                                });

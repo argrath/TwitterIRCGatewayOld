@@ -1364,12 +1364,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public void ProcessTimelineStatus (Status status, ref Boolean friendsCheckRequired)
         {
+            ProcessTimelineStatus(status, ref friendsCheckRequired, false);
+        }
+        public void ProcessTimelineStatus(Status status, ref Boolean friendsCheckRequired, Boolean ignoreGatewayCheck)
+        {
             TimelineStatusEventArgs eventArgs = new TimelineStatusEventArgs(status, status.Text, "PRIVMSG");
             if (!FireEvent(PreProcessTimelineStatus, eventArgs)) return;
             
             // チェック
             // 自分がゲートウェイを通して発言したものは捨てる
-            if (status.User == null || String.IsNullOrEmpty(status.User.ScreenName) || _lastStatusIdsFromGateway.Contains(status.Id))
+            if (!ignoreGatewayCheck && (status.User == null || String.IsNullOrEmpty(status.User.ScreenName) || _lastStatusIdsFromGateway.Contains(status.Id)))
             {
                 return;
             }
