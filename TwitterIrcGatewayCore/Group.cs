@@ -212,12 +212,30 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #endregion
     }
 
+    /// <summary>
+    /// 送信先を決定した後を表すクラス
+    /// </summary>
     public class RoutedGroup : IComparable
     {
+        /// <summary>
+        /// 決定対象となったグループを取得します
+        /// </summary>
         public Group Group { get; set; }
+        /// <summary>
+        /// 自分自身が送信したメッセージかどうかを取得します
+        /// </summary>
         public Boolean IsMessageFromSelf { get; set; }
+        /// <summary>
+        /// チャンネルにユーザが存在しているか、0人のチャンネルだったのかを取得します
+        /// </summary>
         public Boolean IsExistsInChannelOrNoMembers { get; set; }
+        /// <summary>
+        /// このチャンネルに送信されるIRCのメッセージの種類を取得または設定します
+        /// </summary>
         public String IRCMessageType { get; set; }
+        /// <summary>
+        /// このチャンネルに送信されるテキストを取得または設定します
+        /// </summary>
         public String Text { get; set; }
         
         public RoutedGroup()

@@ -55,7 +55,6 @@
     <Compile Include="AddIns\IAddIn.cs" />
     <Compile Include="AddIns\RemoveRedundantSuffix.cs" />
     <Compile Include="AddIns\ResolveTinyUrl.cs" />
-    <Compile Include="AddIns\TestAddIn.cs" />
     <Compile Include="AddIns\TypableMapSupport.cs" />
     <Compile Include="AddIns\UndoStatusUpdate.cs" />
     <Compile Include="Config.cs" />
