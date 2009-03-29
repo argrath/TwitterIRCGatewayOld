@@ -82,4 +82,27 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Text = text;
         }
     }
+
+    public class TimelineStatusRoutedEventArgs : EventArgs
+    {
+        public Status Status { get; private set; }
+        public String Text { get; private set; }
+        public List<RoutedGroup> RoutedGroups { get; private set; }
+        public TimelineStatusRoutedEventArgs(Status status, String text, List<RoutedGroup> routedGroups)
+        {
+            Status = status;
+            Text = text;
+            RoutedGroups = routedGroups;
+        }
+    }
+
+    public class TimelineStatusGroupEventArgs : TimelineStatusEventArgs
+    {
+        public Group Group { get; private set; }
+
+        public TimelineStatusGroupEventArgs(Status status, String text, String ircMessageType, Group group) : base(status, text, ircMessageType)
+        {
+            Group = group;
+        }
+    }
 }

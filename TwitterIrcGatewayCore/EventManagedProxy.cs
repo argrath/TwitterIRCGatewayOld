@@ -5,6 +5,7 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Messaging;
 using System.Runtime.Remoting.Proxies;
 using System.Text;
+using System.Diagnostics;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
@@ -41,6 +42,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
+        [DebuggerStepThrough]
         public override IMessage Invoke(IMessage msg)
         {
             IMethodMessage methodMessage = msg as IMethodMessage;

@@ -63,6 +63,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public event EventHandler<TimelineStatusEventArgs> PreFilterProcessTimelineStatus;
         public event EventHandler<TimelineStatusEventArgs> PostFilterProcessTimelineStatus;
         public event EventHandler<TimelineStatusEventArgs> PreSendMessageTimelineStatus;
+        public event EventHandler<TimelineStatusRoutedEventArgs> MessageRoutedTimelineStatus;
+        public event EventHandler<TimelineStatusGroupEventArgs> PreSendGroupMessageTimelineStatus;
+        public event EventHandler<TimelineStatusGroupEventArgs> PostSendGroupMessageTimelineStatus;
         public event EventHandler<TimelineStatusEventArgs> PostSendMessageTimelineStatus;
         public event EventHandler<TimelineStatusEventArgs> PostProcessTimelineStatus;
         public event EventHandler<TimelineStatusesEventArgs> PostProcessTimelineStatuses;
@@ -1394,63 +1397,89 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (!FireEvent(PostFilterProcessTimelineStatus, eventArgs)) return;
             if (!FireEvent(PreSendMessageTimelineStatus, eventArgs)) return;
             
-            String[] lines = eventArgs.Text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (String line in lines)
+            // 送信先を決定する
+            List<RoutedGroup> routedGroups = RoutingStatusMessage(status, eventArgs.Text, eventArgs.IRCMessageType);
+            // メインチャンネルを送信先として追加する
+            routedGroups.Add(new RoutedGroup()
+                             {
+                                 Group                        = new Group(_config.ChannelName),
+                                 IRCMessageType               = eventArgs.IRCMessageType,
+                                 IsExistsInChannelOrNoMembers = true,
+                                 IsMessageFromSelf            = false,
+                                 Text                         = eventArgs.Text
+                             });
+            if (!FireEvent(MessageRoutedTimelineStatus, new TimelineStatusRoutedEventArgs(status, eventArgs.Text, routedGroups))) return;
+            
+            // 送信する
+            foreach (RoutedGroup routedGroup in routedGroups)
             {
-                // 初回はrecentろぐっぽく
-                if (_isFirstTime)
+                TimelineStatusGroupEventArgs eventArgsGroup = new TimelineStatusGroupEventArgs(status, routedGroup.Text, routedGroup.IRCMessageType, routedGroup.Group);
+                if (!FireEvent(PreSendGroupMessageTimelineStatus, eventArgsGroup)) return;
+
+                String[] lines = routedGroup.Text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var line in lines)
                 {
-                    Send(new NoticeMessage()
+                    if (_isFirstTime)
                     {
-                        SenderNick = status.User.ScreenName,
-                        SenderHost = "twitter@" + Server.ServerName,
-                        Receiver   = _config.ChannelName,
-                        Content    = String.Format("{0}: {1}", status.CreatedAt.ToString("HH:mm"), line)
-                    });
-                }
-                else
-                {
-                    Send(CreateIRCMessageFromStatusAndType(status, eventArgs.IRCMessageType, _config.ChannelName, line));
-                }
-
-                // グループにも投げる
-                foreach (Group group in _groups.Values)
-                {
-                    if (!group.IsJoined || group.IsSpecial)
-                        continue;
-
-                    Boolean isOrMatch = String.IsNullOrEmpty(group.Topic) ? false : group.Topic.StartsWith("|");
-                    Boolean isMatched = String.IsNullOrEmpty(group.Topic) ? true : Regex.IsMatch(line, (isOrMatch ? group.Topic.Substring(1) : group.Topic));
-                    Boolean isExistsInChannelOrNoMembers = (group.Exists(status.User.ScreenName) || group.Members.Count == 0);
-                    Boolean isMessageFromSelf = (_twitterUser != null) ? (status.User.Id == _twitterUser.Id && !group.IgnoreEchoBack) : false;
-
-                    // 0: self && !IgnoreEchoback
-                    // 1: member exists in channel && match regex
-                    // 2: no members in channel(self only) && match regex
-                    // 3: member exists in channel || match regex (StartsWith: "|")
-                    // 4: no members in channel(self only) || match regex (StartsWith: "|")
-                    if (isMessageFromSelf || (isOrMatch ? (isExistsInChannelOrNoMembers || isMatched) : (isExistsInChannelOrNoMembers && isMatched)))
+                        // 初回のときはNOTICE+時間
+                        Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", routedGroup.Group.Name,
+                                                               String.Format("{0}: {1}",
+                                                                             status.CreatedAt.ToString("HH:mm"), line)));
+                    }
+                    else
                     {
-                        if (_isFirstTime)
-                        {
-                            // 初回のときはNOTICE+時間
-                            Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", group.Name, String.Format("{0}: {1}", status.CreatedAt.ToString("HH:mm"), line)));
-                        }
-                        else if (isMessageFromSelf && _config.BroadcastUpdateMessageIsNotice)
-                        {
-                            // 自分からのメッセージでBroadcastUpdateMessageIsNoticeがTrueのときはNOTICE
-                            Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", group.Name, line));
-                        }
-                        else
-                        {
-                            Send(CreateIRCMessageFromStatusAndType(status, eventArgs.IRCMessageType, group.Name, line));
-                        }
+                        Send(CreateIRCMessageFromStatusAndType(status, routedGroup.IRCMessageType,
+                                                               routedGroup.Group.Name, line));
                     }
                 }
+                
+                if (!FireEvent(PostSendGroupMessageTimelineStatus, eventArgsGroup)) return;
             }
 
             if (!FireEvent(PostSendMessageTimelineStatus, eventArgs)) return;
             if (!FireEvent(PostProcessTimelineStatus, eventArgs)) return;
+        }
+
+        /// <summary>
+        /// メッセージを送信する先を決定します
+        /// </summary>
+        /// <param name="status"></param>
+        /// <param name="text"></param>
+        /// <param name="ircMessageType"></param>
+        /// <returns></returns>
+        public List<RoutedGroup> RoutingStatusMessage(Status status, String text, String ircMessageType)
+        {
+            List<RoutedGroup> routedGroups = new List<RoutedGroup>();
+            
+            foreach (Group group in _groups.Values)
+            {
+                if (!group.IsJoined || group.IsSpecial)
+                    continue;
+
+                Boolean isOrMatch = group.IsOrMatch;
+                Boolean isMatched = String.IsNullOrEmpty(group.Topic) ? true : Regex.IsMatch(text, (isOrMatch ? group.Topic.Substring(1) : group.Topic));
+                Boolean isExistsInChannelOrNoMembers = (group.Exists(status.User.ScreenName) || group.Members.Count == 0);
+                Boolean isMessageFromSelf = (_twitterUser != null) ? (status.User.Id == _twitterUser.Id && !group.IgnoreEchoBack) : false;
+
+                // 0: self && !IgnoreEchoback
+                // 1: member exists in channel && match regex
+                // 2: no members in channel(self only) && match regex
+                // 3: member exists in channel || match regex (StartsWith: "|")
+                // 4: no members in channel(self only) || match regex (StartsWith: "|")
+                if (isMessageFromSelf || (group.IsOrMatch ? (isExistsInChannelOrNoMembers || isMatched) : (isExistsInChannelOrNoMembers && isMatched)))
+                {
+                    routedGroups.Add(new RoutedGroup()
+                                     {
+                                         Group = group,
+                                         IsExistsInChannelOrNoMembers = isExistsInChannelOrNoMembers,
+                                         IsMessageFromSelf = isMessageFromSelf,
+                                         // 自分からのメッセージでBroadcastUpdateMessageIsNoticeがTrueのときはNOTICE
+                                         IRCMessageType = (isMessageFromSelf && _config.BroadcastUpdateMessageIsNotice) ? "NOTICE" : ircMessageType,
+                                         Text = text
+                                     });
+                }
+            }
+            return routedGroups;
         }
 
         // XXX: IRCクライアントライブラリのアップデートで対応できるけどとりあえず...
@@ -1527,6 +1556,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="handlers"></param>
         /// <param name="e"></param>
         /// <returns>キャンセルされた場合にはfalseが返ります。</returns>
+        [DebuggerStepThrough]
         private Boolean FireEvent<TEventArgs>(EventHandler<TEventArgs> handlers, TEventArgs e) where TEventArgs:EventArgs
         {
             if (handlers != null)

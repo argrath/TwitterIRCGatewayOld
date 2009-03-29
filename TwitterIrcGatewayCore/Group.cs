@@ -186,6 +186,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
+        public Boolean IsOrMatch
+        {
+            get
+            {
+                return String.IsNullOrEmpty(Topic) ? false : Topic.StartsWith("|");
+            }
+        }
+
+        public override string ToString()
+        {
+            return String.Format("Group: {0} ({1} members)", Name, Members.Count);
+        }
+
         #region IComparable ÉÅÉìÉo
 
         public int CompareTo(object obj)
@@ -196,6 +209,30 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return String.Compare((obj as Group).Name, this.Name, true, CultureInfo.InvariantCulture);
         }
 
+        #endregion
+    }
+
+    public class RoutedGroup : IComparable
+    {
+        public Group Group { get; set; }
+        public Boolean IsMessageFromSelf { get; set; }
+        public Boolean IsExistsInChannelOrNoMembers { get; set; }
+        public String IRCMessageType { get; set; }
+        public String Text { get; set; }
+        
+        public RoutedGroup()
+        {
+            IRCMessageType = "PRIVMSG";
+        }
+        
+        #region IComparable ÉÅÉìÉo
+        public int CompareTo(object obj)
+        {
+            if (!(obj is RoutedGroup))
+                return -1;
+
+            return String.Compare((obj as RoutedGroup).Group.Name, this.Group.Name, true, CultureInfo.InvariantCulture);
+        }
         #endregion
     }
 }
