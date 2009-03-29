@@ -1416,7 +1416,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 TimelineStatusGroupEventArgs eventArgsGroup = new TimelineStatusGroupEventArgs(status, routedGroup.Text, routedGroup.IRCMessageType, routedGroup.Group);
                 if (!FireEvent(PreSendGroupMessageTimelineStatus, eventArgsGroup)) return;
 
-                String[] lines = routedGroup.Text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                String[] lines = eventArgsGroup.Text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
                 {
                     if (_isFirstTime)
@@ -1428,7 +1428,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
                     else
                     {
-                        Send(CreateIRCMessageFromStatusAndType(status, routedGroup.IRCMessageType,
+                        Send(CreateIRCMessageFromStatusAndType(status, eventArgsGroup.IRCMessageType,
                                                                routedGroup.Group.Name, line));
                     }
                 }
