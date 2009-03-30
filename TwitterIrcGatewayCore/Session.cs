@@ -20,6 +20,9 @@ using Misuzilla.Applications.TwitterIrcGateway.AddIns;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
+    /// <summary>
+    /// ユーザからの接続を管理するクラス
+    /// </summary>
     public class Session : MarshalByRefObject, IDisposable
     {
         private readonly static String ConfigBasePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Configs");
@@ -48,35 +51,98 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private User _twitterUser;
         
         #region Events
+        /// <summary>
+        /// IRCメッセージ受信時、TwitterIrcGatewayが処理する前のイベント
+        /// </summary>
         public event EventHandler<MessageReceivedEventArgs> PreMessageReceived;
+        /// <summary>
+        /// IRCメッセージ受信時のイベント
+        /// </summary>
         public event EventHandler<MessageReceivedEventArgs> MessageReceived;
+        /// <summary>
+        /// IRCメッセージ受信時、TwitterIrcGatewayが処理した後のイベント
+        /// </summary>
         public event EventHandler<MessageReceivedEventArgs> PostMessageReceived;
+
+        /// <summary>
+        /// セッション開始時のイベント
+        /// </summary>
         public event EventHandler<SessionStartedEventArgs> SessionStarted;
+        /// <summary>
+        /// セッション終了時のイベント
+        /// </summary>
         public event EventHandler<EventArgs> SessionEnded;
-        
+
+        /// <summary>
+        /// 設定変更時のイベント
+        /// </summary>
         public event EventHandler<EventArgs> ConfigChanged;
 
+        /// <summary>
+        /// アドインをすべて読み込んで Initialize 完了時のイベント
+        /// </summary>
         public event EventHandler<EventArgs> AddInsLoadCompleted;
 
+        /// <summary>
+        /// 受信したタイムラインステータスのセットを処理前のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusesEventArgs> PreProcessTimelineStatuses;
+        /// <summary>
+        /// タイムラインステータスを処理前のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusEventArgs> PreProcessTimelineStatus;
+        /// <summary>
+        /// フィルタ処理前のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusEventArgs> PreFilterProcessTimelineStatus;
+        /// <summary>
+        /// フィルタ処理後のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusEventArgs> PostFilterProcessTimelineStatus;
+        /// <summary>
+        /// タイムラインステータスの送信前のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusEventArgs> PreSendMessageTimelineStatus;
+        /// <summary>
+        /// 受信したステータスメッセージの送信先グループ決定時のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusRoutedEventArgs> MessageRoutedTimelineStatus;
+        /// <summary>
+        /// 受信したステータスメッセージをグループに送信前のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusGroupEventArgs> PreSendGroupMessageTimelineStatus;
+        /// <summary>
+        /// 受信したステータスメッセージをグループに送信後のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusGroupEventArgs> PostSendGroupMessageTimelineStatus;
+        /// <summary>
+        /// タイムラインステータスをすべてのグループに送信後のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusEventArgs> PostSendMessageTimelineStatus;
+        /// <summary>
+        /// タイムラインステータスを処理後のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusEventArgs> PostProcessTimelineStatus;
+        /// <summary>
+        /// 受信したタイムラインステータスのセットを処理後のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusesEventArgs> PostProcessTimelineStatuses;
 
-        // IRCクライアントからのステータス更新要求を受信
+        /// <summary>
+        /// IRCクライアントからのステータス更新要求を受信時のイベント
+        /// </summary>
         public event EventHandler<StatusUpdateEventArgs> UpdateStatusRequestReceived;
-        // Twitterのステータス更新を行う直前
+        /// <summary>
+        /// Twitterのステータス更新を行う直前時のイベント
+        /// </summary>
         public event EventHandler<StatusUpdateEventArgs> PreSendUpdateStatus;
-        // Twitterのステータス更新を行った直後
+        /// <summary>
+        /// Twitterのステータス更新を行った直後時のイベント
+        /// </summary>
         public event EventHandler<StatusUpdateEventArgs> PostSendUpdateStatus;
-        // IRCクライアントからのステータス更新要求が完了
+        /// <summary>
+        /// IRCクライアントからのステータス更新要求が完了時のイベント
+        /// </summary>
         public event EventHandler<TimelineStatusEventArgs> UpdateStatusRequestCommited;
         #endregion
 
@@ -121,7 +187,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// 
+        /// 接続しているクライアントを取得します
         /// </summary>
         public TcpClient TcpClient
         {
@@ -129,7 +195,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// 
+        /// 現在のニックネームを取得します
         /// </summary>
         public String Nick
         {
@@ -137,7 +203,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// 
+        /// クライアントホスト名を取得します
         /// </summary>
         public String ClientHost
         {
@@ -145,7 +211,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// セッションに結びつけられたTwitterへのAPIアクセスのためのサービス
+        /// セッションに結びつけられたTwitterへのAPIアクセスのためのサービスを取得します
         /// </summary>
         public TwitterService TwitterService
         {
@@ -153,7 +219,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// セッションに結びつけられた設定
+        /// セッションに結びつけられた設定を取得します
         /// </summary>
         public Config Config
         {
@@ -161,7 +227,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// セッションが持つグループのコレクション
+        /// セッションが持つグループのコレクションを取得します
         /// </summary>
         public Groups Groups
         {
@@ -169,7 +235,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// セッションが持つフィルタのコレクション
+        /// セッションが持つフィルタのコレクションを取得します
         /// </summary>
         public Filters Filters
         {
@@ -177,7 +243,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// セッションのアドインマネージャ
+        /// セッションのアドインマネージャを取得します
         /// </summary>
         public AddInManager AddInManager
         {
@@ -185,7 +251,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }        
         
         /// <summary>
-        /// ユーザの設定が保存されているディレクトリのパス
+        /// ユーザの設定が保存されているディレクトリのパスを取得します
         /// </summary>
         public String UserConfigDirectory
         {
@@ -193,7 +259,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// 接続に利用しているTwitterのアカウントのユーザ情報
+        /// 接続に利用しているTwitterのアカウントのユーザ情報を取得します
         /// </summary>
         public User TwitterUser
         {
@@ -1201,7 +1267,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #endregion
 
         /// <summary>
-        /// 
+        /// IRCメッセージを送信します
         /// </summary>
         /// <param name="msg"></param>
         public void Send(IRCMessage msg)
@@ -1218,7 +1284,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// JOIN とかクライアントに返すやつ
+        /// JOIN とかクライアントに返すメッセージを送信します
         /// </summary>
         /// <param name="msg"></param>
         public void SendServer(IRCMessage msg)
@@ -1228,7 +1294,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// IRCサーバメッセージ系
+        /// IRCサーバメッセージ系を送信します
         /// </summary>
         /// <param name="msg"></param>
         public void SendServerMessage(IRCMessage msg)
@@ -1238,7 +1304,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// サーバメッセージ系
+        /// サーバメッセージ系を送信します
         /// </summary>
         /// <param name="message"></param>
         public void SendTwitterGatewayServerMessage(String message)
@@ -1251,7 +1317,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// サーバエラーメッセージ系
+        /// サーバエラーメッセージ系を送信します
         /// </summary>
         /// <param name="message"></param>
         public void SendServerErrorMessage(String message)
@@ -1293,7 +1359,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 
         /// </summary>
-        void GetFriendNames()
+        private void GetFriendNames()
         {
             RunCheck(delegate
             {
@@ -1362,6 +1428,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             });
         }
 
+        /// <summary>
+        /// タイムラインのステータスを処理して、クライアントに送信します
+        /// </summary>
+        /// <param name="status"></param>
+        /// <param name="friendsCheckRequired"></param>
         public void ProcessTimelineStatus (Status status, ref Boolean friendsCheckRequired)
         {
             ProcessTimelineStatus(status, ref friendsCheckRequired, false);
