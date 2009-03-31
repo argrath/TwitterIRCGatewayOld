@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net;
@@ -8,7 +8,7 @@ using System.Diagnostics;
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
     /// <summary>
-    /// TwitterIrcGateway‚ÌÚ‘±ƒT[ƒo‹@”\‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+    /// TwitterIrcGatewayã®æ¥ç¶šã‚µãƒ¼ãƒæ©Ÿèƒ½ã‚’æä¾›ã—ã¾ã™ã€‚
     /// </summary>
     public class Server : MarshalByRefObject
     {
@@ -17,7 +17,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Encoding _encoding = Encoding.GetEncoding("ISO-2022-JP");
 
         /// <summary>
-        /// APIƒAƒNƒZƒX‚É—˜—p‚·‚éƒvƒƒNƒVƒT[ƒo‚Ìİ’è
+        /// APIã‚¢ã‚¯ã‚»ã‚¹ã«åˆ©ç”¨ã™ã‚‹ãƒ—ãƒ­ã‚¯ã‚·ã‚µãƒ¼ãƒã®è¨­å®š
         /// </summary>
         public IWebProxy Proxy = null;
 
@@ -25,12 +25,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public const String ServerNick = "$TwitterIrcGatewayServer$";
 
         /// <summary>
-        /// V‚½‚ÈƒZƒbƒVƒ‡ƒ“‚ªŠJn‚³‚ê‚½ƒCƒxƒ“ƒg
+        /// æ–°ãŸãªã‚»ãƒƒã‚·ãƒ§ãƒ³ãŒé–‹å§‹ã•ã‚ŒãŸã‚¤ãƒ™ãƒ³ãƒˆ
         /// </summary>
         public event EventHandler<SessionStartedEventArgs> SessionStartedReceived;
 
         /// <summary>
-        /// •¶šƒGƒ“ƒR[ƒfƒBƒ“ƒO‚ğæ“¾Eİ’è‚µ‚Ü‚·
+        /// æ–‡å­—ã‚¨ãƒ³ã‚³ãƒ¼ãƒ‡ã‚£ãƒ³ã‚°ã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™
         /// </summary>
         public Encoding Encoding
         {
@@ -38,7 +38,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             set { _encoding = value; }
         }
         /// <summary>
-        /// ƒT[ƒo‚ªŒ»İ“®ì’†‚©‚Ç‚¤‚©‚ğæ“¾‚µ‚Ü‚·
+        /// ã‚µãƒ¼ãƒãŒç¾åœ¨å‹•ä½œä¸­ã‹ã©ã†ã‹ã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public Boolean IsRunning
         {
@@ -46,10 +46,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// w’è‚µ‚½IPƒAƒhƒŒƒX‚Æƒ|[ƒg‚ÅƒNƒ‰ƒCƒAƒ“ƒg‚©‚ç‚ÌÚ‘±‘Ò‚¿ó‚¯‚ğŠJn‚µ‚Ü‚·
+        /// æŒ‡å®šã—ãŸIPã‚¢ãƒ‰ãƒ¬ã‚¹ã¨ãƒãƒ¼ãƒˆã§ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã‹ã‚‰ã®æ¥ç¶šå¾…ã¡å—ã‘ã‚’é–‹å§‹ã—ã¾ã™
         /// </summary>
-        /// <param name="ipAddr">Ú‘±‚ğ‘Ò‚¿ó‚¯‚éIPƒAƒhƒŒƒX</param>
-        /// <param name="port">Ú‘±‚ğ‘Ò‚¿ó‚¯‚éƒ|[ƒg</param>
+        /// <param name="ipAddr">æ¥ç¶šã‚’å¾…ã¡å—ã‘ã‚‹IPã‚¢ãƒ‰ãƒ¬ã‚¹</param>
+        /// <param name="port">æ¥ç¶šã‚’å¾…ã¡å—ã‘ã‚‹ãƒãƒ¼ãƒˆ</param>
         public void Start(IPAddress ipAddr, Int32 port)
         {
             if (IsRunning)
@@ -66,7 +66,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// ƒNƒ‰ƒCƒAƒ“ƒg‚©‚ç‚ÌÚ‘±‘Ò‚¿ó‚¯‚ğ’â~‚µ‚Ü‚·
+        /// ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã‹ã‚‰ã®æ¥ç¶šå¾…ã¡å—ã‘ã‚’åœæ­¢ã—ã¾ã™
         /// </summary>
         public void Stop()
         {
@@ -114,7 +114,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         void session_SessionStartedReceived(object sender, SessionStartedEventArgs e)
         {
-            // ’†Œp
+            // ä¸­ç¶™
             if (SessionStartedReceived != null)
             {
                 SessionStartedReceived(sender, e);

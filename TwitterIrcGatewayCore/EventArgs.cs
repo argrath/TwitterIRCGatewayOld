@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Net.Sockets;
@@ -8,20 +8,20 @@ using Misuzilla.Net.Irc;
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
     /// <summary>
-    /// IRCƒƒbƒZ[ƒWóMƒCƒxƒ“ƒg‚Ìƒf[ƒ^‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+    /// IRCãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å—ä¿¡æ™‚ã‚¤ãƒ™ãƒ³ãƒˆã®ãƒ‡ãƒ¼ã‚¿ã‚’æä¾›ã—ã¾ã™ã€‚
     /// </summary>
     public class MessageReceivedEventArgs : CancelableEventArgs
     {
         /// <summary>
-        /// óM‚µ‚½IRCƒƒbƒZ[ƒW‚ğæ“¾‚µ‚Ü‚·
+        /// å—ä¿¡ã—ãŸIRCãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public IRCMessage Message { get; set; }
         /// <summary>
-        /// ƒNƒ‰ƒCƒAƒ“ƒg‚Ö‚ÌÚ‘±‚ğæ“¾‚µ‚Ü‚·
+        /// ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã¸ã®æ¥ç¶šã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public TcpClient Client { get; private set; }
         /// <summary>
-        /// ƒNƒ‰ƒCƒAƒ“ƒg‚Ö‚Ìo—Í‚Ì‚½‚ß‚ÌStreamWriter‚ğæ“¾‚µ‚Ü‚·
+        /// ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã¸ã®å‡ºåŠ›ã®ãŸã‚ã®StreamWriterã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public StreamWriter Writer { get; private set; }
 
@@ -34,12 +34,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// ƒZƒbƒVƒ‡ƒ“‚ªŠJnƒCƒxƒ“ƒg‚Ìƒf[ƒ^‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+    /// ã‚»ãƒƒã‚·ãƒ§ãƒ³ãŒé–‹å§‹æ™‚ã‚¤ãƒ™ãƒ³ãƒˆã®ãƒ‡ãƒ¼ã‚¿ã‚’æä¾›ã—ã¾ã™ã€‚
     /// </summary>
     public class SessionStartedEventArgs : EventArgs
     {
         /// <summary>
-        /// Ú‘±‚µ‚Ä‚«‚½ƒ†[ƒU‚Ì–¼‘O‚ğæ“¾‚µ‚Ü‚·B
+        /// æ¥ç¶šã—ã¦ããŸãƒ¦ãƒ¼ã‚¶ã®åå‰ã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
         public String UserName;
         public SessionStartedEventArgs(String userName)
@@ -49,27 +49,27 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// ƒLƒƒƒ“ƒZƒ‹‰Â”\‚ÈƒCƒxƒ“ƒg‚Ìƒf[ƒ^‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+    /// ã‚­ãƒ£ãƒ³ã‚»ãƒ«å¯èƒ½ãªã‚¤ãƒ™ãƒ³ãƒˆã®ãƒ‡ãƒ¼ã‚¿ã‚’æä¾›ã—ã¾ã™ã€‚
     /// </summary>
     public abstract class CancelableEventArgs : EventArgs
     {
         /// <summary>
-        /// ˆ—‚ğƒLƒƒƒ“ƒZƒ‹‚·‚é‚©‚Ç‚¤‚©‚ğæ“¾Eİ’è‚µ‚Ü‚·
+        /// å‡¦ç†ã‚’ã‚­ãƒ£ãƒ³ã‚»ãƒ«ã™ã‚‹ã‹ã©ã†ã‹ã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™
         /// </summary>
         public Boolean Cancel { get; set; }
     }
 
     /// <summary>
-    /// ƒ^ƒCƒ€ƒ‰ƒCƒ“ƒXƒe[ƒ^ƒXˆê——‚ğæ“¾‚µ‚½ƒCƒxƒ“ƒg‚Ìƒf[ƒ^‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+    /// ã‚¿ã‚¤ãƒ ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ä¸€è¦§ã‚’å–å¾—ã—ãŸã‚¤ãƒ™ãƒ³ãƒˆã®ãƒ‡ãƒ¼ã‚¿ã‚’æä¾›ã—ã¾ã™ã€‚
     /// </summary>
     public class TimelineStatusesEventArgs : CancelableEventArgs
     {
         /// <summary>
-        /// ƒXƒe[ƒ^ƒXˆê——‚ğæ“¾‚µ‚Ü‚·B
+        /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ä¸€è¦§ã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
         public Statuses Statuses { get; private set; }
         /// <summary>
-        /// ‰‰ñƒAƒNƒZƒX‚©‚Ç‚¤‚©‚ğæ“¾‚µ‚Ü‚·B
+        /// åˆå›ã‚¢ã‚¯ã‚»ã‚¹ã‹ã©ã†ã‹ã‚’å–å¾—ã—ã¾ã™ã€‚
         /// </summary>
         public Boolean IsFirstTime { get; set; }
         
@@ -81,20 +81,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
     
     /// <summary>
-    /// ƒ^ƒCƒ€ƒ‰ƒCƒ“ƒXƒe[ƒ^ƒX‚ğˆ—‚·‚éƒCƒxƒ“ƒg‚Ìƒf[ƒ^‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+    /// ã‚¿ã‚¤ãƒ ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’å‡¦ç†ã™ã‚‹ã‚¤ãƒ™ãƒ³ãƒˆã®ãƒ‡ãƒ¼ã‚¿ã‚’æä¾›ã—ã¾ã™ã€‚
     /// </summary>
     public class TimelineStatusEventArgs : CancelableEventArgs
     {
         /// <summary>
-        /// ó‚¯æ‚Á‚½ƒXƒe[ƒ^ƒX‚ğæ“¾‚µ‚Ü‚·
+        /// å—ã‘å–ã£ãŸã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public Status Status { get; private set; }
         /// <summary>
-        /// ‚±‚ê‚©‚çƒNƒ‰ƒCƒAƒ“ƒg‚É‘—‚ë‚¤‚Æ‚µ‚Ä‚¢‚é–{•¶‚ğæ“¾Eİ’è‚µ‚Ü‚·
+        /// ã“ã‚Œã‹ã‚‰ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã«é€ã‚ã†ã¨ã—ã¦ã„ã‚‹æœ¬æ–‡ã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™
         /// </summary>
         public String Text { get; set; }
         /// <summary>
-        /// ƒNƒ‰ƒCƒAƒ“ƒg‚É‘—M‚·‚éIRCƒƒbƒZ[ƒW‚Ìí—Ş‚ğæ“¾Eİ’è‚µ‚Ü‚·
+        /// ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã«é€ä¿¡ã™ã‚‹IRCãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®ç¨®é¡ã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™
         /// </summary>
         public String IRCMessageType { get; set; }
         
@@ -110,24 +110,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// ƒXƒe[ƒ^ƒX‚ğƒNƒ‰ƒCƒAƒ“ƒg‚©‚çXV‚µ‚½ƒCƒxƒ“ƒg‚Ìƒf[ƒ^‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+    /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã‹ã‚‰æ›´æ–°ã—ãŸã‚¤ãƒ™ãƒ³ãƒˆã®ãƒ‡ãƒ¼ã‚¿ã‚’æä¾›ã—ã¾ã™ã€‚
     /// </summary>
     public class StatusUpdateEventArgs : CancelableEventArgs
     {
         /// <summary>
-        /// ƒNƒ‰ƒCƒAƒ“ƒg‚©‚çó‚¯æ‚Á‚½IRCƒƒbƒZ[ƒW‚ğæ“¾‚µ‚Ü‚·Bƒ^ƒCƒ~ƒ“ƒO‚âŒÄ‚Ño‚µŒ³‚É‚æ‚Á‚Ä‚Ínull‚É‚È‚è‚Ü‚·B
+        /// ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã‹ã‚‰å—ã‘å–ã£ãŸIRCãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å–å¾—ã—ã¾ã™ã€‚ã‚¿ã‚¤ãƒŸãƒ³ã‚°ã‚„å‘¼ã³å‡ºã—å…ƒã«ã‚ˆã£ã¦ã¯nullã«ãªã‚Šã¾ã™ã€‚
         /// </summary>
         public PrivMsgMessage ReceivedMessage { get; set; }
         /// <summary>
-        /// XV‚·‚é‚Ì‚É—˜—p‚·‚éƒeƒLƒXƒg‚ğæ“¾Eİ’è‚µ‚Ü‚·
+        /// æ›´æ–°ã™ã‚‹ã®ã«åˆ©ç”¨ã™ã‚‹ãƒ†ã‚­ã‚¹ãƒˆã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™
         /// </summary>
         public String Text { get; set; }
         /// <summary>
-        /// •ÔMæ‚ÌƒXƒe[ƒ^ƒX‚ÌID‚ğw’è‚µ‚Ü‚·B0‚ğw’è‚·‚é‚Æ•ÔMæ‚ğw’è‚µ‚È‚©‚Á‚½‚±‚Æ‚É‚È‚è‚Ü‚·B
+        /// è¿”ä¿¡å…ˆã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã®IDã‚’æŒ‡å®šã—ã¾ã™ã€‚0ã‚’æŒ‡å®šã™ã‚‹ã¨è¿”ä¿¡å…ˆã‚’æŒ‡å®šã—ãªã‹ã£ãŸã“ã¨ã«ãªã‚Šã¾ã™ã€‚
         /// </summary>
         public Int32 InReplyToStatusId { get; set; }
         /// <summary>
-        /// ƒXƒe[ƒ^ƒX‚ğXV‚µ‚Ä‚»‚ÌŒ‹‰Ê‚ÌƒXƒe[ƒ^ƒX‚ğæ“¾‚µ‚Ü‚·BXVŠ®—¹‚ÌƒCƒxƒ“ƒg‚Å‚Ì‚İ—˜—p‚Å‚«‚Ü‚·B
+        /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’æ›´æ–°ã—ã¦ãã®çµæœã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’å–å¾—ã—ã¾ã™ã€‚æ›´æ–°å®Œäº†æ™‚ã®ã‚¤ãƒ™ãƒ³ãƒˆã§ã®ã¿åˆ©ç”¨ã§ãã¾ã™ã€‚
         /// </summary>
         public Status CreatedStatus { get; set; }
 
@@ -145,20 +145,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// ƒƒbƒZ[ƒW‚Ì‘—Mæ‚ğŒˆ’è‚µ‚½ƒCƒxƒ“ƒg‚Ìƒf[ƒ^‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+    /// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®é€ä¿¡å…ˆã‚’æ±ºå®šã—ãŸã‚¤ãƒ™ãƒ³ãƒˆã®ãƒ‡ãƒ¼ã‚¿ã‚’æä¾›ã—ã¾ã™ã€‚
     /// </summary>
     public class TimelineStatusRoutedEventArgs : EventArgs
     {
         /// <summary>
-        /// ƒXƒe[ƒ^ƒX‚ğæ“¾‚µ‚Ü‚·
+        /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public Status Status { get; private set; }
         /// <summary>
-        /// ƒƒbƒZ[ƒW‚Ì–{•¶‚ğæ“¾‚µ‚Ü‚·
+        /// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®æœ¬æ–‡ã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public String Text { get; private set; }
         /// <summary>
-        /// Œˆ’è‚³‚ê‚½‘—Mæ‚ÌƒŠƒXƒg‚ğæ“¾‚µ‚Ü‚·B‚±‚ÌƒŠƒXƒg‚É’Ç‰Á‚Ü‚½‚Ííœ‚·‚é‚±‚Æ‚Å‘—Mæ‚ğ•ÏX‚Å‚«‚Ü‚·B
+        /// æ±ºå®šã•ã‚ŒãŸé€ä¿¡å…ˆã®ãƒªã‚¹ãƒˆã‚’å–å¾—ã—ã¾ã™ã€‚ã“ã®ãƒªã‚¹ãƒˆã«è¿½åŠ ã¾ãŸã¯å‰Šé™¤ã™ã‚‹ã“ã¨ã§é€ä¿¡å…ˆã‚’å¤‰æ›´ã§ãã¾ã™ã€‚
         /// </summary>
         public List<RoutedGroup> RoutedGroups { get; private set; }
         
@@ -171,12 +171,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// ƒƒbƒZ[ƒW‚ğŠeƒOƒ‹[ƒv‚É‘—M‚·‚éƒCƒxƒ“ƒg‚Ìƒf[ƒ^‚ğ’ñ‹Ÿ‚µ‚Ü‚·B
+    /// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’å„ã‚°ãƒ«ãƒ¼ãƒ—ã«é€ä¿¡ã™ã‚‹ã‚¤ãƒ™ãƒ³ãƒˆã®ãƒ‡ãƒ¼ã‚¿ã‚’æä¾›ã—ã¾ã™ã€‚
     /// </summary>
     public class TimelineStatusGroupEventArgs : TimelineStatusEventArgs
     {
         /// <summary>
-        /// ‘—M‘ÎÛ‚Æ‚È‚éƒOƒ‹[ƒv‚ğæ“¾‚µ‚Ü‚·
+        /// é€ä¿¡å¯¾è±¡ã¨ãªã‚‹ã‚°ãƒ«ãƒ¼ãƒ—ã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public Group Group { get; private set; }
 

@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Globalization;
@@ -11,7 +11,7 @@ using System.Diagnostics;
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
     /// <summary>
-    /// Group‚ğƒ`ƒƒƒ“ƒlƒ‹–¼‚ÅŠi”[‚µ‚Ü‚·B
+    /// Groupã‚’ãƒãƒ£ãƒ³ãƒãƒ«åã§æ ¼ç´ã—ã¾ã™ã€‚
     /// </summary>
     public class Groups : SortedList<string, Group>
     {
@@ -71,7 +71,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <returns></returns>
         public static Groups Load(String path)
         {
-            // group “Ç‚İæ‚è
+            // group èª­ã¿å–ã‚Š
             if (File.Exists(path))
             {
                 Trace.WriteLine(String.Format("Load Group: {0}", path));
@@ -128,34 +128,34 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// IRCã‚Åƒ`ƒƒƒ“ƒlƒ‹‚Æ‚µ‚Ä•\Œ»‚³‚ê‚éƒƒbƒZ[ƒW‘—M‘ÎÛ‚ÌƒOƒ‹[ƒv‚ğ•\‚µ‚Ü‚·B
+    /// IRCä¸Šã§ãƒãƒ£ãƒ³ãƒãƒ«ã¨ã—ã¦è¡¨ç¾ã•ã‚Œã‚‹ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸é€ä¿¡å¯¾è±¡ã®ã‚°ãƒ«ãƒ¼ãƒ—ã‚’è¡¨ã—ã¾ã™ã€‚
     /// </summary>
     public class Group : IComparable
     {
         /// <summary>
-        /// ƒ`ƒƒƒ“ƒlƒ‹–¼‚ğæ“¾Eİ’è‚µ‚Ü‚·
+        /// ãƒãƒ£ãƒ³ãƒãƒ«åã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™
         /// </summary>
         public String Name { get; set; }
         public String Mode { get; set; }
         /// <summary>
-        /// ƒOƒ‹[ƒv‚É‘®‚·‚éƒ†[ƒU‚ÌƒŠƒXƒg‚ğæ“¾‚µ‚Ü‚·
+        /// ã‚°ãƒ«ãƒ¼ãƒ—ã«å±ã™ã‚‹ãƒ¦ãƒ¼ã‚¶ã®ãƒªã‚¹ãƒˆã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public List<String> Members { get; set; }
         /// <summary>
-        /// JOIN‚µ‚Ä‚¢‚é‚©‚Ç‚¤‚©‚ğæ“¾Eİ’è‚µ‚Ü‚·
+        /// JOINã—ã¦ã„ã‚‹ã‹ã©ã†ã‹ã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™
         /// </summary>
         public Boolean IsJoined { get; set; }
         /// <summary>
-        /// “Á•Êˆµ‚¢‚³‚ê‚éƒ`ƒƒƒ“ƒlƒ‹‚©‚Ç‚¤‚©‚ğæ“¾Eİ’è‚µ‚Ü‚·B
-        /// “Á•Êˆµ‚¢‚³‚ê‚Ä‚¢‚éê‡Aƒ^ƒCƒ€ƒ‰ƒCƒ“ƒXƒe[ƒ^ƒX‚Í‘—M‚³‚ê‚È‚­‚È‚è‚Ü‚·B
+        /// ç‰¹åˆ¥æ‰±ã„ã•ã‚Œã‚‹ãƒãƒ£ãƒ³ãƒãƒ«ã‹ã©ã†ã‹ã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™ã€‚
+        /// ç‰¹åˆ¥æ‰±ã„ã•ã‚Œã¦ã„ã‚‹å ´åˆã€ã‚¿ã‚¤ãƒ ãƒ©ã‚¤ãƒ³ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã¯é€ä¿¡ã•ã‚Œãªããªã‚Šã¾ã™ã€‚
         /// </summary>
         public Boolean IsSpecial { get; set; }
         /// <summary>
-        /// ƒ`ƒƒƒ“ƒlƒ‹‚ÌƒgƒsƒbƒN‚ğæ“¾Eİ’è‚µ‚Ü‚·
+        /// ãƒãƒ£ãƒ³ãƒãƒ«ã®ãƒˆãƒ”ãƒƒã‚¯ã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™
         /// </summary>
         public String Topic { get; set; }
         /// <summary>
-        /// ƒ`ƒƒƒ“ƒlƒ‹‚Ìƒ‚[ƒh‚ğæ“¾Eİ’è‚µ‚Ü‚·
+        /// ãƒãƒ£ãƒ³ãƒãƒ«ã®ãƒ¢ãƒ¼ãƒ‰ã‚’å–å¾—ãƒ»è¨­å®šã—ã¾ã™
         /// </summary>
         public List<ChannelMode> ChannelModes { get; set; }
 
@@ -168,7 +168,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             if (!name.StartsWith("#") || name.Length < 2)
             {
-                throw new ArgumentException("ƒ`ƒƒƒ“ƒlƒ‹–¼‚Í#‚Ån‚Ü‚é•K—v‚ª‚ ‚è‚Ü‚·B");
+                throw new ArgumentException("ãƒãƒ£ãƒ³ãƒãƒ«åã¯#ã§å§‹ã¾ã‚‹å¿…è¦ãŒã‚ã‚Šã¾ã™ã€‚");
             }
             Name = name;
             Members = new List<string>();
@@ -224,7 +224,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return String.Format("Group: {0} ({1} members)", Name, Members.Count);
         }
 
-        #region IComparable ƒƒ“ƒo
+        #region IComparable ãƒ¡ãƒ³ãƒ
 
         public int CompareTo(object obj)
         {
@@ -238,28 +238,28 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// ‘—Mæ‚ğŒˆ’è‚µ‚½Œã‚ğ•\‚·ƒNƒ‰ƒX
+    /// é€ä¿¡å…ˆã‚’æ±ºå®šã—ãŸå¾Œã‚’è¡¨ã™ã‚¯ãƒ©ã‚¹
     /// </summary>
     public class RoutedGroup : IComparable
     {
         /// <summary>
-        /// Œˆ’è‘ÎÛ‚Æ‚È‚Á‚½ƒOƒ‹[ƒv‚ğæ“¾‚µ‚Ü‚·
+        /// æ±ºå®šå¯¾è±¡ã¨ãªã£ãŸã‚°ãƒ«ãƒ¼ãƒ—ã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public Group Group { get; set; }
         /// <summary>
-        /// ©•ª©g‚ª‘—M‚µ‚½ƒƒbƒZ[ƒW‚©‚Ç‚¤‚©‚ğæ“¾‚µ‚Ü‚·
+        /// è‡ªåˆ†è‡ªèº«ãŒé€ä¿¡ã—ãŸãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‹ã©ã†ã‹ã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public Boolean IsMessageFromSelf { get; set; }
         /// <summary>
-        /// ƒ`ƒƒƒ“ƒlƒ‹‚Éƒ†[ƒU‚ª‘¶İ‚µ‚Ä‚¢‚é‚©A0l‚Ìƒ`ƒƒƒ“ƒlƒ‹‚¾‚Á‚½‚Ì‚©‚ğæ“¾‚µ‚Ü‚·
+        /// ãƒãƒ£ãƒ³ãƒãƒ«ã«ãƒ¦ãƒ¼ã‚¶ãŒå­˜åœ¨ã—ã¦ã„ã‚‹ã‹ã€0äººã®ãƒãƒ£ãƒ³ãƒãƒ«ã ã£ãŸã®ã‹ã‚’å–å¾—ã—ã¾ã™
         /// </summary>
         public Boolean IsExistsInChannelOrNoMembers { get; set; }
         /// <summary>
-        /// ‚±‚Ìƒ`ƒƒƒ“ƒlƒ‹‚É‘—M‚³‚ê‚éIRC‚ÌƒƒbƒZ[ƒW‚Ìí—Ş‚ğæ“¾‚Ü‚½‚Íİ’è‚µ‚Ü‚·
+        /// ã“ã®ãƒãƒ£ãƒ³ãƒãƒ«ã«é€ä¿¡ã•ã‚Œã‚‹IRCã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã®ç¨®é¡ã‚’å–å¾—ã¾ãŸã¯è¨­å®šã—ã¾ã™
         /// </summary>
         public String IRCMessageType { get; set; }
         /// <summary>
-        /// ‚±‚Ìƒ`ƒƒƒ“ƒlƒ‹‚É‘—M‚³‚ê‚éƒeƒLƒXƒg‚ğæ“¾‚Ü‚½‚Íİ’è‚µ‚Ü‚·
+        /// ã“ã®ãƒãƒ£ãƒ³ãƒãƒ«ã«é€ä¿¡ã•ã‚Œã‚‹ãƒ†ã‚­ã‚¹ãƒˆã‚’å–å¾—ã¾ãŸã¯è¨­å®šã—ã¾ã™
         /// </summary>
         public String Text { get; set; }
         
@@ -268,7 +268,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             IRCMessageType = "PRIVMSG";
         }
         
-        #region IComparable ƒƒ“ƒo
+        #region IComparable ãƒ¡ãƒ³ãƒ
         public int CompareTo(object obj)
         {
             if (!(obj is RoutedGroup))
