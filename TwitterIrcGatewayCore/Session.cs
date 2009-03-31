@@ -736,15 +736,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             SendNumericReply(NumericReply.RPL_MYINFO
                 , String.Format("{0} {1}-{2} {3} {4}", Environment.MachineName, t.FullName, t.Assembly.GetName().Version, "", ""));
 
-            JoinMessage joinMsg = new JoinMessage(_config.ChannelName, "");
-            PrivMsgMessage autoMsg = new PrivMsgMessage();
-            autoMsg.SenderNick = Server.ServerNick;
-            autoMsg.SenderHost = "twitter@" + Server.ServerName;
-            autoMsg.Receiver = _config.ChannelName;
-            autoMsg.Content = "Twitter IRC Gateway Server Connected.";
-
-            SendServer(joinMsg);
-            Send(autoMsg);
+            SendTwitterGatewayServerMessage("Twitter IRC Gateway Server Connected.");
 
             //
             // Twitte Service Setup
@@ -764,6 +756,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             OnSessionStarted(_username);
             Trace.WriteLine(String.Format("SessionStarted: UserName={0}; Nickname={1}", _username, _nick));
+
+            // メインチャンネルにJOIN
+            SendServer(new JoinMessage(_config.ChannelName, ""));
 
             _twitter.Start();
         }
