@@ -10,6 +10,9 @@ using System.Xml.Serialization;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
+    /// <summary>
+    /// アドインを管理する機能を提供します。
+    /// </summary>
     public class AddInManager : MarshalByRefObject
     {
         private List<IAddIn> _addIns;
@@ -20,14 +23,21 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Server _server;
         private AppDomain _addInDomain;
 
+        /// <summary>
+        /// 読み込まれているアドインのコレクションを取得します
+        /// </summary>
         public ICollection<IAddIn> AddIns { get { return _addIns.AsReadOnly(); } }
+        
+        /// <summary>
+        /// アドインの型のコレクションを取得します
+        /// </summary>
         public ICollection<Type> AddInTypes { get { return _addInTypes.AsReadOnly(); } }
 
         /// <summary>
-        /// 
+        /// <see cref="AddInManager"/> クラスのインスタンスを初期化します。
         /// </summary>
-        /// <param name="server"></param>
-        /// <param name="session"></param>
+        /// <param name="server">サーバのインスタンス</param>
+        /// <param name="session">接続中のセッション情報のインスタンス</param>
         public AddInManager(Server server, Session session)
         {
             _session = session;
@@ -46,7 +56,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         //}
 
         /// <summary>
-        /// 
+        /// アドインを読み込みます。
         /// </summary>
         public void Load()
         {
@@ -75,6 +85,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Initialize();
         }
 
+        /// <summary>
+        /// アドインを初期化します。
+        /// </summary>
         public void Initialize()
         {
             foreach (Type addInType in _addInTypes)
@@ -94,6 +107,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 addIn.Initialize(_server, _session);
         }
 
+        /// <summary>
+        /// 読み込まれているアドインを破棄します。
+        /// </summary>
         public void Uninitialize()
         {
             foreach (IAddIn addIn in _addIns)
@@ -105,8 +121,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 指定した型を設定ファイルから読み込みます
         /// </summary>
-        /// <param name="configType"></param>
-        /// <returns></returns>
+        /// <param name="configType">設定の型</param>
+        /// <returns>設定のインスタンス</returns>
         public Object GetConfig(Type configType)
         {
             String fileName = configType.FullName + ".xml";
@@ -147,7 +163,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 指定した型を設定ファイルから読み込みます
         /// </summary>
-        /// <returns></returns>
+        /// <returns>指定した設定型のインスタンス</returns>
         public T GetConfig<T>() where T : class, IConfiguration, new()
         {
             T retVal = GetConfig(typeof(T)) as T;
@@ -157,7 +173,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// オブジェクトを設定ファイルに書き込みます
         /// </summary>
-        /// <param name="o"></param>
+        /// <param name="o">保存する設定のインスタンス</param>
         public void SaveConfig(IConfiguration o)
         {
             Type configType = o.GetType();
@@ -202,9 +218,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// 指定した型の設定をリセットします
+        /// 指定した型の設定を初期化します。
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">初期化対象の設定型</typeparam>
         public void ResetConfig<T>() where T : class, IConfiguration, new()
         {
             T newObj = new T();
@@ -212,10 +228,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// アドインを取得します
+        /// 指定した型のアドインのインスタンスを取得します
         /// </summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
+        /// <param name="t">取得したいアドインの型</param>
+        /// <returns>アドインのインスタンス</returns>
         public IAddIn GetAddIn(Type t)
         {
             foreach (var addIn in _addIns)
@@ -227,10 +243,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         
         /// <summary>
-        /// アドインを取得します
+        /// 指定した型のアドインのインスタンスを取得します
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
+        /// <typeparam name="T">取得したいアドインの型</typeparam>
+        /// <returns>アドインのインスタンス</returns>
         public T GetAddIn<T>() where T : class, IAddIn
         {
             return GetAddIn(typeof(T)) as T;

@@ -11,6 +11,9 @@ using Misuzilla.Applications.TwitterIrcGateway.AddIns;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
+    /// <summary>
+    /// TwitterIrcGateway 本体の設定情報を表します。
+    /// </summary>
     public class Config : MarshalByRefObject, IConfiguration
     {
         [Browsable(false)]

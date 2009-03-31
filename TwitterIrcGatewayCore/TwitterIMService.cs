@@ -8,6 +8,7 @@ using agsXMPP.Xml.Dom;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
+    [Obsolete("IMのサポートは現在利用できません。")]
     public class TwitterIMService : IDisposable
     {
         private XmppClientConnection _xmppConnection;

@@ -10,6 +10,9 @@ using System.Diagnostics;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
+    /// <summary>
+    /// Groupをチャンネル名で格納します。
+    /// </summary>
     public class Groups : SortedList<string, Group>
     {
         public Groups()
@@ -124,14 +127,36 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
     }
 
+    /// <summary>
+    /// IRC上でチャンネルとして表現されるメッセージ送信対象のグループを表します。
+    /// </summary>
     public class Group : IComparable
     {
+        /// <summary>
+        /// チャンネル名を取得・設定します
+        /// </summary>
         public String Name { get; set; }
         public String Mode { get; set; }
+        /// <summary>
+        /// グループに属するユーザのリストを取得します
+        /// </summary>
         public List<String> Members { get; set; }
+        /// <summary>
+        /// JOINしているかどうかを取得・設定します
+        /// </summary>
         public Boolean IsJoined { get; set; }
+        /// <summary>
+        /// 特別扱いされるチャンネルかどうかを取得・設定します。
+        /// 特別扱いされている場合、タイムラインステータスは送信されなくなります。
+        /// </summary>
         public Boolean IsSpecial { get; set; }
+        /// <summary>
+        /// チャンネルのトピックを取得・設定します
+        /// </summary>
         public String Topic { get; set; }
+        /// <summary>
+        /// チャンネルのモードを取得・設定します
+        /// </summary>
         public List<ChannelMode> ChannelModes { get; set; }
 
         public Group()

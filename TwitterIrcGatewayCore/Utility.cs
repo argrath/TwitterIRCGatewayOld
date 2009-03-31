@@ -8,6 +8,9 @@ using System.Globalization;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
+    /// <summary>
+    /// 様々な処理に便利な機能を提供します。
+    /// </summary>
     public static class Utility
     {
         static Utility()

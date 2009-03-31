@@ -9,6 +9,10 @@ using System.Diagnostics;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
+    /// <summary>
+    /// 接続されたイベントを管理するプロクシです。
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class EventMangedProxy<T> : RealProxy where T : MarshalByRefObject
     {
         private static readonly Dictionary<MethodInfo, EventInfo> EventsByAddMethods = new Dictionary<MethodInfo, EventInfo>();

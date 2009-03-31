@@ -14,6 +14,9 @@ using System.Threading;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
+    /// <summary>
+    /// Twitterへの接続と操作を提供します。
+    /// </summary>
     public class TwitterService : IDisposable
     {
         //private WebClient _webClient;
@@ -37,17 +40,47 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private LinkedList<Status> _statusBuffer;
         private LinkedList<Status> _repliesBuffer;
 
+        #region Events
+        /// <summary>
+        /// 更新チェック時にエラーが発生した場合に発生します。
+        /// </summary>
         public event EventHandler<ErrorEventArgs> CheckError;
+        /// <summary>
+        /// タイムラインステータスの更新があった場合に発生します。
+        /// </summary>
         public event EventHandler<StatusesUpdatedEventArgs> TimelineStatusesReceived;
+        /// <summary>
+        /// Repliesの更新があった場合に発生します。
+        /// </summary>
         public event EventHandler<StatusesUpdatedEventArgs> RepliesReceived;
+        /// <summary>
+        /// ダイレクトメッセージの更新があった場合に発生します。
+        /// </summary>
         public event EventHandler<DirectMessageEventArgs> DirectMessageReceived;
+        #endregion
 
+        #region Fields
+        /// <summary>
+        /// Twitter APIのエンドポイントURLのプレフィックスを取得・設定します。
+        /// </summary>
         public String ServiceServerPrefix = "http://twitter.com";
+        /// <summary>
+        /// リクエストのRefererを取得・設定します。
+        /// </summary>
         public String Referer = "http://twitter.com/home";
+        /// <summary>
+        /// リクエストのクライアント名を取得・設定します。この値はsourceパラメータとして利用されます。
+        /// </summary>
+        public String ClientName = "TwitterIrcGateway";
         public String ClientUrl = "http://www.misuzilla.org/dist/net/twitterircgateway/";
         public String ClientVersion = typeof(TwitterService).Assembly.GetName().Version.ToString();
-        public String ClientName = "TwitterIrcGateway";
+        #endregion
 
+        /// <summary>
+        /// TwitterService クラスのインスタンスをユーザ名とパスワードで初期化します。
+        /// </summary>
+        /// <param name="userName">ユーザー名</param>
+        /// <param name="password">パスワード</param>
         public TwitterService(String userName, String password)
         {
             CredentialCache credCache = new CredentialCache();
@@ -1151,6 +1184,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #region Cookie アクセス
 
         private CookieCollection _cookies = null;
+        [Obsolete("Cookieによる認証はサポートされません。代わりにGET(POST)を利用してください。")]
         public String GETWithCookie(String url)
         {
             Boolean isRetry = false;
@@ -1335,6 +1369,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #endregion
     }
 
+    /// <summary>
+    /// エラー発生時のイベントのデータを提供します。
+    /// </summary>
     public class ErrorEventArgs : EventArgs
     {
         public Exception Exception { get; set; }
@@ -1343,7 +1380,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             this.Exception = ex;
         }
     }
-
+    /// <summary>
+    /// ステータスが更新時のイベントのデータを提供します。
+    /// </summary>
     public class StatusesUpdatedEventArgs : EventArgs
     {
         public Statuses Statuses { get; set; }
@@ -1360,6 +1399,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             this.FriendsCheckRequired = friendsCheckRequired;
         }
     }
+    /// <summary>
+    /// ダイレクトメッセージを受信時のイベントのデータを提供します。
+    /// </summary>
     public class DirectMessageEventArgs : EventArgs
     {
         public DirectMessage DirectMessage { get; set; }
@@ -1374,6 +1416,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             this.IsFirstTime = isFirstTime;
         }
     }
+    /// <summary>
+    /// Twitterにアクセスを試みた際にスローされる例外。
+    /// </summary>
     public class TwitterServiceException : ApplicationException
     {
         public TwitterServiceException(String message)
@@ -1390,6 +1435,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
     }
 
+    /// <summary>
+    /// データが空を表します。
+    /// </summary>
     [XmlRoot("nilclasses")]
     public class NilClasses
     {
@@ -1419,6 +1467,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
     }
 
+    /// <summary>
+    /// DirectMessage のセットを格納します。
+    /// </summary>
     [XmlRoot("direct-messages")]
     public class DirectMessages
     {
@@ -1446,6 +1497,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }    
     }
 
+    /// <summary>
+    /// ダイレクトメッセージの情報を表します。
+    /// </summary>
     [XmlType("DirectMessage")]
     public class DirectMessage
     {
@@ -1485,6 +1539,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
     }
 
+    /// <summary>
+    /// Statusのセットを格納します。
+    /// </summary>
     [XmlType("statuses")]
     public class Statuses
     {
@@ -1513,6 +1570,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
     }
 
+    /// <summary>
+    /// Userのセットを格納します。
+    /// </summary>
     [XmlType("users")]
     public class Users
     {
@@ -1583,6 +1643,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
     }
 
+    /// <summary>
+    /// ステータスを表します。
+    /// </summary>
     [XmlType("status")]
     public class Status
     {

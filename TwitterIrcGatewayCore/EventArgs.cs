@@ -8,7 +8,7 @@ using Misuzilla.Net.Irc;
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
     /// <summary>
-    /// IRCメッセージ受信時イベントの引数
+    /// IRCメッセージ受信時イベントのデータを提供します。
     /// </summary>
     public class MessageReceivedEventArgs : CancelableEventArgs
     {
@@ -34,10 +34,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// セッションが開始時イベントの引数
+    /// セッションが開始時イベントのデータを提供します。
     /// </summary>
     public class SessionStartedEventArgs : EventArgs
     {
+        /// <summary>
+        /// 接続してきたユーザの名前を取得します。
+        /// </summary>
         public String UserName;
         public SessionStartedEventArgs(String userName)
         {
@@ -46,7 +49,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// キャンセル可能なイベントの引数
+    /// キャンセル可能なイベントのデータを提供します。
     /// </summary>
     public abstract class CancelableEventArgs : EventArgs
     {
@@ -57,16 +60,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// タイムラインステータス一覧を取得したイベントの引数
+    /// タイムラインステータス一覧を取得したイベントのデータを提供します。
     /// </summary>
     public class TimelineStatusesEventArgs : CancelableEventArgs
     {
         /// <summary>
-        /// ステータス一覧を取得します
+        /// ステータス一覧を取得します。
         /// </summary>
         public Statuses Statuses { get; private set; }
         /// <summary>
-        /// 初回アクセスかどうかを取得します
+        /// 初回アクセスかどうかを取得します。
         /// </summary>
         public Boolean IsFirstTime { get; set; }
         
@@ -78,7 +81,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
     
     /// <summary>
-    /// タイムラインステータスを処理するイベントの引数
+    /// タイムラインステータスを処理するイベントのデータを提供します。
     /// </summary>
     public class TimelineStatusEventArgs : CancelableEventArgs
     {
@@ -107,7 +110,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// ステータスをクライアントから更新したイベントの引数
+    /// ステータスをクライアントから更新したイベントのデータを提供します。
     /// </summary>
     public class StatusUpdateEventArgs : CancelableEventArgs
     {
@@ -142,7 +145,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// メッセージの送信先を決定したイベントの引数
+    /// メッセージの送信先を決定したイベントのデータを提供します。
     /// </summary>
     public class TimelineStatusRoutedEventArgs : EventArgs
     {
@@ -168,7 +171,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     }
 
     /// <summary>
-    /// メッセージを各グループに送信するイベントの引数
+    /// メッセージを各グループに送信するイベントのデータを提供します。
     /// </summary>
     public class TimelineStatusGroupEventArgs : TimelineStatusEventArgs
     {
