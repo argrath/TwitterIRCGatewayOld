@@ -1523,7 +1523,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             
             foreach (Group group in _groups.Values)
             {
-                if (!group.IsJoined || group.IsRoutable)
+                if (!group.IsJoined || !group.IsRoutable)
                     continue;
 
                 Boolean isOrMatch = group.IsOrMatch;
