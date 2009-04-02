@@ -12,6 +12,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     /// </summary>
     public class Server : MarshalByRefObject
     {
+        private static List<Server> _runningServers = new List<Server>();
+        
         private TcpListener _tcpListener;
         private List<Session> _sessions;
         private Encoding _encoding = Encoding.GetEncoding("ISO-2022-JP");
@@ -46,6 +48,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// 現在存在しているセッション情報のコレクションを取得します。
+        /// </summary>
+        public IList<Session> Sessions
+        {
+            get { return _sessions.AsReadOnly(); }
+        }
+
+        /// <summary>
+        /// 現在実行しているサーバのコレクションを取得します。
+        /// </summary>
+        public static IList<Server> RunningServers
+        {
+            get { return _runningServers.AsReadOnly(); }
+        }
+        
+        /// <summary>
         /// 指定したIPアドレスとポートでクライアントからの接続待ち受けを開始します
         /// </summary>
         /// <param name="ipAddr">接続を待ち受けるIPアドレス</param>
@@ -55,6 +73,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (IsRunning)
             {
                 throw new InvalidOperationException();
+            }
+            
+            lock (_runningServers)
+            {
+                _runningServers.Add(this);
             }
 
             _sessions = new List<Session>();
@@ -70,6 +93,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public void Stop()
         {
+            lock (_runningServers)
+            {
+                _runningServers.Remove(this);
+            }
+            
             lock (_sessions)
             {
                 foreach (Session session in _sessions)

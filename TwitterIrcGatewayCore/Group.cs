@@ -159,11 +159,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public List<ChannelMode> ChannelModes { get; set; }
 
+        /// <summary>
+        /// グループのインスタンスを初期化します。
+        /// </summary>
         public Group()
         {
             ChannelModes = new List<ChannelMode>();
         }
 
+        /// <summary>
+        /// 指定した名前でグループのインスタンスを初期化します。
+        /// </summary>
+        /// <param name="name">#で始まるチャンネル名</param>
         public Group(String name)
         {
             if (!name.StartsWith("#") || name.Length < 2)
@@ -175,6 +182,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             ChannelModes = new List<ChannelMode>();
         }
 
+        /// <summary>
+        /// 指定したユーザがグループのメンバかどうかを取得します。
+        /// </summary>
+        /// <param name="id">ユーザのID</param>
+        /// <returns>グループのメンバに属しているかどうかを表すBoolean値。</returns>
         public Boolean Exists(String id)
         {
             Int32 pos;
@@ -185,6 +197,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return pos > -1;
         }
 
+        /// <summary>
+        /// グループのメンバに属するユーザを追加します。
+        /// </summary>
+        /// <param name="id">ユーザのID</param>
         public void Add(String id)
         {
             lock (Members)
@@ -194,6 +210,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
+        /// <summary>
+        /// 指定したユーザをグループのメンバから削除します。
+        /// </summary>
+        /// <param name="id">ユーザのID</param>
         public void Remove(String id)
         {
             lock (Members)
@@ -203,6 +223,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
+        /// <summary>
+        /// グループに送信されたメッセージのエコーバックを無視するかどうかを取得します。
+        /// </summary>
         public Boolean IgnoreEchoBack
         {
             get
@@ -211,12 +234,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
+        /// <summary>
+        /// グループのトピックを利用したマッチがメンバとOR条件になっているかどうかを取得します。
+        /// </summary>
         public Boolean IsOrMatch
         {
             get
             {
                 return String.IsNullOrEmpty(Topic) ? false : Topic.StartsWith("|");
             }
+        }
+        
+        /// <summary>
+        /// TwitterIrcGatewayがトピックなどを考慮してメッセージ送信先として選択できるかどうかを取得します。
+        /// </summary>
+        public Boolean IsRoutable
+        {
+            get { return !(IsSpecial || ChannelModes.Exists(mode => mode.Mode == ChannelModeTypes.InviteOnly)); }
         }
 
         public override string ToString()
