@@ -101,7 +101,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 Trace.WriteLine(String.Format("AddIn: {0}", addInType.FullName));
                 _addIns.Add(Activator.CreateInstance(addInType) as IAddIn);
             }
-            _xmlSerializer = new XmlSerializer(typeof(Object), _configurationTypes.ToArray());
+
+            // XMLのシリアライザの中で名前がかぶらないようにする
+            XmlAttributeOverrides xmlAttrOverrides = new XmlAttributeOverrides();
+            foreach (var configType in _configurationTypes)
+            {
+                XmlAttributes xmlAttributes = new XmlAttributes();
+                xmlAttributes.XmlType = new XmlTypeAttribute(configType.FullName);
+                xmlAttrOverrides.Add(configType, xmlAttributes);
+            }
+            _xmlSerializer = new XmlSerializer(typeof(Object), xmlAttrOverrides, _configurationTypes.ToArray(), null, null);
 
             foreach (IAddIn addIn in _addIns)
                 addIn.Initialize(_server, _session);
