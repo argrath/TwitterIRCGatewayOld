@@ -26,6 +26,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 // 取得間隔またはチェックの必要性が変更になったらタイマーを再起動する
                 if (memberInfo.Name.StartsWith("Interval") || memberInfo.Name == "EnableRepliesCheck")
                 {
+                    Session.TwitterService.Interval = Session.Config.Interval;
+                    Session.TwitterService.IntervalReplies = Session.Config.IntervalReplies;
+                    Session.TwitterService.IntervalDirectMessage = Session.Config.IntervalDirectMessage;
                     Session.TwitterService.Stop();
                     Session.TwitterService.Start();
                 }

@@ -305,7 +305,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 this.Close();
             }
         }
-
+        
         #region イベント実行メソッド
         internal virtual void OnAddInsLoadCompleted()
         {
@@ -326,12 +326,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         protected virtual void OnSessionStarted(String username)
         {
-            LoadConfig();
-            OnConfigChanged();
-            
-            LoadGroups();
-            LoadFilters();
-
             if (!String.IsNullOrEmpty(_config.IMServiceServerName))
             {
                 ConnectToIMService(true);
@@ -363,7 +357,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
 
         }
-        
+
+        public void LoadSettings()
+        {
+            LoadConfig();
+            OnConfigChanged();
+
+            LoadGroups();
+            LoadFilters();
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -737,6 +740,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 , String.Format("{0} {1}-{2} {3} {4}", Environment.MachineName, t.FullName, t.Assembly.GetName().Version, "", ""));
 
             SendTwitterGatewayServerMessage("Twitter IRC Gateway Server Connected.");
+
+            // 設定を読み込む
+            LoadSettings();
 
             //
             // Twitte Service Setup

@@ -33,6 +33,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private DateTime _lastAccessTimeline = new DateTime();
         private DateTime _lastAccessReplies = new DateTime();
         private DateTime _lastAccessDirectMessage = DateTime.Now;
+        private Int32 _lastAccessDirectMessageId = 0;
         private Boolean _isFirstTime = true;
         private Boolean _isFirstTimeReplies = true;
 
@@ -424,6 +425,40 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 指定したユーザの timeline を取得します。
         /// </summary>
+
+        /// <summary>
+        /// direct messages を取得します。
+        /// </summary>
+        /// <param name="sinceId">最後に取得したID</param>
+        /// <exception cref="WebException"></exception>
+        /// <exception cref="TwitterServiceException"></exception>
+        public DirectMessages GetDirectMessages(Int32 sinceId)
+        {
+            return ExecuteRequest<DirectMessages>(() =>
+            {
+                // Cookie ではダメ
+                String responseBody = GET(String.Format("/direct_messages.xml?since_id={0}", sinceId), false);
+                DirectMessages directMessages;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    // 空
+                    directMessages = new DirectMessages();
+                    directMessages.DirectMessage = new DirectMessage[0];
+                }
+                else
+                {
+                    directMessages = DirectMessages.Serializer.Deserialize(new StringReader(responseBody)) as DirectMessages;
+                    if (directMessages == null || directMessages.DirectMessage == null)
+                    {
+                        directMessages = new DirectMessages();
+                        directMessages.DirectMessage = new DirectMessage[0];
+                    }
+                }
+
+                return directMessages;
+            });
+        }
+
         /// <param name="screenName">スクリーンネーム</param>
         /// <param name="since">最終更新日時</param>
         /// <param name="count"></param>
@@ -871,7 +906,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             RunCheck(delegate
             {
-                DirectMessages directMessages = GetDirectMessages(_lastAccessDirectMessage);
+                DirectMessages directMessages = (_lastAccessDirectMessageId == 0) ? GetDirectMessages(_lastAccessDirectMessage) : GetDirectMessages(_lastAccessDirectMessageId);
                 Array.Reverse(directMessages.DirectMessage);
                 foreach (DirectMessage message in directMessages.DirectMessage)
                 {
@@ -887,6 +922,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     if (message.CreatedAt > _lastAccessDirectMessage)
                     {
                         _lastAccessDirectMessage = message.CreatedAt;
+                        _lastAccessDirectMessageId = message.Id;
                     }
                 }
             });
