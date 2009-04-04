@@ -112,6 +112,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
+        public override string ToString()
+        {
+            return String.Format("Server: LocalEndPoint={0}", _tcpListener.LocalEndpoint);
+        }
+
         #region Internal Implementation
         void AcceptHandled(IAsyncResult ar)
         {

@@ -1573,6 +1573,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return Utility.ParseDateTime(_createdAt);
             }
         }
+
+        public override string ToString()
+        {
+            return String.Format("DirectMessage: {0} (ID:{1})", Text, Id.ToString());
+        }
     }
 
     /// <summary>
@@ -1677,6 +1682,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return _serializer;
             }
         }
+
+        public override string ToString()
+        {
+            return String.Format("User: {0} / {1} (ID:{2})", ScreenName, Name, Id.ToString());
+        }
     }
 
     /// <summary>
@@ -1775,6 +1785,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             Status status = obj as Status;
             return (status.Id == this.Id) && (status.Text == this.Text);
+        }
+
+        public override string ToString()
+        {
+            return String.Format("Status: {0} (ID:{1})", Text, Id.ToString());
         }
     }
 }

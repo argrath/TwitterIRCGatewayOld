@@ -1624,6 +1624,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 throw new ObjectDisposedException(this.GetType().Name);
         }
 
+        public override string ToString()
+        {
+            return String.Format("Session: User={0}, Client={1}", _username, _tcpClient.Client.RemoteEndPoint);
+        }
+
         #region ヘルパーメソッド
         /// <summary>
         /// 
