@@ -814,7 +814,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 {
                     try
                     {
-                        Status status = UpdateStatus(message.Content);
+                        Status status = UpdateStatus(eventArgs.Text);
                         if (!FireEvent(UpdateStatusRequestCommited, new TimelineStatusEventArgs(status))) return;
                     }
                     catch (TwitterServiceException tse)
@@ -950,7 +950,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             StatusUpdateEventArgs eventArgs = new StatusUpdateEventArgs(message, inReplyToStatusId);
             if (!FireEvent(PreSendUpdateStatus, eventArgs)) return null;
 
-            Status status = _twitter.UpdateStatus(message, inReplyToStatusId);
+            Status status = _twitter.UpdateStatus(eventArgs.Text, inReplyToStatusId);
                         
             if (status != null)
             {
