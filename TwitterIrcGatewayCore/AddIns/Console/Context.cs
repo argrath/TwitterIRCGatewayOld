@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
-using Misuzilla.Net.Irc;
-using System.Collections;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {

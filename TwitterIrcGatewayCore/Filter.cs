@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Xml.Serialization;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
-using Misuzilla.Net.Irc;
-using System.IO;
 using System.Xml;
+using System.Xml.Serialization;
+using Misuzilla.Net.Irc;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.Filter
 {

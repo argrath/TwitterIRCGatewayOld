@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using System.ComponentModel;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 using Misuzilla.Net.Irc;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console

@@ -1,22 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Web;
-using System.Xml;
-
-using TypableMap;
-using Misuzilla.Net.Irc;
 using Misuzilla.Applications.TwitterIrcGateway.Filter;
-using Misuzilla.Applications.TwitterIrcGateway.AddIns;
+using Misuzilla.Net.Irc;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {

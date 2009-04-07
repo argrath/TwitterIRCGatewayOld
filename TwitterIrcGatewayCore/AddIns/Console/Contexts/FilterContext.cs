@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 using Misuzilla.Applications.TwitterIrcGateway.Filter;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console

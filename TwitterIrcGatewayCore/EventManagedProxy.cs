@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Messaging;
 using System.Runtime.Remoting.Proxies;
-using System.Text;
-using System.Diagnostics;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {

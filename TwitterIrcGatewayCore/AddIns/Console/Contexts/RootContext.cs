@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
-using Misuzilla.Applications.TwitterIrcGateway.Filter;
-using Misuzilla.Net.Irc;
-using System.Reflection;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {

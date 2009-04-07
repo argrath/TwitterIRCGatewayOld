@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Reflection;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using System.Xml;
-using Misuzilla.Applications.TwitterIrcGateway.AddIns;
 using System.Xml.Serialization;
+using Misuzilla.Applications.TwitterIrcGateway.AddIns;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
