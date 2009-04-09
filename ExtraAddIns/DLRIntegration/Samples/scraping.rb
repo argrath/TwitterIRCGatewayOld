@@ -49,7 +49,7 @@ Thread.new do
 	# ユーザ情報をキャッシュする
 	Session.pre_send_message_timeline_status do |sender, e|
 		if e.status.user.Id != 0
-			Scraping.user_cache[e.status.user.ScreenName] = e.status.user
+			Scraping.user_cache[e.status.user.ScreenName.to_s] = e.status.user
 		end
 	end
     
