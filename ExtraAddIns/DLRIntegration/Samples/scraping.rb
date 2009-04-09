@@ -42,7 +42,7 @@ class Scraping
 				
 				# Status
 				s.Source    = status.match(%r{<span>from (.*?)</span>})[1].to_s
-				s.Text      = Utility::UnescapeCharReference(status.match(%r{class="entry-content">(.*?)</span>})[1].to_s.gsub(%r{<a href="(http://[^"]*)"[^>]*>}, '\1').gsub(/<[^>]*>/, ''))
+				s.Text      = Utility::UnescapeCharReference(status.match(%r{class="entry-content">(.*?)</span>})[1].to_s.gsub(%r{<a href="(http://[^"]*)"[^>]*>.*?</a>}, '\1').gsub(/<[^>]*>/, ''))
 				s.Id        = status.match(%r{id="status_(\d+)"})[1].to_i
 				s.CreatedAt = Time.now
 				
