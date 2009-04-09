@@ -1,5 +1,6 @@
+# $Id$
 include Misuzilla::Applications::TwitterIrcGateway
-$status_a = nil
+
 class Scraping
 	@@interval = 30
 	@@user_cache = {}
@@ -12,7 +13,6 @@ class Scraping
 		home = Session.TwitterService.GETWithCookie("/home").to_s
 		if statuses = home.match(%r{(<li class="hentry status.*?</li>)})
 			statuses.to_a.reverse.each do |status|
-				$status_a = status
 				s = Status.new
 
 				# User
