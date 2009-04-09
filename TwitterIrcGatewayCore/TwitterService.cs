@@ -1200,7 +1200,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             //webRequest.PreAuthenticate = true;
             webRequest.Proxy = _proxy;
             webRequest.Method = method;
-            webRequest.Accept = "text/xml, application/xml";
+            webRequest.Accept = "text/xml, application/xml, text/html;q=0.5";
             webRequest.UserAgent = String.Format("{0}/{1}", ClientName, ClientVersion);
             //webRequest.Referer = TwitterService.Referer;
             webRequest.Headers["X-Twitter-Client"] = ClientName;
@@ -1235,25 +1235,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 if (wResponse == null || wResponse.StatusCode != HttpStatusCode.Unauthorized || isRetry)
                     throw;
 
-                _cookies = Login(_userName, _credential.GetCredential(new Uri("http://twitter.com"), "Basic").Password);
+                _cookies = CookieLogin();
 
                 isRetry = true;
                 goto Retry;
             }
         }
 
-        private CookieCollection Login(String userNameOrEmail, String password)
+        public CookieCollection CookieLogin()
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("Cookie Login: {0}", userNameOrEmail));
+            System.Diagnostics.Trace.WriteLine(String.Format("Cookie Login: {0}", _userName));
 
-            HttpWebRequest request = CreateWebRequest("http://twitter.com/sessions") as HttpWebRequest;
+            HttpWebRequest request = CreateWebRequest("http://twitter.com/account/verify_credentials.xml") as HttpWebRequest;
             request.AllowAutoRedirect = false;
-            request.Method = "POST";
-            using (StreamWriter sw = new StreamWriter(request.GetRequestStream()))
-            {
-                sw.Write("username_or_email={0}&password={1}&remember_me=1&commit=Sign%20In", userNameOrEmail, password);
-            }
-            
+            request.Method = "GET";
+
+            NetworkCredential cred = _credential.GetCredential(new Uri("http://twitter.com/account/verify_credentials.xml"), "Basic");
+            request.Headers["Authorization"] = String.Format("Basic {0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", cred.UserName, cred.Password))));
+
             HttpWebResponse response = request.GetResponse() as HttpWebResponse;
             using (StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
             {
@@ -1268,6 +1267,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 {
                     cookie.Domain = "twitter.com";
                 }
+
+                _cookies = response.Cookies;
+                
                 return response.Cookies;
             }
         }
