@@ -9,6 +9,15 @@ class Scraping
 	def self.interval; @@interval; end
 	def self.user_cache; @@user_cache; end
 	
+	def self.prepare_user_cache
+#		begin
+			Session.TwitterService.GetFriends(20).each do |u|
+				@@user_cache[u.ScreenName.to_s] = u
+			end
+#		rescue
+#		end
+	end
+	
 	def self.fetch_home
 		home = Session.TwitterService.GETWithCookie("/home").to_s
 		if statuses = home.match(%r{(<li class="hentry status.*?</li>)})
@@ -20,16 +29,21 @@ class Scraping
 				if @@user_cache[m[2]]
 					s.User = @@user_cache[m[2]]
 				else
-					s.User = User.new
-					s.User.Id = 0
-					s.User.Name = m[1]
-					s.User.ScreenName = m[2]
+					#begin
+					#	s.User = Session.TwitterService.GetUser(m[2])
+					#	@@user_cache[m[2]] = s.User
+					#rescue
+						s.User            = User.new
+						s.User.Id         = 0
+						s.User.Name       = m[1]
+						s.User.ScreenName = m[2]
+					#end
 				end
 				
 				# Status
-				s.Source = Utility::UnescapeCharReference(status.match(%r{<span>from (.*?)</span>})[1].to_s)
-				s.Text = status.match(%r{class="entry-content">(.*?)</span>})[1].to_s.gsub(/<[^>]*>/, '')
-				s.Id   = status.match(%r{id="status_(\d+)"})[1].to_i
+				s.Source    = status.match(%r{<span>from (.*?)</span>})[1].to_s
+				s.Text      = Utility::UnescapeCharReference(status.match(%r{class="entry-content">(.*?)</span>})[1].to_s.gsub(/<[^>]*>/, ''))
+				s.Id        = status.match(%r{id="status_(\d+)"})[1].to_i
 				s.CreatedAt = Time.now
 				
 				# 送信
