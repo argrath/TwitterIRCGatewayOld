@@ -31,6 +31,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Int32 _lastAccessDirectMessageId = 0;
         private Boolean _isFirstTime = true;
         private Boolean _isFirstTimeReplies = true;
+        private Boolean _isFirstTimeDirectMessage = true;
 
         private Int32 _bufferSize = 250;
         private LinkedList<Status> _statusBuffer;
@@ -133,10 +134,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// POSTを利用してログインしてデータにアクセスします。
         /// </summary>
+        [Obsolete("POSTによる取得は廃止されました。")]
         public Boolean POSTFetchMode
         {
-            get;
-            set;
+            get { return false; }
+            set { }
         }
        
         /// <summary>
@@ -911,15 +913,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         continue;
                     }
                     
-                    OnDirectMessageReceived(new DirectMessageEventArgs(message));
+                    OnDirectMessageReceived(new DirectMessageEventArgs(message, _isFirstTimeDirectMessage));
                     
                     // 最終更新時刻
-                    if (message.CreatedAt > _lastAccessDirectMessage)
+                    if (_lastAccessDirectMessageId == 0 || message.CreatedAt > _lastAccessDirectMessage)
                     {
                         _lastAccessDirectMessage = message.CreatedAt;
                         _lastAccessDirectMessageId = message.Id;
                     }
                 }
+                _isFirstTimeDirectMessage = false;
             });
         }
 

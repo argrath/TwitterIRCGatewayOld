@@ -1190,6 +1190,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         void twitter_DirectMessageReceived(object sender, DirectMessageEventArgs e)
         {
+            // 初回は無視する
+            if (e.IsFirstTime)
+                return;
+            
             DirectMessage message = e.DirectMessage;
             String text = (_config.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(message.Text) : message.Text;
             String[] lines = text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
