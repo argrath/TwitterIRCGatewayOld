@@ -113,6 +113,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         [Description("データの取得にPOSTメソッドを利用するかどうかを指定します。")]
         public Boolean POSTFetchMode { get; set; }
+        /// <summary>
+        /// タイムラインの一回の取得につき何件取得するかを指定します。
+        /// </summary>
+        [Description("タイムラインの一回の取得につき何件取得するかを指定します。")]
+        public Int32 FetchCount { get; set; }
 
         /// <summary>
         /// デフォルトの設定
@@ -127,6 +132,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             EnableRemoveRedundantSuffix = false;
             DisabledAddInsList = new List<string>();
             EnableOldStyleReply = false;
+            FetchCount = 50;
 
             if (Default != null)
             {

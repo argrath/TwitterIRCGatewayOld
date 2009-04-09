@@ -187,6 +187,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// タイムラインの一回の取得につき何件取得するかを指定します。
+        /// </summary>
+        public Int32 FetchCount
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// 認証情報を問い合わせます。
         /// </summary>
         /// <return cref="User">ユーザー情報</returns>
@@ -333,9 +342,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <exception cref="TwitterServiceException"></exception>
         public Statuses GetTimeline(DateTime since)
         {
+            return GetTimeline(since, FetchCount);
+        }
+        /// <summary>
+        /// timeline を取得します。
+        /// </summary>
+        /// <param name="since">最終更新日時</param>
+        /// <param name="count">取得数</param>
+        /// <returns></returns>
+        public Statuses GetTimeline(DateTime since, Int32 count)
+        {
             return ExecuteRequest<Statuses>(() =>
             {
-                String responseBody = GET(String.Format("/statuses/friends_timeline.xml?since={0}", Utility.UrlEncode(since.ToUniversalTime().ToString("r"))));
+                String responseBody = GET(String.Format("/statuses/friends_timeline.xml?since={0}&count={1}", Utility.UrlEncode(since.ToUniversalTime().ToString("r")), count));
                 Statuses statuses;
                 if (NilClasses.CanDeserialize(responseBody))
                 {
@@ -1416,6 +1435,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             this.Exception = ex;
         }
     }
+
     /// <summary>
     /// ステータスが更新時のイベントのデータを提供します。
     /// </summary>
