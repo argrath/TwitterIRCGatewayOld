@@ -4,10 +4,13 @@ include Misuzilla::Applications::TwitterIrcGateway
 class Scraping
 	@@interval = 30
 	@@user_cache = {}
+	@@thread = nil
 	
 	def self.interval=(val); @@interval = val; end
 	def self.interval; @@interval; end
 	def self.user_cache; @@user_cache; end
+	def self.thread=(val); @@thread = val; end
+	def self.thread; @@thread; end
 	
 	def self.prepare_user_cache
 #		begin
@@ -20,8 +23,9 @@ class Scraping
 	
 	def self.fetch_home
 		home = Session.TwitterService.GETWithCookie("/home").to_s
-		if statuses = home.match(%r{(<li class="hentry status.*?</li>)})
-			statuses.to_a.reverse.each do |status|
+		if statuses = home.scan(%r{(<li class="hentry status.*?</li>)})
+			statuses.reverse.each do |status1|
+				status = status1[0]
 				s = Status.new
 
 				# User
@@ -47,17 +51,19 @@ class Scraping
 				s.CreatedAt = Time.now
 				
 				# 送信
+				#System::Diagnostics::Trace::WriteLine(s)
 				Session.TwitterService.ProcessStatus(s, System::Action[Status].new{|s1| Session.ProcessTimelineStatus(s, false, false) })
 			end
 		end
 	end
 end
 
-Thread.new do
+Scraping.thread = Thread.new do
 	# ちゃんとThreadを終わらせないと大変残念なことになる
 	dlr_addin = Session.AddInManager.GetAddIn(Misuzilla::Applications::TwitterIrcGateway::AddIns::DLRIntegration::DLRIntegrationAddIn.to_clr_type)
 	dlr_addin.BeforeUnload do |sender, e|
 		Scraping.interval = 0
+		Scraping.thread.join
 	end
 	
 	# ユーザ情報をキャッシュする
@@ -79,4 +85,6 @@ Thread.new do
 		end
 		sleep(Scraping.interval)
 	end
-end.run
+end
+
+Scraping.thread.run
