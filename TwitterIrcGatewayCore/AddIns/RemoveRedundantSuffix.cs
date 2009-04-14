@@ -86,17 +86,5 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 
             return redundantSuffix;
         }
-
-        private void BuildRegex()
-        {
-            String[] pairs = pairsString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
-
-            List<String> pairsReList = new List<string>();
-            foreach (var pair in pairs)
-                pairsReList.Add(Regex.Escape(pair.Substring(0, 1)) + ".{2,}" + Regex.Escape(pair.Substring(1, 1)));
-
-            var re = new Regex(@"^(\s*(" + String.Join("|", pairsReList.ToArray()) + @")+)$");
-
-        }
     }
 }

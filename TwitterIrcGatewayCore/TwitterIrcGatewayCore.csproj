@@ -37,6 +37,42 @@
     </DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IronPython, Version=2.6.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>AddIns\DLRIntegration\IronPython.dll</HintPath>
+    </Reference>
+    <Reference Include="IronPython.Modules, Version=2.6.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>AddIns\DLRIntegration\IronPython.Modules.dll</HintPath>
+    </Reference>
+    <Reference Include="IronPythonTest, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>AddIns\DLRIntegration\IronPythonTest.dll</HintPath>
+    </Reference>
+    <Reference Include="IronRuby, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>AddIns\DLRIntegration\IronRuby.dll</HintPath>
+    </Reference>
+    <Reference Include="IronRuby.Libraries, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>AddIns\DLRIntegration\IronRuby.Libraries.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Dynamic, Version=0.9.5.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>AddIns\DLRIntegration\Microsoft.Dynamic.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting, Version=0.9.5.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>AddIns\DLRIntegration\Microsoft.Scripting.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.Core, Version=0.9.5.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>AddIns\DLRIntegration\Microsoft.Scripting.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Scripting.ExtensionAttribute, Version=0.9.5.1, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>AddIns\DLRIntegration\Microsoft.Scripting.ExtensionAttribute.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -52,6 +88,7 @@
     <Compile Include="AddIns\Console\Contexts\GroupContext.cs" />
     <Compile Include="AddIns\Console\Contexts\SystemContext.cs" />
     <Compile Include="AddIns\Console\GenericConfig.cs" />
+    <Compile Include="AddIns\DLRIntegration\DLRIntegrationAddIn.cs" />
     <Compile Include="AddIns\ExtensionCommands.cs" />
     <Compile Include="AddIns\IAddIn.cs" />
     <Compile Include="AddIns\RemoveRedundantSuffix.cs" />
@@ -87,6 +124,12 @@
       <Project>{DC39021C-FA24-4E34-AB4A-3260BB5314AF}</Project>
       <Name>agsXMPP2008</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AddIns\DLRIntegration\Samples\attach_event.py" />
+    <None Include="AddIns\DLRIntegration\Samples\attach_event.rb" />
+    <None Include="AddIns\DLRIntegration\Samples\notify_delay.rb" />
+    <None Include="AddIns\DLRIntegration\Samples\scraping.rb" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
