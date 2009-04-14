@@ -41,6 +41,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SocialRemoveRedundantS
                     Configuration config = Session.AddInManager.GetConfig<Configuration>();
                     String url = config.BlackListUrl;
                     Trace.WriteLine("Download Blacklist: " + url);
+                    webClient.Encoding = Encoding.UTF8;
                     _blackList = webClient.DownloadString(url);
                     config.BlackListCache = _blackList;
                     Session.AddInManager.SaveConfig(config);
