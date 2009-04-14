@@ -8,7 +8,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 {
     class RemoveRedundantSuffix : AddInBase
     {
-        private static readonly Regex _suffixMatchRE = new Regex(@"^(\s*(\(.{2,}\)|\《.{2,}\》|\【.{2,}\】|\[.{2,}\]|\*.{2,}\*|lang:ja)+)$");
+        private static readonly Regex _suffixMatchRE = new Regex(@"^(\s*(\＜.{2,}\＞|\<.{2,}\>|\(.{2,}\)|\《.{2,}\》|\【.{2,}\】|\[.{2,}\]|\*.{2,}\*|lang:ja)+)$");
         private Dictionary<Int32, LinkedList<String>> _lastStatusFromFriends;
         
         public override void Initialize()
@@ -87,5 +87,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
             return redundantSuffix;
         }
 
+        private void BuildRegex()
+        {
+            String[] pairs = pairsString.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+
+            List<String> pairsReList = new List<string>();
+            foreach (var pair in pairs)
+                pairsReList.Add(Regex.Escape(pair.Substring(0, 1)) + ".{2,}" + Regex.Escape(pair.Substring(1, 1)));
+
+            var re = new Regex(@"^(\s*(" + String.Join("|", pairsReList.ToArray()) + @")+)$");
+
+        }
     }
 }

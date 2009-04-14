@@ -286,10 +286,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
                 }
             }
-            //catch (IOException)
-            //{}
-            //catch (NullReferenceException)
-            //{}
+            catch (IOException)
+            {}
+            catch (NullReferenceException)
+            {}
             finally
             {
                 OnSessionEnded();
