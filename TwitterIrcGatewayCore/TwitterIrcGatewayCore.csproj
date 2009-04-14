@@ -45,10 +45,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>AddIns\DLRIntegration\IronPython.Modules.dll</HintPath>
     </Reference>
-    <Reference Include="IronPythonTest, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>AddIns\DLRIntegration\IronPythonTest.dll</HintPath>
-    </Reference>
     <Reference Include="IronRuby, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>AddIns\DLRIntegration\IronRuby.dll</HintPath>
