@@ -31,6 +31,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             SwitchEnable(args, false);
         }
+        
+        [Description("フィルタを再読み込みします")]
+        public void Reload()
+        {
+            Session.LoadFilters();
+            ConsoleAddIn.NotifyMessage("フィルタを再読み込みしました。");
+        }
 
         private void SwitchEnable(String args, Boolean enable)
         {
