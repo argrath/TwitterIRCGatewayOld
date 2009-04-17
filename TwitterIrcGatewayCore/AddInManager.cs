@@ -70,6 +70,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 foreach (String fileName in Directory.GetFiles(addinsBase, "*.dll"))
                 {
+                    // 無視する
+                    if (String.Compare(Path.GetFileName(fileName), "Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration.dll", true) == 0)
+                        continue;
+
                     try
                     {
                         Assembly asm = Assembly.LoadFile(fileName);
