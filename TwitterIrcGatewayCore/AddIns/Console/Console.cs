@@ -176,9 +176,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             StringBuilder sb = new StringBuilder();
             foreach (Context ctx in ContextStack)
-                sb.Insert(0, ctx.GetType().Name.Replace("Context", "") + "\\");
+                sb.Insert(0, ctx.ContextName.Replace("Context", "") + "\\");
 
-            sb.Append(CurrentContext.GetType().Name.Replace("Context", ""));
+            sb.Append(CurrentContext.ContextName.Replace("Context", ""));
 
             NotifyMessage(sb.ToString(), message);
         }

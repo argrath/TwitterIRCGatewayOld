@@ -20,6 +20,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
         public virtual Type[] Contexts { get { return new Type[0]; } }
         public virtual IConfiguration[] Configurations { get { return new IConfiguration[0]; } }
+        public virtual String ContextName { get { return this.GetType().Name; } }
         
         /// <summary>
         /// 

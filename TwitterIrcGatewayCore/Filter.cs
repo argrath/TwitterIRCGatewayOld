@@ -47,6 +47,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
             _items.Add(item);
         }
 
+        public void Remove(FilterItem item)
+        {
+            _items.Remove(item);
+        }
+
+        public void RemoveAt(Int32 index)
+        {
+            _items.RemoveAt(index);
+        }
+        
         private List<FilterItem> _items;
         public FilterItem[] Items
         {
@@ -162,7 +172,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
         }
     }
 
-    public abstract class FilterItem
+    public abstract class FilterItem : Misuzilla.Applications.TwitterIrcGateway.AddIns.IConfiguration
     {
         private Boolean _enabled = true;
         [XmlAttribute]
