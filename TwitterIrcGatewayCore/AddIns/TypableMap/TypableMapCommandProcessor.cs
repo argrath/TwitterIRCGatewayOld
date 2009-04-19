@@ -6,6 +6,8 @@ using TypableMap;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
 {
+    public delegate Boolean ProcessCommand(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, String args);
+
     public class TypableMapCommandProcessor
     {
         public Session Session { get; private set; }
@@ -113,8 +115,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
 
             return false;
         }
-
-        public delegate Boolean ProcessCommand(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, String args);
 
         public interface ITypableMapCommand
         {
