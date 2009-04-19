@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -1083,6 +1084,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             catch (TwitterServiceException ex2)
             {
                 OnCheckError(new ErrorEventArgs(ex2));
+                return false;
+            }
+            catch (Exception ex3)
+            {
+                OnCheckError(new ErrorEventArgs(ex3));
+                Trace.WriteLine("RunCheck(Unhandled Exception): "+ex3.Message);
                 return false;
             }
 

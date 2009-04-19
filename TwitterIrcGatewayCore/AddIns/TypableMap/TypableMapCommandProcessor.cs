@@ -42,7 +42,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
 
             foreach (var t in typeof(TypableMapCommandProcessor).GetNestedTypes())
             {
-                if (typeof(ITypableMapCommand).IsAssignableFrom(t) && t.IsClass)
+                if (typeof(ITypableMapCommand).IsAssignableFrom(t) && typeof(GenericCommand) != t && t.IsClass)
                 {
                     var cmd = Activator.CreateInstance(t) as ITypableMapCommand;
                     AddCommand(cmd);
@@ -58,9 +58,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
             UpdateRegex();
             return command;
         }
+        public ITypableMapCommand AddCommand(String command, String description, ProcessCommand processCommand)
+        {
+            GenericCommand commandC = new GenericCommand(command, description, processCommand);
+            return AddCommand(commandC);
+        }
         public Boolean RemoveCommand(ITypableMapCommand command)
         {
-            Boolean retVal = _commands.Remove(command.CommandName);
+            return RemoveCommand(command.CommandName);
+        }
+        public Boolean RemoveCommand(String command)
+        {
+            Boolean retVal = _commands.Remove(command);
             if (_commands.Count != 0)
             {
                 UpdateRegex();
@@ -105,12 +114,45 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
             return false;
         }
 
+        public delegate Boolean ProcessCommand(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, String args);
+
         public interface ITypableMapCommand
         {
             String CommandName { get; }
             Boolean Process(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, String args);
         }
+        
+        public class GenericCommand : ITypableMapCommand
+        {
+            private ProcessCommand _processCommandDelegate;
+            private String _commandName;
+            private String _description;
+            
+            public GenericCommand(String commandName, String description, ProcessCommand processCommand)
+            {
+                _commandName = commandName;
+                _description = description;
+                _processCommandDelegate = processCommand;
+            }
+            
+            public String Description
+            {
+                get { return _description; }
+            }
+            
+            #region ITypableMapCommand メンバ
+            public string CommandName
+            {
+                get { return _commandName; }
+            }
 
+            public bool Process(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, string args)
+            {
+                return _processCommandDelegate(processor, msg, status, args);
+            }
+            #endregion
+        }
+        
         public class PermalinkCommand : ITypableMapCommand
         {
             #region ITypableMapCommand メンバ

@@ -73,33 +73,40 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
         {
             Trace.WriteLine(String.Format("Filter: User: {0} / Message: {1}",args.User.ScreenName, args.Content.Replace('\n', ' ')));
             Trace.Indent();
-            foreach (FilterItem item in _items)
+            try
             {
-                if (!item.Enabled)
-                    continue;
-                
-                Trace.WriteLine("=> " + item.GetType().Name);
-                Trace.Indent();
-                try
+                foreach (FilterItem item in _items)
                 {
-                    Boolean executed = item.Execute(args);
-                    if (args.Drop)
+                    if (!item.Enabled)
+                        continue;
+
+                    Trace.Indent();
+                    try
                     {
-                        Trace.WriteLine(String.Format("=> DROP", item.GetType().Name, args.User.ScreenName, args.Content.Replace('\n', ' ')));
-                        return false;
+                        Boolean executed = item.Execute(args);
+                        if (args.Drop)
+                        {
+                            Trace.WriteLine(String.Format("=> Drop", item.GetType().Name, args.User.ScreenName,
+                                                          args.Content.Replace('\n', ' ')));
+                            return false;
+                        }
+                        else if (executed)
+                        {
+                            Trace.WriteLine(String.Format("=> Execute Result: Filter: {0} / User: {1} / Message: {2}",
+                                                          item.GetType().Name,
+                                                          args.User.ScreenName, args.Content.Replace('\n', ' ')));
+                        }
                     }
-                    else if (executed)
+                    finally
                     {
-                        Trace.WriteLine(String.Format("=> Result: User: {1} / Message: {2}", item.GetType().Name,
-                                                      args.User.ScreenName, args.Content.Replace('\n', ' ')));
+                        Trace.Unindent();
                     }
-                }
-                finally
-                {
-                    Trace.Unindent();
                 }
             }
-            Trace.Unindent();
+            finally 
+            {
+                Trace.Unindent();
+            }
 
             return true;
         }
