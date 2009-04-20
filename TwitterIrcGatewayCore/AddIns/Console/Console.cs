@@ -107,6 +107,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 if (String.Compare(ctx.Name.Replace("Context", ""), args[0], true) == 0)
                 {
                     this.PushContext(this.GetContext(ctx, Server, Session));
+
+                    // 続く文字列をもう一度処理し直す
+                    if (args.Length > 1)
+                    {
+                        ProcessInput(String.Join(" ", args, 1, args.Length - 1), true);
+                    }
                     return;
                 }
             }
