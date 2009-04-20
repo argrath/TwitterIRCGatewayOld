@@ -32,3 +32,17 @@ Misuzilla::IronRuby::TypableMap.register("test", "Test Command") do |p, msg, sta
 
   true # true を返すとハンドルしたことになりステータス更新処理は行われない
 end
+
+# TypableMap: rt コマンドを追加する
+Misuzilla::IronRuby::TypableMap.register("rt", "ReTweet Command") do |p, msg, status, args|
+  System::Diagnostics::Trace.WriteLine("RT: #{status.to_string}")
+
+  Session.RunCheck(Procedure.new{
+    updated_status = Session.update_status("RT: #{status.text} (via @#{status.user.screen_name})")
+    Session.send_channel_message(updated_status.text)
+  }, System::Action[System::Exception].new{|ex|
+    Session.send_channel_message(msg.receiver, Server.server_nick, "メッセージ送信に失敗しました", false, false, true)
+  })
+
+  true # true を返すとハンドルしたことになりステータス更新処理は行われない
+end

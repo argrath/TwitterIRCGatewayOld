@@ -814,91 +814,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         SendTwitterGatewayServerMessage("エラー: メッセージは完了しましたが、レスポンスを正しく受信できませんでした。(" + tse.Message + ")");
                     }
 
-                    // topic にする
-                    if (_config.SetTopicOnStatusChanged)
-                    {
-                        TopicMessage topicMsg = new TopicMessage(_config.ChannelName, message.Content);
-                        topicMsg.Sender = _clientHost;
-                        Send(topicMsg);
-                    }
-
-                    // 他のチャンネルにも投げる
-                    if (_config.BroadcastUpdate)
-                    {
-                        // #Twitter
-                        if (String.Compare(message.Receiver, _config.ChannelName, true) != 0)
-                        {
-                            // XXX: 例によってIRCライブラリのバージョンアップでどうにかしたい
-                            if (_config.BroadcastUpdateMessageIsNotice)
-                            {
-                                Send(new NoticeMessage()
-                                {
-                                    Sender = _clientHost,
-                                    Receiver = _config.ChannelName,
-                                    Content = message.Content
-                                });
-                            }
-                            else
-                            {
-                                Send(new PrivMsgMessage()
-                                {
-                                    Sender = _clientHost,
-                                    Receiver = _config.ChannelName,
-                                    Content = message.Content
-                                });
-                            }
-                        }
-                        
-                        // group
-                        foreach (Group group in _groups.Values)
-                        {
-                            if (group.IsJoined && !group.IsSpecial && !group.IgnoreEchoBack && String.Compare(message.Receiver, group.Name, true) != 0)
-                            {
-                                if (_config.BroadcastUpdateMessageIsNotice)
-                                {
-                                    Send(new NoticeMessage()
-                                    {
-                                        Sender = _clientHost,
-                                        Receiver = group.Name,
-                                        Content = message.Content
-                                    });
-                                }
-                                else
-                                {
-                                    Send(new PrivMsgMessage()
-                                    {
-                                        Sender = _clientHost,
-                                        Receiver = group.Name,
-                                        Content = message.Content
-                                    });
-                                }
-                            }
-                        }
-                    }
+                    // クライアントに送信する
+                    SendChannelMessage(message.Receiver, _nick, message.Content, true, true, false);
                 }
-                else
+                else if (String.Compare(message.Receiver, "trace", true) == 0)
                 {
                     // 人に対する場合はDirect Message
                     _twitter.SendDirectMessage(message.Receiver, message.Content);
                 }
                 if (isRetry)
                 {
-                    NoticeMessage noticeMsg = new NoticeMessage();
-                    noticeMsg.SenderNick = Server.ServerNick;
-                    noticeMsg.SenderHost = Server.ServerName;
-                    noticeMsg.Receiver = message.Receiver;
-                    noticeMsg.Content = "メッセージ送信のリトライに成功しました。";
-                    Send(noticeMsg);
+                    SendChannelMessage(message.Receiver, Server.ServerNick, "メッセージ送信のリトライに成功しました。", false, false, true);
                 }
             }
             catch (WebException ex)
             {
-                NoticeMessage noticeMsg = new NoticeMessage();
-                noticeMsg.SenderNick = Server.ServerNick;
-                noticeMsg.SenderHost = Server.ServerName;
-                noticeMsg.Receiver = message.Receiver;
-                noticeMsg.Content = String.Format("メッセージ送信に失敗しました({0})" + (!isRetry ? "/リトライします。" : ""), ex.Message.Replace("\n", " "));
-                Send(noticeMsg);
+                String content = String.Format("メッセージ送信に失敗しました({0})" + (!isRetry ? "/リトライします。" : ""), ex.Message.Replace("\n", " "));
+                SendChannelMessage(message.Receiver, Server.ServerNick, content, false, false, true);
 
                 // 一回だけリトライするよ
                 if (!isRetry)
@@ -1281,7 +1213,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// JOIN とかクライアントに返すメッセージを送信します
+        /// JOIN などクライアントに返すメッセージを送信します
         /// </summary>
         /// <param name="msg"></param>
         public void SendServer(IRCMessage msg)
@@ -1291,7 +1223,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// IRCサーバメッセージ系を送信します
+        /// IRCサーバからのメッセージを送信します
         /// </summary>
         /// <param name="msg"></param>
         public void SendServerMessage(IRCMessage msg)
@@ -1301,7 +1233,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// サーバメッセージ系を送信します
+        /// TwitterIrcGatewayからのメッセージを送信します
         /// </summary>
         /// <param name="message"></param>
         public void SendTwitterGatewayServerMessage(String message)
@@ -1314,7 +1246,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// サーバエラーメッセージ系を送信します
+        /// サーバのエラーメッセージを送信します
         /// </summary>
         /// <param name="message"></param>
         public void SendServerErrorMessage(String message)
@@ -1351,6 +1283,111 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 numMsg.CommandParams[i+1] = commandParams[i];
 
             SendServerMessage(numMsg);
+        }
+
+        /// <summary>
+        /// 更新メッセージなどをチャンネルに送信、エコーバックします。
+        /// </summary>
+        /// <param name="content">送信するメッセージ</param>
+        public void SendChannelMessage(String content)
+        {
+            SendChannelMessage(String.Empty, _clientHost, content, true, true, false);
+        }
+
+        /// <summary>
+        /// メッセージをクライアントに送信、必要の応じてトピックに設定し、エコーバックします。
+        /// </summary>
+        /// <param name="receivedChannel">入力があったチャンネル</param>
+        /// <param name="content">送信するメッセージ</param>
+        /// <param name="withEchoBack">エコーバックするかどうかを指定します</param>
+        /// <param name="setTopic">トピックに設定するかどうかを指定します</param>
+        /// <param name="forceNotice">送信メッセージを設定にかかわらずNOTICEにするかどうかを指定します</param>
+        public void SendChannelMessage(String receivedChannel, String sender, String content, Boolean withEchoBack, Boolean setTopic, Boolean forceNotice)
+        {
+            // topicに設定する
+            if (_config.SetTopicOnStatusChanged && setTopic)
+            {
+                TopicMessage topicMsg = new TopicMessage(_config.ChannelName, content);
+                topicMsg.Sender = sender;
+                Send(topicMsg);
+            }
+
+            // 他のチャンネルにも投げる
+            if (_config.BroadcastUpdate && withEchoBack)
+            {
+                // #Twitter
+                if (String.Compare(receivedChannel, _config.ChannelName, true) != 0)
+                {
+                    // XXX: 例によってIRCライブラリのバージョンアップでどうにかしたい
+                    if (_config.BroadcastUpdateMessageIsNotice || forceNotice)
+                    {
+                        Send(new NoticeMessage()
+                        {
+                            Sender = sender,
+                            Receiver = _config.ChannelName,
+                            Content = content
+                        });
+                    }
+                    else
+                    {
+                        Send(new PrivMsgMessage()
+                        {
+                            Sender = sender,
+                            Receiver = _config.ChannelName,
+                            Content = content
+                        });
+                    }
+                }
+
+                // group
+                foreach (Group group in _groups.Values)
+                {
+                    if (group.IsJoined && !group.IsSpecial && !group.IgnoreEchoBack && String.Compare(receivedChannel, group.Name, true) != 0)
+                    {
+                        if (_config.BroadcastUpdateMessageIsNotice || forceNotice)
+                        {
+                            Send(new NoticeMessage()
+                            {
+                                Sender = sender,
+                                Receiver = group.Name,
+                                Content = content
+                            });
+                        }
+                        else
+                        {
+                            Send(new PrivMsgMessage()
+                            {
+                                Sender = sender,
+                                Receiver = group.Name,
+                                Content = content
+                            });
+                        }
+                    }
+                }
+            }
+            // 全チャンネルエコーバックが有効でなく、チャンネルが指定されていない場合にはデフォルトに流す
+            else if (String.IsNullOrEmpty(receivedChannel))
+            {
+                if (forceNotice)
+                {
+                    Send(new NoticeMessage()
+                    {
+                        Sender = sender,
+                        Receiver = _config.ChannelName,
+                        Content = content
+                    });
+                }
+                else
+                {
+                    Send(new PrivMsgMessage()
+                    {
+                        Sender = sender,
+                        Receiver = _config.ChannelName,
+                        Content = content
+                    });
+                }
+            }
+
         }
 
         /// <summary>
@@ -1574,7 +1611,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return msg;
         }
 
-        public delegate void Procedure();
         /// <summary>
         /// チェックを実行します。例外が発生した場合には自動的にメッセージを送信します。
         /// </summary>
@@ -1598,6 +1634,34 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             catch (TwitterServiceException ex2)
             {
                 twitter_CheckError(_twitter, new ErrorEventArgs(ex2));
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// チェックを実行します。Twitterに由来する例外が発生した場合には指定したデリゲートを呼び出します。
+        /// </summary>
+        /// <param name="proc">実行するチェック処理</param>
+        /// <returns></returns>
+        public Boolean RunCheck(Procedure proc, Action<Exception> twitterExceptionCallback)
+        {
+            try
+            {
+                proc();
+            }
+            catch (WebException ex)
+            {
+                if (ex.Response == null || !(ex.Response is HttpWebResponse) || ((HttpWebResponse)(ex.Response)).StatusCode != HttpStatusCode.NotModified)
+                {
+                    // not-modified 以外
+                    twitterExceptionCallback(ex);
+                    return false;
+                }
+            }
+            catch (TwitterServiceException ex2)
+            {
+                twitterExceptionCallback(ex2);
                 return false;
             }
             return true;
@@ -1688,4 +1752,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         #endregion
     }
+
+    public delegate void Procedure();
 }

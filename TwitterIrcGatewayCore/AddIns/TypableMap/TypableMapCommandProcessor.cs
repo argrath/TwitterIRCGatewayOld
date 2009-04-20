@@ -251,17 +251,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
 
             public Boolean Process(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, string args)
             {
-                processor.Session.RunCheck(() =>
-                                               {
-                                                   String replyMsg = String.Format("@{0} {1}", status.User.ScreenName, args);
-                                                   Status updatedStatus = processor.Session.UpdateStatus(replyMsg, status.Id);
-                                                   processor.Session.TwitterService.ProcessStatus(updatedStatus, (s) =>
-                                                                                                                     {
-                                                                                                                         Boolean requireFriendsUpdate = false;
-                                                                                                                         processor.Session.ProcessTimelineStatus(s, ref requireFriendsUpdate, true);
-                                                                                                                     });
-                                                   
-                                               });
+                var session = processor.Session;
+                session.RunCheck(() =>
+                                     {
+                                         String replyMsg = String.Format("@{0} {1}", status.User.ScreenName, args);
+                                         Status updatedStatus = session.UpdateStatus(replyMsg, status.Id);
+                                         session.SendChannelMessage(updatedStatus.Text);
+                                     },
+                                 (ex) =>
+                                     {
+                                         session.SendChannelMessage(msg.Receiver, Server.ServerNick, "メッセージ送信に失敗しました", false, false, true);
+                                     });
                 return true;
             }
 
