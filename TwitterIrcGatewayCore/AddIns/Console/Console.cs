@@ -76,7 +76,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     
         void ProcessMessage(PrivMsgMessage privMsg)
         {
-            String msgText = privMsg.Content.Trim();
+            String msgText = privMsg.Content;//.Trim();
             ProcessInput(msgText, true);
         }
         
@@ -121,7 +121,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             MethodInfo methodInfo = CurrentContext.GetCommand(args[0].Replace(":", ""));
             if (methodInfo == null)
             {
-                NotifyMessage("指定された名前はこのコンテキストのコマンド、またはサブコンテキストにも見つかりません。");
+                // OnCallMissingCommand で処理できるかどうか試す
+                if (!CurrentContext.OnCallMissingCommand(args[0].Replace(":", ""), inputLine))
+                {
+                    NotifyMessage("指定された名前はこのコンテキストのコマンド、またはサブコンテキストにも見つかりません。");
+                }
                 return;
             }
 
@@ -195,8 +199,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <param name="message">メッセージ</param>
         public void NotifyMessage(String senderNick, String message)
         {
-            Session.Send(new NoticeMessage(ConsoleChannelName, message)
-                             {SenderHost = "twitter@" + Server.ServerName, SenderNick = senderNick});
+            foreach (var line in message.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                Session.Send(new NoticeMessage(ConsoleChannelName, line) { SenderHost = "twitter@" + Server.ServerName, SenderNick = senderNick });
+            }
         }
 
         /// <summary>

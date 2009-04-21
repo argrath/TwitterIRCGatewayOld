@@ -39,6 +39,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         protected virtual void OnConfigurationChanged(IConfiguration config, MemberInfo memberInfo, Object value)
         {
         }
+        
+        /// <summary>
+        /// 存在しないコマンドが呼ばれた場合の処理
+        /// </summary>
+        /// <param name="commandName"></param>
+        /// <param name="args"></param>
+        /// <returns>コマンドを処理したかどうかを表す値。falseを返す場合、該当するコマンドは存在しなかった扱いとなります。</returns>
+        [Browsable(false)]
+        public virtual Boolean OnCallMissingCommand(String commandName, String rawInputLine)
+        {
+            return false;
+        }
 
         #region Context Base Implementation
         [Description("コマンドの一覧または説明を表示します")]

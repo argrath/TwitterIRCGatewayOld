@@ -4,12 +4,15 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using IronPython.Hosting;
 using IronRuby.Builtins;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Misuzilla.Applications.TwitterIrcGateway.AddIns.Console;
 using System.IO;
 using System.Security.Policy;
+using Microsoft.Scripting.Hosting.Shell;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 {
@@ -20,7 +23,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
         public event EventHandler BeforeUnload;
 
-        internal Dictionary<String, ScriptScope> ScriptScopes { get { return _scriptScopes; } }
+        internal IDictionary<String, ScriptScope> ScriptScopes { get { return _scriptScopes; } }
+        internal ScriptRuntime ScriptRuntime { get { return _scriptRuntime; } }
 
         public override void Initialize()
         {
@@ -140,10 +144,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
         public delegate void ScriptExecutionCallback(String fileName, Exception e);
     }
-    
+
     [Description("DLR統合 コンテキストに切り替えます")]
     public class DLRContext : Context
     {
+        public override Type[] Contexts { get { return new Type[] {typeof (IpyContext)}; } }
+        
         [Description("読み込まれているスクリプトを一覧表示します")]
         public void List()
         {
@@ -192,6 +198,136 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                 ConsoleAddIn.NotifyMessage("Eval コマンドは現在無効化されています。");
                 //ConsoleAddIn.NotifyMessage("ユーザ設定ディレクトリに EnableDLRDebug ファイルを作成することで有効になります。");
             }
+        }
+    }
+    
+    [Description("IronPython コンソールコンテキストに切り替えます")]
+    public class IpyContext : Context
+    {
+        private Thread _consoleThread;
+        private PythonCommandLine _pythonCommandLine;
+        private VirtualConsole _virtualConsole;
+        
+        public override void Initialize()
+        {
+            DLRIntegrationAddIn addIn = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>();
+            _pythonCommandLine = new PythonCommandLine2();
+            _virtualConsole = new VirtualConsole(Session, ConsoleAddIn);
+            PythonConsoleOptions consoleOptions = new PythonConsoleOptions();
+
+            _consoleThread = new Thread(t =>
+            {
+                _pythonCommandLine.Run(addIn.ScriptRuntime.GetEngine("py"), _virtualConsole, consoleOptions);
+            });
+            _consoleThread.Start();
+
+            base.Initialize();
+        }
+
+        public override bool OnCallMissingCommand(string commandName, string rawInputLine)
+        {
+            _virtualConsole.SetLine(rawInputLine);
+            return true;
+        }
+        
+
+        [Description("IronPython コンソールを終了します")]
+        public new void Exit()
+        {
+            _consoleThread.Abort();
+            base.Exit();
+        }
+
+        private class VirtualWriter : TextWriter
+        {
+            private ConsoleAddIn _consoleAddIn;
+            public override Encoding Encoding { get { return Encoding.UTF8; } }
+            public override void Write(string value)
+            {
+                if (!String.IsNullOrEmpty(value.Trim()))
+                    _consoleAddIn.NotifyMessage(value);
+            }
+
+            public VirtualWriter(ConsoleAddIn consoleAddIn)
+            {
+                _consoleAddIn = consoleAddIn;
+            }
+        }
+        
+        /// <summary>
+        /// PythonCommandLine.cs の Initialize で Console.Out/Error に OutputWriter を設定しており、
+        /// それはもともとの System.Console.Out などをみている
+        /// </summary>
+        class PythonCommandLine2 : PythonCommandLine
+        {
+            protected override int Run()
+            {
+                Language.DomainManager.SharedIO.SetOutput(MemoryStream.Null, Console.Output);
+                Language.DomainManager.SharedIO.SetErrorOutput(MemoryStream.Null, Console.Output);
+                return base.Run();
+            }
+        }
+        
+        private class VirtualConsole : IConsole
+        {
+            private Session _session;
+            private ConsoleAddIn _consoleAddIn;
+            private String _line;
+            private ManualResetEvent _resetEvent = new ManualResetEvent(false);
+            private VirtualWriter _writer;
+            
+            public VirtualConsole(Session session, ConsoleAddIn consoleAddIn)
+            {
+                _writer = new VirtualWriter(consoleAddIn);
+                _session = session;
+                _consoleAddIn = consoleAddIn;
+            }
+
+            public void SetLine(String line)
+            {
+                _line = line;
+                _resetEvent.Set();
+            }
+            
+            #region IConsole メンバ
+
+            public TextWriter ErrorOutput
+            {
+                get { return _writer;  }
+                set {}
+            }
+
+            public TextWriter Output
+            {
+                get { return _writer; }
+                set {}
+            }
+
+            public string ReadLine(int autoIndentSize)
+            {
+                _resetEvent.WaitOne();
+                _resetEvent.Reset();
+                return _line;
+            }
+
+            public void Write(string text, Style style)
+            {
+                // TODO: style
+                _consoleAddIn.NotifyMessage(text);
+            }
+
+            public void WriteLine()
+            {
+                _consoleAddIn.NotifyMessage(" ");
+            }
+
+            public void WriteLine(string text, Style style)
+            {
+                // TODO: style
+                _consoleAddIn.NotifyMessage(text);
+            }
+
+            #endregion
         }
     }
 }
