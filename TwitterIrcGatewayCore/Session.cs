@@ -814,8 +814,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         SendTwitterGatewayServerMessage("エラー: メッセージは完了しましたが、レスポンスを正しく受信できませんでした。(" + tse.Message + ")");
                     }
 
-                    // クライアントに送信する
-                    SendChannelMessage(message.Receiver, _nick, message.Content, true, true, false);
+                    // ほかのグループに送信する
+                    SendChannelMessage(message.Receiver, _nick, message.Content, false, true, true, false);
                 }
                 else if (String.Compare(message.Receiver, "trace", true) == 0)
                 {
@@ -824,13 +824,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
                 if (isRetry)
                 {
-                    SendChannelMessage(message.Receiver, Server.ServerNick, "メッセージ送信のリトライに成功しました。", false, false, true);
+                    SendChannelMessage(message.Receiver, Server.ServerNick, "メッセージ送信のリトライに成功しました。", true, false, false, true);
                 }
             }
             catch (WebException ex)
             {
                 String content = String.Format("メッセージ送信に失敗しました({0})" + (!isRetry ? "/リトライします。" : ""), ex.Message.Replace("\n", " "));
-                SendChannelMessage(message.Receiver, Server.ServerNick, content, false, false, true);
+                SendChannelMessage(message.Receiver, Server.ServerNick, content, true, false, false, true);
 
                 // 一回だけリトライするよ
                 if (!isRetry)
@@ -1286,23 +1286,45 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// 更新メッセージなどをチャンネルに送信、エコーバックします。
+        /// ユーザ自身の更新メッセージなどをチャンネルに送信、必要なチャンネルにエコーバックします。
         /// </summary>
         /// <param name="content">送信するメッセージ</param>
         public void SendChannelMessage(String content)
         {
-            SendChannelMessage(String.Empty, _clientHost, content, true, true, false);
+            SendChannelMessage(String.Empty, _clientHost, content, true, true, true, false);
         }
 
         /// <summary>
-        /// メッセージをクライアントに送信、必要の応じてトピックに設定し、エコーバックします。
+        /// ユーザ自身の更新メッセージなどをチャンネルに送信、必要なチャンネルにエコーバックします。
+        /// </summary>
+        /// <param name="receivedChannel">入力のあったチャンネル</param>
+        /// <param name="content">送信するメッセージ</param>
+        public void SendChannelMessage(String receivedChannel, String content)
+        {
+            SendChannelMessage(receivedChannel, _clientHost, content, true, true, true, false);
+        }
+ 
+        /// <summary>
+        /// ユーザ自身の更新メッセージなどをチャンネルに送信、必要なチャンネルにエコーバックします。
+        /// </summary>
+        /// <param name="receivedChannel">入力のあったチャンネル</param>
+        /// <param name="sender">送信元</param>
+        /// <param name="content">送信するメッセージ</param>
+        public void SendChannelMessage(String receivedChannel, String sender, String content)
+        {
+            SendChannelMessage(receivedChannel, sender, content, true, true, true, false);
+        }       
+        /// <summary>
+        /// メッセージをクライアントに送信、必要の応じてトピックに設定し、必要なチャンネルにエコーバックします。
         /// </summary>
         /// <param name="receivedChannel">入力があったチャンネル</param>
         /// <param name="content">送信するメッセージ</param>
-        /// <param name="withEchoBack">エコーバックするかどうかを指定します</param>
+        /// <param name="sender">送信元</param>
+        /// <param name="sendToTargetChannel">対象のチャンネルに送信するかどうかを指定します</param>
+        /// <param name="withEchoBack">ほかのチャンネルにエコーバックするかどうかを指定します</param>
         /// <param name="setTopic">トピックに設定するかどうかを指定します</param>
         /// <param name="forceNotice">送信メッセージを設定にかかわらずNOTICEにするかどうかを指定します</param>
-        public void SendChannelMessage(String receivedChannel, String sender, String content, Boolean withEchoBack, Boolean setTopic, Boolean forceNotice)
+        public void SendChannelMessage(String receivedChannel, String sender, String content, Boolean sendToTargetChannel, Boolean withEchoBack, Boolean setTopic, Boolean forceNotice)
         {
             // topicに設定する
             if (_config.SetTopicOnStatusChanged && setTopic)
@@ -1310,6 +1332,29 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 TopicMessage topicMsg = new TopicMessage(_config.ChannelName, content);
                 topicMsg.Sender = sender;
                 Send(topicMsg);
+            }
+            
+            // 指定されたチャンネルに流す必要があればまず流す
+            if (sendToTargetChannel && !String.IsNullOrEmpty(receivedChannel))
+            {
+                if (_config.BroadcastUpdateMessageIsNotice || forceNotice)
+                {
+                    Send(new NoticeMessage()
+                    {
+                        Sender = sender,
+                        Receiver = receivedChannel,
+                        Content = content
+                    });
+                }
+                else
+                {
+                    Send(new PrivMsgMessage()
+                    {
+                        Sender = sender,
+                        Receiver = receivedChannel,
+                        Content = content
+                    });
+                }                
             }
 
             // 他のチャンネルにも投げる

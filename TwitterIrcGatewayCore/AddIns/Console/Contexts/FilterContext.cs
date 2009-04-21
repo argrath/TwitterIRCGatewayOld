@@ -13,6 +13,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Description("存在するフィルタをすべて表示します")]
         public void List()
         {
+            if (Session.Filters.Items.Length == 0)
+            {
+                ConsoleAddIn.NotifyMessage("フィルタは現在設定されていません。");
+                return;
+            }
+            
             for (var i = 0; i < Session.Filters.Items.Length; i++)
             {
                 FilterItem filter = Session.Filters.Items[i];

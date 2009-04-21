@@ -16,16 +16,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
     public class DLRIntegrationAddIn : AddInBase
     {
         private ScriptRuntime _scriptRuntime;
-        private ScriptScope _scriptScope;
+        private Dictionary<String, ScriptScope> _scriptScopes;
 
         public event EventHandler BeforeUnload;
+
+        internal Dictionary<String, ScriptScope> ScriptScopes { get { return _scriptScopes; } }
 
         public override void Initialize()
         {
             Session.AddInsLoadCompleted += (sender, e) =>
             {
                 Session.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<DLRContext>();
-                ReloadScripts((fileName, ex) => { Trace.WriteLine("Script Execute: " + fileName); if (ex != null) { Trace.WriteLine(ex.ToString()); } });
+                ReloadScripts((fileName, ex) => { Trace.WriteLine("Script Executed: " + fileName); if (ex != null) { Trace.WriteLine(ex.ToString()); } });
             };
         }
 
@@ -39,7 +41,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             if (_scriptRuntime != null)
             {
                 if (BeforeUnload != null)
-                    BeforeUnload(this, EventArgs.Empty);
+                {
+                    // アンロード時に出るExceptionはとりあえず全部握りつぶす
+                    foreach (EventHandler handler in BeforeUnload.GetInvocationList())
+                    {
+                        try
+                        {
+                            handler.Invoke(this, EventArgs.Empty);
+                        }
+                        catch (Exception e)
+                        {
+                            Trace.WriteLine("Exception at BeforeUnload(Ignore): "+e.Message);
+                        }
+                    }
+                }
 
                 _scriptRuntime.Shutdown();
                 _scriptRuntime = null;
@@ -50,7 +65,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         public Object Eval(String languageName, String expression)
         {
             ScriptEngine engine = _scriptRuntime.GetEngine(languageName);
-            return engine.CreateScriptSourceFromString(expression, SourceCodeKind.Statements).Execute(_scriptScope);
+            return engine.CreateScriptSourceFromString(expression, SourceCodeKind.Statements).Execute(_scriptScopes["*Eval*"]);
         }
     
         public void ReloadScripts(ScriptExecutionCallback scriptExecutionCallback)
@@ -72,15 +87,28 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
                 _scriptRuntime.LoadAssembly(asm);
             
-            _scriptScope = _scriptRuntime.CreateScope();
-            _scriptScope.SetVariable("Session", Session);
-            _scriptScope.SetVariable("Server", Server);
+            _scriptScopes = new Dictionary<string, ScriptScope>();
+            PrepareScriptScopeByPath("*Eval*");
             _scriptRuntime.Globals.SetVariable("Session", Session);
             _scriptRuntime.Globals.SetVariable("Server", Server);
 
-            if (Directory.Exists(Path.Combine(Session.UserConfigDirectory, "Scripts")))
+            // 共通のスクリプトを読む
+            LoadScriptsFromDirectory(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "GlobalScripts"), scriptExecutionCallback);
+
+            // ユーザごとのスクリプトを読む
+            LoadScriptsFromDirectory(Path.Combine(Session.UserConfigDirectory, "Scripts"), scriptExecutionCallback);
+        }
+        
+        /// <summary>
+        /// 指定したディレクトリ以下のスクリプトを読み込む
+        /// </summary>
+        /// <param name="rootDir"></param>
+        /// <param name="scriptExecutionCallback"></param>
+        private void LoadScriptsFromDirectory(String rootDir, ScriptExecutionCallback scriptExecutionCallback)
+        {
+            if (Directory.Exists(rootDir))
             {
-                foreach (var path in Directory.GetFiles(Path.Combine(Session.UserConfigDirectory, "Scripts"), "*.*", SearchOption.AllDirectories))
+                foreach (var path in Directory.GetFiles(rootDir, "*.*", SearchOption.AllDirectories))
                 {
                     ScriptEngine engine;
                     if (_scriptRuntime.TryGetEngineByFileExtension(Path.GetExtension(path), out engine))
@@ -88,7 +116,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                         try
                         {
                             String expression = File.ReadAllText(path, Encoding.UTF8);
-                            engine.Execute(expression, _scriptScope);
+                            ScriptScope scriptScope = PrepareScriptScopeByPath(path);
+                            engine.Execute(expression, scriptScope);
                             scriptExecutionCallback(path, null);
                         }
                         catch (Exception ex)
@@ -99,6 +128,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                 }
             }
         }
+        
+        private ScriptScope PrepareScriptScopeByPath(String path)
+        {
+            ScriptScope scriptScope = _scriptRuntime.CreateScope();
+            scriptScope.SetVariable("Session", Session);
+            scriptScope.SetVariable("Server", Server);
+
+            return _scriptScopes[path] = scriptScope;
+        }
 
         public delegate void ScriptExecutionCallback(String fileName, Exception e);
     }
@@ -106,9 +144,26 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
     [Description("DLR統合 コンテキストに切り替えます")]
     public class DLRContext : Context
     {
+        [Description("読み込まれているスクリプトを一覧表示します")]
+        public void List()
+        {
+            DLRIntegrationAddIn addIn = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>();
+            if (addIn.ScriptScopes.Keys.Count == 0)
+            {
+                ConsoleAddIn.NotifyMessage("スクリプトは現在読み込まれていません。");
+                return;
+            }
+
+            foreach (var key in addIn.ScriptScopes.Keys)
+            {
+                ConsoleAddIn.NotifyMessage(key);
+            }
+        }
+        
         [Description("スクリプトを再読み込みします")]
         public void Reload()
         {
+            ConsoleAddIn.NotifyMessage("スクリプトを再読み込みします。");
             Session.AddInManager.GetAddIn<DLRIntegrationAddIn>().ReloadScripts((fileName, ex) =>
                                                                                {
                                                                                    ConsoleAddIn.NotifyMessage("ファイル " + fileName + " を読み込みました。");
@@ -118,6 +173,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                                                                                         ConsoleAddIn.NotifyMessage(ex.Message);
                                                                                    }
                                                                                });
+            ConsoleAddIn.NotifyMessage("スクリプトを再読み込みしました。");
         }
 
         [Description("現在のスクリプトスコープでスクリプトを評価します")]

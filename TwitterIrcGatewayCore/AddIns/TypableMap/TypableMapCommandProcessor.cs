@@ -260,7 +260,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                                      },
                                  (ex) =>
                                      {
-                                         session.SendChannelMessage(msg.Receiver, Server.ServerNick, "メッセージ送信に失敗しました", false, false, true);
+                                         session.SendChannelMessage(msg.Receiver, Server.ServerNick, "メッセージ送信に失敗しました", true, false, false, true);
                                      });
                 return true;
             }
