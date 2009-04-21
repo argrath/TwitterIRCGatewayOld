@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
+using IronRuby.Builtins;
 using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting;
 using Misuzilla.Applications.TwitterIrcGateway.AddIns.Console;
@@ -62,8 +63,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             ScriptRuntimeSetup scriptRuntimeSetup = new ScriptRuntimeSetup();
             scriptRuntimeSetup.LanguageSetups.Add(new LanguageSetup("IronPython.Runtime.PythonContext, IronPython", "IronPython 2.6 Alpha", new[] { "IronPython", "Python", "py" }, new[] { ".py" }));
             scriptRuntimeSetup.LanguageSetups.Add(new LanguageSetup("IronRuby.Runtime.RubyContext, IronRuby", "IronRuby 1.0 Alpha", new[] { "IronRuby", "Ruby", "rb" }, new[] { ".rb" }));
-            scriptRuntimeSetup.LanguageSetups[0].Options.Add("LibraryPaths", @"Libraries\IronPython".Split(';'));
+            scriptRuntimeSetup.LanguageSetups[0].Options.Add("PythonLibraryPaths", @"Libraries\IronPython".Split(';'));
             scriptRuntimeSetup.LanguageSetups[1].Options.Add("LibraryPaths", @"Libraries\IronRuby\IronRuby;Libraries\IronRuby\ruby;Libraries\IronRuby\ruby\site_ruby;Libraries\IronRuby\ruby\site_ruby\1.8;Libraries\IronRuby\ruby\1.8".Split(';'));
+            scriptRuntimeSetup.LanguageSetups[1].Options["KCode"] = RubyEncoding.KCodeUTF8;
+            scriptRuntimeSetup.LanguageSetups[1].ExceptionDetail = true;
             _scriptRuntime = ScriptRuntime.CreateRemote(AppDomain.CurrentDomain, scriptRuntimeSetup);
             
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
