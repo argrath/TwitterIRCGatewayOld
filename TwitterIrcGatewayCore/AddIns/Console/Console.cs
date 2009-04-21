@@ -87,7 +87,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <param name="resolveAlias">エイリアス解決処理をするかどうか</param>
         void ProcessInput(String inputLine, Boolean resolveAlias)
         {            
-            String[] args = Regex.Split(inputLine, @"(?<!\\)\s");
+            String[] args = Regex.Split(inputLine.Trim(), @"(?<!\\)\s");
             if (args.Length == 0)
                 return;
 
