@@ -148,7 +148,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
     [Description("DLR統合 コンテキストに切り替えます")]
     public class DLRContext : Context
     {
-        public override Type[] Contexts { get { return new Type[] {typeof (IpyContext)}; } }
+        public override Type[] Contexts { get { return (IsEvalEnabled ? new Type[] {typeof (IpyContext)} : new Type[0]); } }
+        public Boolean IsEvalEnabled { get { return File.Exists(Path.Combine(Session.UserConfigDirectory, "EnableDLRDebug")); } }
         
         [Description("読み込まれているスクリプトを一覧表示します")]
         public void List()
@@ -188,7 +189,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                          [Description("評価する式")]
                          String expression)
         {
-            if (File.Exists(Path.Combine(Session.UserConfigDirectory, "EnableDLRDebug")))
+            if (IsEvalEnabled)
             {
                 Object retVal = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>().Eval(languageName, expression);
                 ConsoleAddIn.NotifyMessage(retVal == null ? "(null)" : retVal.ToString());
