@@ -36,7 +36,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.CamouflageClient
             Configuration config = Session.AddInManager.GetConfig<Configuration>();
             if (!String.IsNullOrEmpty(value))
                 config.ClientSource = value;
-            ConsoleAddIn.NotifyMessage("ClientSource = " + config.ClientSource);
+            Console.NotifyMessage("ClientSource = " + config.ClientSource);
             Session.AddInManager.SaveConfig(config);
 
             Session.AddInManager.GetAddIn<CamouflageClientAddIn>().UpdateClientSource();
@@ -47,7 +47,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.CamouflageClient
         {
             Configuration config = Session.AddInManager.GetConfig<Configuration>();
             config.ClientSource = String.Empty;
-            ConsoleAddIn.NotifyMessage("ClientSource = " + config.ClientSource);
+            Console.NotifyMessage("ClientSource = " + config.ClientSource);
             Session.AddInManager.SaveConfig(config);
             Session.AddInManager.GetAddIn<CamouflageClientAddIn>().UpdateClientSource();
         }

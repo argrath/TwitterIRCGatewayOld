@@ -8,33 +8,69 @@ using Misuzilla.Net.Irc;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {
-    public class ConsoleAddIn : AddInBase
+    public class Console : MarshalByRefObject
     {
+        public String ConsoleChannelName { get; private set; }
         public Context CurrentContext { get; set; }
         public Stack<Context> ContextStack { get; set; }
-        public String ConsoleChannelName { get { return "#Console";  } }
+
         public GeneralConfig Config { get; private set; }
 
         internal List<Type> Contexts { get; private set; }
+        
+        private Session Session { get; set; }
+        private Server Server { get; set; }
 
-        public override void Initialize()
+        /// <summary>
+        /// コンソールを有効にします。
+        /// </summary>
+        /// <param name="channelName"></param>
+        /// <param name="server"></param>
+        /// <param name="session"></param>
+        /// <param name="rootContextType"></param>
+        public void Attach(String channelName, Server server, Session session, Type rootContextType) 
         {
+            if (!channelName.StartsWith("#") && channelName.Length > 0)
+                throw new ArgumentException("チャンネル名は # から始まる2文字以上の文字列を指定する必要があります。", "channelName");
+            
+            ConsoleChannelName = channelName;
+            Server = server;
+            Session = session;
+            
             Session.PreMessageReceived += new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
             Session.PostMessageReceived += new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
 
             // Default Context
-            CurrentContext = this.GetContext<RootContext>(Server, Session);
+            CurrentContext = this.GetContext(rootContextType, Server, Session);
+            if (CurrentContext == null)
+                throw new ArgumentException("指定されたコンテキストは登録されていません。", "rootContextType");
+
             ContextStack = new Stack<Context>();
             Config = Session.AddInManager.GetConfig<GeneralConfig>();
             Contexts = new List<Type>();
-
-            RegisterContext<RootContext>();
-            RegisterContext<ConfigContext>();
-            RegisterContext<FilterContext>();
-            RegisterContext<GroupContext>();
-            RegisterContext<SystemContext>();
         
             LoadAliases();
+
+            // チャンネル
+            Group group;
+            if (!Session.Groups.TryGetValue(ConsoleChannelName, out group))
+            {
+                group = new Group(ConsoleChannelName);
+                Session.Groups.Add(ConsoleChannelName, group);
+            }
+            group.IsSpecial = true;
+            group.IsJoined = true;
+
+            Session.SendServer(new JoinMessage(ConsoleChannelName, ""));
+        }
+        
+        /// <summary>
+        /// コンソールを終了します。
+        /// </summary>
+        public void Detach()
+        {
+            Session.PreMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
+            Session.PostMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
         }
 
         /// <summary>
@@ -256,6 +292,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             Context ctx = Activator.CreateInstance(t) as Context;
             ctx.Server = server;
             ctx.Session = session;
+            ctx.Console = this;
             ctx.Initialize();
             return ctx;
         }

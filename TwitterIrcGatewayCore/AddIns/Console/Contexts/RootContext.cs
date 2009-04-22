@@ -14,7 +14,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     [Browsable(false)]
     public class RootContext : Context
     {
-        public override Type[] Contexts { get { return ConsoleAddIn.Contexts.ToArray(); } }
+        public override Type[] Contexts { get { return Console.Contexts.ToArray(); } }
 
         [Description("Twitter 検索を利用して検索します")]
         public void Search(String keywords)
@@ -30,11 +30,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
                 if (entries.Count == 0)
                 {
-                    ConsoleAddIn.NotifyMessage("検索結果は見つかりませんでした。");
+                    Console.NotifyMessage("検索結果は見つかりませんでした。");
                     return;
                 }
 
-                for (var i = (Math.Min(entries.Count, ConsoleAddIn.Config.SearchCount)); i > 0; i--)
+                for (var i = (Math.Min(entries.Count, Console.Config.SearchCount)); i > 0; i--)
                 {
                     // 後ろから取っていく
                     XmlElement entryE = entries[i - 1] as XmlElement;
@@ -47,16 +47,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
                     StringBuilder sb = new StringBuilder();
                     sb.Append(updated.ToString("HH:mm")).Append(": ").Append(body);
-                    if (ConsoleAddIn.Config.ShowPermalinkAfterStatus)
+                    if (Console.Config.ShowPermalinkAfterStatus)
                         sb.Append(" ").Append(link);
 
-                    ConsoleAddIn.NotifyMessage(screenName, sb.ToString());
+                    Console.NotifyMessage(screenName, sb.ToString());
                 }
             }
             catch (WebException we)
             {
-                ConsoleAddIn.NotifyMessage("Twitter 検索へのリクエスト中にエラーが発生しました:");
-                ConsoleAddIn.NotifyMessage(we.Message);
+                Console.NotifyMessage("Twitter 検索へのリクエスト中にエラーが発生しました:");
+                Console.NotifyMessage(we.Message);
             }
         }
 
@@ -68,18 +68,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             {
                 try
                 {
-                    var retStatuses = Session.TwitterService.GetTimelineByScreenName(screenName, new DateTime(), ConsoleAddIn.Config.SearchCount);
+                    var retStatuses = Session.TwitterService.GetTimelineByScreenName(screenName, new DateTime(), Console.Config.SearchCount);
                     statuses.AddRange(retStatuses.Status);
                 }
                 catch (TwitterServiceException te)
                 {
-                    ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} のタイムラインを取得中にエラーが発生しました:", screenName));
-                    ConsoleAddIn.NotifyMessage(te.Message);
+                    Console.NotifyMessage(String.Format("ユーザ {0} のタイムラインを取得中にエラーが発生しました:", screenName));
+                    Console.NotifyMessage(te.Message);
                 }
                 catch (WebException we)
                 {
-                    ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} のタイムラインを取得中にエラーが発生しました:", screenName));
-                    ConsoleAddIn.NotifyMessage(we.Message);
+                    Console.NotifyMessage(String.Format("ユーザ {0} のタイムラインを取得中にエラーが発生しました:", screenName));
+                    Console.NotifyMessage(we.Message);
                 }
             }
 
@@ -96,18 +96,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 {
                     var retStatuses = Session.TwitterService.GetFavoritesByScreenName(screenName, 1);
                     statuses.AddRange(retStatuses.Status);
-                    if (statuses.Count > ConsoleAddIn.Config.FavoritesCount)
+                    if (statuses.Count > Console.Config.FavoritesCount)
                         statuses.RemoveRange(10, statuses.Count - 10);
                 }
                 catch (TwitterServiceException te)
                 {
-                    ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} の Favorites を取得中にエラーが発生しました:", screenName));
-                    ConsoleAddIn.NotifyMessage(te.Message);
+                    Console.NotifyMessage(String.Format("ユーザ {0} の Favorites を取得中にエラーが発生しました:", screenName));
+                    Console.NotifyMessage(te.Message);
                 }
                 catch (WebException we)
                 {
-                    ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} の Favorites を取得中にエラーが発生しました:", screenName));
-                    ConsoleAddIn.NotifyMessage(we.Message);
+                    Console.NotifyMessage(String.Format("ユーザ {0} の Favorites を取得中にエラーが発生しました:", screenName));
+                    Console.NotifyMessage(we.Message);
                 }
             }
 
@@ -139,17 +139,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     var user = follow
                                    ? Session.TwitterService.CreateFriendship(screenName)
                                    : Session.TwitterService.DestroyFriendship(screenName);
-                    ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} を {1} しました。", screenName, action));
+                    Console.NotifyMessage(String.Format("ユーザ {0} を {1} しました。", screenName, action));
                 }
                 catch (TwitterServiceException te)
                 {
-                    ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} を {1} する際にエラーが発生しました:", screenName, action));
-                    ConsoleAddIn.NotifyMessage(te.Message);
+                    Console.NotifyMessage(String.Format("ユーザ {0} を {1} する際にエラーが発生しました:", screenName, action));
+                    Console.NotifyMessage(te.Message);
                 }
                 catch (WebException we)
                 {
-                    ConsoleAddIn.NotifyMessage(String.Format("ユーザ {0} を {1} する際にエラーが発生しました:", screenName, action));
-                    ConsoleAddIn.NotifyMessage(we.Message);
+                    Console.NotifyMessage(String.Format("ユーザ {0} を {1} する際にエラーが発生しました:", screenName, action));
+                    Console.NotifyMessage(we.Message);
                 }
             }
         }
@@ -161,10 +161,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendFormat("{0}: {1}", status.CreatedAt.ToString("HH:mm"), status.Text);
-                if (ConsoleAddIn.Config.ShowPermalinkAfterStatus)
+                if (Console.Config.ShowPermalinkAfterStatus)
                     sb.AppendFormat(" http://twitter.com/{0}/status/{1}", status.User.ScreenName, status.Id);
 
-                ConsoleAddIn.NotifyMessage(status.User.ScreenName, sb.ToString());
+                Console.NotifyMessage(status.User.ScreenName, sb.ToString());
             }
         }
     }

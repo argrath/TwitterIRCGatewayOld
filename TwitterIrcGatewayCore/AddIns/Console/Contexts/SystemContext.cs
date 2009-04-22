@@ -17,7 +17,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 if (addinAsm == Assembly.GetExecutingAssembly())
                     continue;
 
-                ConsoleAddIn.NotifyMessage(String.Format("{0} {1} {2}",
+                Console.NotifyMessage(String.Format("{0} {1} {2}",
                                                          addInType.FullName,
                                                          addinAsm.GetName().Version,
                                                          (Session.AddInManager.GetAddIn(addInType) == null
@@ -32,7 +32,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             if (String.IsNullOrEmpty(addInName))
             {
-                ConsoleAddIn.NotifyMessage("アドインの名前を指定する必要があります。");
+                Console.NotifyMessage("アドインの名前を指定する必要があります。");
                 return;
             }
             foreach (var t in Session.AddInManager.AddInTypes)
@@ -45,12 +45,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                         Session.Config.DisabledAddInsList.Add(t.FullName);
                         Session.SaveConfig();
                     }
-                    ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は無効化されました。次回接続時まで設定は反映されません。", t.FullName));
+                    Console.NotifyMessage(String.Format("アドイン \"{0}\" は無効化されました。次回接続時まで設定は反映されません。", t.FullName));
                     return;
                 }
             }
 
-            ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
+            Console.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
         }
 
         [Description("アドインを有効にします")]
@@ -58,7 +58,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             if (String.IsNullOrEmpty(addInName))
             {
-                ConsoleAddIn.NotifyMessage("アドインの名前を指定する必要があります。");
+                Console.NotifyMessage("アドインの名前を指定する必要があります。");
                 return;
             }
 
@@ -71,11 +71,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                         Session.Config.DisabledAddInsList.Remove(t.FullName);
                         Session.SaveConfig();
                     }
-                    ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は有効化されました。次回接続時まで設定は反映されません。", t.FullName));
+                    Console.NotifyMessage(String.Format("アドイン \"{0}\" は有効化されました。次回接続時まで設定は反映されません。", t.FullName));
                     return;
                 }
             }
-            ConsoleAddIn.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
+            Console.NotifyMessage(String.Format("アドイン \"{0}\" は読み込まれていません。", addInName));
         }
 
         [Description("アドインを再読込します")]
@@ -89,7 +89,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             Assembly asm = typeof(Server).Assembly;
             AssemblyName asmName = asm.GetName();
-            ConsoleAddIn.NotifyMessage(String.Format("TwitterIrcGateway {0}", asmName.Version));
+            Console.NotifyMessage(String.Format("TwitterIrcGateway {0}", asmName.Version));
         }
 
         [Description("システム情報を表示します")]
@@ -98,30 +98,30 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             Assembly asm = typeof(Server).Assembly;
             AssemblyName asmName = asm.GetName();
 
-            ConsoleAddIn.NotifyMessage("[Core]");
-            ConsoleAddIn.NotifyMessage(String.Format("TwitterIrcGateway {0}", asmName.Version));
-            ConsoleAddIn.NotifyMessage(String.Format("Location: {0}", asm.Location));
-            ConsoleAddIn.NotifyMessage(String.Format("BaseDirectory: {0}", Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
+            Console.NotifyMessage("[Core]");
+            Console.NotifyMessage(String.Format("TwitterIrcGateway {0}", asmName.Version));
+            Console.NotifyMessage(String.Format("Location: {0}", asm.Location));
+            Console.NotifyMessage(String.Format("BaseDirectory: {0}", Path.GetDirectoryName(Assembly.GetEntryAssembly().Location)));
 
-            ConsoleAddIn.NotifyMessage("[System]");
-            ConsoleAddIn.NotifyMessage(String.Format("Operating System: {0}", Environment.OSVersion));
-            ConsoleAddIn.NotifyMessage(String.Format("Runtime Version: {0}", Environment.Version));
+            Console.NotifyMessage("[System]");
+            Console.NotifyMessage(String.Format("Operating System: {0}", Environment.OSVersion));
+            Console.NotifyMessage(String.Format("Runtime Version: {0}", Environment.Version));
 
-            ConsoleAddIn.NotifyMessage("[Session]");
-            ConsoleAddIn.NotifyMessage(String.Format("ConfigDirectory: {0}", Session.UserConfigDirectory));
+            Console.NotifyMessage("[Session]");
+            Console.NotifyMessage(String.Format("ConfigDirectory: {0}", Session.UserConfigDirectory));
             if (Session.TwitterUser != null)
             {
-                ConsoleAddIn.NotifyMessage(String.Format("TwitterUser: {0} ({1})", Session.TwitterUser.ScreenName,
+                Console.NotifyMessage(String.Format("TwitterUser: {0} ({1})", Session.TwitterUser.ScreenName,
                                                          Session.TwitterUser.Id));
             }
 
-            ConsoleAddIn.NotifyMessage("[AddIns]");
+            Console.NotifyMessage("[AddIns]");
             foreach (IAddIn addIn in Session.AddInManager.AddIns)
             {
                 Assembly addinAsm = addIn.GetType().Assembly;
                 if (addinAsm != asm)
                 {
-                    ConsoleAddIn.NotifyMessage(String.Format("{0} {1}", addIn.GetType().FullName,
+                    Console.NotifyMessage(String.Format("{0} {1}", addIn.GetType().FullName,
                                                              addinAsm.GetName().Version));
                 }
             }

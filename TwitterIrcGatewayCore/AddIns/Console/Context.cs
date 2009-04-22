@@ -16,7 +16,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Browsable(false)]
         public Server Server { get; set; }
         [Browsable(false)]
+        [Obsolete("ConsoleAddIn プロパティは古い形式です。Console プロパティを利用してください。このプロパティは常に ConsoleAddIn クラスの唯一のインスタンスを返します。")]
         public ConsoleAddIn ConsoleAddIn { get { return Session.AddInManager.GetAddIn<ConsoleAddIn>(); } }
+        [Browsable(false)]
+        public Console Console { get; internal set; }
 
         public virtual Type[] Contexts { get { return new Type[0]; } }
         public virtual IConfiguration[] Configurations { get { return new IConfiguration[0]; } }
@@ -44,7 +47,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// 存在しないコマンドが呼ばれた場合の処理
         /// </summary>
         /// <param name="commandName"></param>
-        /// <param name="args"></param>
+        /// <param name="rawInputLine"></param>
         /// <returns>コマンドを処理したかどうかを表す値。falseを返す場合、該当するコマンドは存在しなかった扱いとなります。</returns>
         [Browsable(false)]
         public virtual Boolean OnCallMissingCommand(String commandName, String rawInputLine)
@@ -61,16 +64,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 // コマンドの一覧
                 if (this.Contexts.Length > 0)
                 {
-                    ConsoleAddIn.NotifyMessage("[Contexts]");
+                    Console.NotifyMessage("[Contexts]");
                     foreach (var ctx in this.Contexts)
                     {
                         if (IsBrowsable(ctx))
-                            ConsoleAddIn.NotifyMessage(String.Format("{0} - {1}", ctx.Name.Replace("Context", ""),
+                            Console.NotifyMessage(String.Format("{0} - {1}", ctx.Name.Replace("Context", ""),
                                                                      GetDescription(ctx)));
                     }
                 }
 
-                ConsoleAddIn.NotifyMessage("[Commands]");
+                Console.NotifyMessage("[Commands]");
                 MethodInfo[] methodInfoArr = this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
                 Type t = typeof(Context);
                 foreach (var methodInfo in methodInfoArr)
@@ -79,7 +82,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                         !methodInfo.IsSpecialName)
                     {
                         if (IsBrowsable(methodInfo))
-                            ConsoleAddIn.NotifyMessage(String.Format("{0} - {1}", methodInfo.Name,
+                            Console.NotifyMessage(String.Format("{0} - {1}", methodInfo.Name,
                                                                      GetDescription(methodInfo)));
                     }
                 }
@@ -90,22 +93,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 MethodInfo methodInfo = GetCommand(commandName);
                 if (methodInfo == null)
                 {
-                    ConsoleAddIn.NotifyMessage("指定された名前はこのコンテキストのコマンドに見つかりません。");
+                    Console.NotifyMessage("指定された名前はこのコンテキストのコマンドに見つかりません。");
                     return;
                 }
 
                 String desc = GetDescription(methodInfo);
                 if (!String.IsNullOrEmpty(desc))
-                    ConsoleAddIn.NotifyMessage(desc);
+                    Console.NotifyMessage(desc);
                 
                 ParameterInfo[] paramInfo = methodInfo.GetParameters();
                 if (paramInfo.Length > 0)
                 {
-                    ConsoleAddIn.NotifyMessage("引数:");
+                    Console.NotifyMessage("引数:");
                     foreach (var paramInfoItem in paramInfo)
                     {
                         desc = GetDescription(paramInfoItem);
-                        ConsoleAddIn.NotifyMessage(String.Format("- {0}: {1}",
+                        Console.NotifyMessage(String.Format("- {0}: {1}",
                                                                  (String.IsNullOrEmpty(desc) ? paramInfoItem.Name : desc),
                                                                  paramInfoItem.ParameterType));
                     }
@@ -135,22 +138,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     FieldInfo fi = memberInfo as FieldInfo;
 
                     if (pi != null && pi.CanWrite)
-                        ConsoleAddIn.NotifyMessage(String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.Name, Inspect(pi.GetValue(config, null))));
+                        Console.NotifyMessage(String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.Name, Inspect(pi.GetValue(config, null))));
                     else if (fi != null && !fi.IsInitOnly)
-                        ConsoleAddIn.NotifyMessage(String.Format("{0} ({1}) = {2}", fi.Name, fi.FieldType.Name, Inspect(fi.GetValue(config))));
+                        Console.NotifyMessage(String.Format("{0} ({1}) = {2}", fi.Name, fi.FieldType.Name, Inspect(fi.GetValue(config))));
 
                     // さがしているのが一個の時は説明を出して終わり
                     if (!String.IsNullOrEmpty(configName))
                     {
                         String desc = GetDescription(memberInfo);
                         if (!String.IsNullOrEmpty(desc))
-                            ConsoleAddIn.NotifyMessage(desc);
+                            Console.NotifyMessage(desc);
                         return;
                     }
                 }
             }
             if (!String.IsNullOrEmpty(configName))
-                ConsoleAddIn.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
+                Console.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
         }
         
         [Description("設定を変更します")]
@@ -158,12 +161,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             if (String.IsNullOrEmpty(configName))
             {
-                ConsoleAddIn.NotifyMessage("設定名が指定されていません。");
+                Console.NotifyMessage("設定名が指定されていません。");
                 return;
             }
             if (String.IsNullOrEmpty(value))
             {
-                ConsoleAddIn.NotifyMessage("値が指定されていません。");
+                Console.NotifyMessage("値が指定されていません。");
                 return;
             }
             
@@ -187,7 +190,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     TypeConverter tConv = TypeDescriptor.GetConverter(type);
                     if (!tConv.CanConvertFrom(typeof(String)))
                     {
-                        ConsoleAddIn.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" には適切な TypeConverter がないため、このコマンドで設定することはできません。", configName, type.FullName));
+                        Console.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" には適切な TypeConverter がないため、このコマンドで設定することはできません。", configName, type.FullName));
                         return;
                     }
 
@@ -197,20 +200,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                         if (pi != null && pi.CanWrite)
                         {
                             pi.SetValue(config, convertedValue, null);
-                            ConsoleAddIn.NotifyMessage(String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.Name, Inspect(pi.GetValue(config, null))));
+                            Console.NotifyMessage(String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.Name, Inspect(pi.GetValue(config, null))));
                         }
                         else if (fi != null && !fi.IsInitOnly)
                         {
                             fi.SetValue(config, convertedValue);
-                            ConsoleAddIn.NotifyMessage(String.Format("{0} ({1}) = {2}", fi.Name, fi.FieldType.Name, Inspect(fi.GetValue(config))));
+                            Console.NotifyMessage(String.Format("{0} ({1}) = {2}", fi.Name, fi.FieldType.Name, Inspect(fi.GetValue(config))));
                         }
                         OnConfigurationChanged(config, memberInfo, convertedValue);
                     }
                     catch (Exception ex)
                     {
-                        ConsoleAddIn.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" に値を変換し設定する際にエラーが発生しました({2})。", configName, type.FullName, ex.GetType().Name));
+                        Console.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" に値を変換し設定する際にエラーが発生しました({2})。", configName, type.FullName, ex.GetType().Name));
                         foreach (var line in ex.Message.Split('\n'))
-                            ConsoleAddIn.NotifyMessage(line);
+                            Console.NotifyMessage(line);
                     }
 
                     // 見つかったので値をセットして終わり
@@ -218,7 +221,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 }
             }
             
-            ConsoleAddIn.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
+            Console.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
         }
 
         [Description("コマンドのエイリアスを設定します")]
@@ -228,40 +231,40 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             if (values.Length == 0)
             {
                 // 一覧
-                foreach (var alias in ConsoleAddIn.GetAliasesByType(this.GetType()))
+                foreach (var alias in Console.GetAliasesByType(this.GetType()))
                 {
-                    ConsoleAddIn.NotifyMessage(alias.Key + " = " + alias.Value);
+                    Console.NotifyMessage(alias.Key + " = " + alias.Value);
                 }
             }
             else if (values.Length == 1)
             {
                 // 表示
-                var aliasesByType = ConsoleAddIn.GetAliasesByType(this.GetType());
+                var aliasesByType = Console.GetAliasesByType(this.GetType());
                 if (aliasesByType.ContainsKey(values[0]))
                 {
-                    ConsoleAddIn.NotifyMessage(values[0] + " = " + aliasesByType[values[0]]);
+                    Console.NotifyMessage(values[0] + " = " + aliasesByType[values[0]]);
                 }
                 else
                 {
-                    ConsoleAddIn.NotifyMessage("エイリアスは見つかりません。");
+                    Console.NotifyMessage("エイリアスは見つかりません。");
                 }
             }
             else if (values[1] == "-")
             {
-                ConsoleAddIn.UnregisterAliasByType(this.GetType(), values[0]);
-                ConsoleAddIn.NotifyMessage("エイリアス \"" + values[0] + "\" を削除しました。");
+                Console.UnregisterAliasByType(this.GetType(), values[0]);
+                Console.NotifyMessage("エイリアス \"" + values[0] + "\" を削除しました。");
             }
             else
             {
-                ConsoleAddIn.RegisterAliasByType(this.GetType(), values[0], values[1]);
-                ConsoleAddIn.NotifyMessage("エイリアス \"" + values[0] + "\" を登録しました。");
+                Console.RegisterAliasByType(this.GetType(), values[0], values[1]);
+                Console.NotifyMessage("エイリアス \"" + values[0] + "\" を登録しました。");
             }
         }
 
         [Description("コンテキストを一つ前のものに戻します")]
         public void Exit()
         {
-            ConsoleAddIn.PopContext();
+            Console.PopContext();
         }
         #endregion
 

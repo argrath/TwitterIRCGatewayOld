@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="AddInManager.cs" />
     <Compile Include="AddIns\ClientMessageWait.cs" />
+    <Compile Include="AddIns\Console\ConsoleAddIn.cs" />
     <Compile Include="AddIns\Console\Contexts\RootContext.cs" />
     <Compile Include="AddIns\Console\Contexts\ConfigContext.cs" />
     <Compile Include="AddIns\Console\Console.cs" />

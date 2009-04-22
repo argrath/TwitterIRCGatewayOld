@@ -15,9 +15,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         public void UpdateFollowerIds()
         {
             RevealOnewayFollow addIn = Session.AddInManager.GetAddIn<RevealOnewayFollow>();
-            ConsoleAddIn.NotifyMessage("Follower リストを更新しています。");
+            Console.NotifyMessage("Follower リストを更新しています。");
             addIn.UpdateFollowerIds();
-            ConsoleAddIn.NotifyMessage("Follower リストを更新しました。現在、" + addIn.FollowerIds.Count.ToString() + "人のユーザーに Follow されています。");
+            Console.NotifyMessage("Follower リストを更新しました。現在、" + addIn.FollowerIds.Count.ToString() + "人のユーザーに Follow されています。");
         }
     }
     public class RevealOnewayFollow : AddInBase

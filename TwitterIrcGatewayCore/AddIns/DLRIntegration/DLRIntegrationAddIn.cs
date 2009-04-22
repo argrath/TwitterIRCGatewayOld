@@ -157,30 +157,30 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             DLRIntegrationAddIn addIn = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>();
             if (addIn.ScriptScopes.Keys.Count == 0)
             {
-                ConsoleAddIn.NotifyMessage("スクリプトは現在読み込まれていません。");
+                Console.NotifyMessage("スクリプトは現在読み込まれていません。");
                 return;
             }
 
             foreach (var key in addIn.ScriptScopes.Keys)
             {
-                ConsoleAddIn.NotifyMessage(key);
+                Console.NotifyMessage(key);
             }
         }
         
         [Description("スクリプトを再読み込みします")]
         public void Reload()
         {
-            ConsoleAddIn.NotifyMessage("スクリプトを再読み込みします。");
+            Console.NotifyMessage("スクリプトを再読み込みします。");
             Session.AddInManager.GetAddIn<DLRIntegrationAddIn>().ReloadScripts((fileName, ex) =>
                                                                                {
-                                                                                   ConsoleAddIn.NotifyMessage("ファイル " + fileName + " を読み込みました。");
+                                                                                   Console.NotifyMessage("ファイル " + fileName + " を読み込みました。");
                                                                                    if (ex != null)
                                                                                    {
-                                                                                        ConsoleAddIn.NotifyMessage("実行時にエラーが発生しました:");
-                                                                                        ConsoleAddIn.NotifyMessage(ex.Message);
+                                                                                        Console.NotifyMessage("実行時にエラーが発生しました:");
+                                                                                        Console.NotifyMessage(ex.Message);
                                                                                    }
                                                                                });
-            ConsoleAddIn.NotifyMessage("スクリプトを再読み込みしました。");
+            Console.NotifyMessage("スクリプトを再読み込みしました。");
         }
 
         [Description("現在のスクリプトスコープでスクリプトを評価します")]
@@ -192,11 +192,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             if (IsEvalEnabled)
             {
                 Object retVal = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>().Eval(languageName, expression);
-                ConsoleAddIn.NotifyMessage(retVal == null ? "(null)" : retVal.ToString());
+                Console.NotifyMessage(retVal == null ? "(null)" : retVal.ToString());
             }
             else
             {
-                ConsoleAddIn.NotifyMessage("Eval コマンドは現在無効化されています。");
+                Console.NotifyMessage("Eval コマンドは現在無効化されています。");
                 //ConsoleAddIn.NotifyMessage("ユーザ設定ディレクトリに EnableDLRDebug ファイルを作成することで有効になります。");
             }
         }

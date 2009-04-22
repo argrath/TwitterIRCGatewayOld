@@ -15,13 +15,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             if (channelNameAndUserNames.Length == 1)
             {
-                ConsoleAddIn.NotifyMessage("エラー: ユーザが指定されていません。");
+                Console.NotifyMessage("エラー: ユーザが指定されていません。");
                 return;
             }
 
             if (!Session.Groups.ContainsKey(channelNameAndUserNames[0]))
             {
-                ConsoleAddIn.NotifyMessage("エラー: 指定されたグループは存在しません。");
+                Console.NotifyMessage("エラー: 指定されたグループは存在しません。");
                 return;
             }
 
