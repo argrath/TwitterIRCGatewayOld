@@ -40,7 +40,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private String _password;
         private String _nick;
         private User _twitterUser;
-        
+
         #region Events
         /// <summary>
         /// IRCメッセージ受信時、TwitterIrcGatewayが処理する前のイベント
@@ -1775,6 +1775,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             if (!_isDisposed)
             {
+                AddInManager.Uninitialize();
+                
                 if (_config.EnableTrace)
                 {
                     Trace.Listeners.Remove(_traceListener);

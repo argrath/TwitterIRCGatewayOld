@@ -125,7 +125,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public void Uninitialize()
         {
             foreach (IAddIn addIn in _addIns)
-                addIn.Uninitialize();
+            {
+                try
+                {
+                    addIn.Uninitialize();
+                }
+                catch (Exception e)
+                {
+                    Trace.WriteLine("Exception at Uninitialize(Ignore): " + String.Format("{0}\n{1}", addIn.GetType(), e.Message));
+                }
+            }
 
             _addIns = new List<IAddIn>();
         }
