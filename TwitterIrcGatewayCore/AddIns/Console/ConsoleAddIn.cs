@@ -13,7 +13,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         #region IAddIn メンバ
         public void Initialize(Server server, Session session)
         {
-            Attach("#Console", server, session, typeof(RootContext));
+            Attach("#Console", server, session, typeof(RootContext), false);
 
             RegisterContext<RootContext>();
             RegisterContext<ConfigContext>();

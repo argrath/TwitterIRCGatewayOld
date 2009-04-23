@@ -32,6 +32,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <param name="rootContextType"></param>
         public void Attach(String channelName, Server server, Session session, Type rootContextType) 
         {
+            Attach(channelName, server, session, rootContextType, true);
+        }
+
+        /// <summary>
+        /// コンソールを有効にします。
+        /// </summary>
+        /// <param name="channelName"></param>
+        /// <param name="server"></param>
+        /// <param name="session"></param>
+        /// <param name="rootContextType"></param>
+        /// <param name="autoJoin"></param>
+        public void Attach(String channelName, Server server, Session session, Type rootContextType, Boolean autoJoin) 
+        {
             if (!channelName.StartsWith("#") && channelName.Length > 0)
                 throw new ArgumentException("チャンネル名は # から始まる2文字以上の文字列を指定する必要があります。", "channelName");
             
@@ -55,16 +68,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             LoadAliases();
 
             // チャンネル
-            Group group;
-            if (!Session.Groups.TryGetValue(ConsoleChannelName, out group))
+            if (autoJoin)
             {
-                group = new Group(ConsoleChannelName);
-                Session.Groups.Add(ConsoleChannelName, group);
-            }
-            group.IsSpecial = true;
-            group.IsJoined = true;
+                Group group;
+                if (!Session.Groups.TryGetValue(ConsoleChannelName, out group))
+                {
+                    group = new Group(ConsoleChannelName);
+                    Session.Groups.Add(ConsoleChannelName, group);
+                }
+                group.IsSpecial = true;
+                group.IsJoined = true;
 
-            Session.SendServer(new JoinMessage(ConsoleChannelName, ""));
+                Session.SendServer(new JoinMessage(ConsoleChannelName, ""));
+            }
         }
         
         /// <summary>
