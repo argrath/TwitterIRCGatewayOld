@@ -95,6 +95,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             PrepareScriptScopeByPath("*Eval*");
             _scriptRuntime.Globals.SetVariable("Session", Session);
             _scriptRuntime.Globals.SetVariable("Server", Server);
+            _scriptRuntime.Globals.SetVariable("CurrentSession", Session);
+            _scriptRuntime.Globals.SetVariable("CurrentServer", Server);
 
             // 共通のスクリプトを読む
             LoadScriptsFromDirectory(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "GlobalScripts"), scriptExecutionCallback);
@@ -138,6 +140,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             ScriptScope scriptScope = _scriptRuntime.CreateScope();
             scriptScope.SetVariable("Session", Session);
             scriptScope.SetVariable("Server", Server);
+            scriptScope.SetVariable("CurrentSession", Session);
+            scriptScope.SetVariable("CurrentServer", Server);
 
             return _scriptScopes[path] = scriptScope;
         }

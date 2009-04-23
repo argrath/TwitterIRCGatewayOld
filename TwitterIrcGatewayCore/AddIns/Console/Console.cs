@@ -274,12 +274,47 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             RegisterContext(typeof(T));
         }
+        
+        /// <summary>
+        /// コンテキストを追加します。
+        /// </summary>
+        /// <param name="contextType"></param>
         public void RegisterContext(Type contextType)
         {
+            if (!typeof(Context).IsAssignableFrom(contextType))
+                throw new ArgumentException("指定された型は Context クラスを継承していません。", "contextType");
+            if (contextType.IsAbstract)
+                throw new ArgumentException("指定された型は抽象型です。", "contextType");
+            
             if (!Contexts.Contains(contextType))
                 Contexts.Add(contextType);
         }
-
+        /// <summary>
+        /// コンテキストを削除します。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        public void UnregisterContext<T>() where T : Context, new()
+        {
+            UnregisterContext(typeof(T));
+        }
+        
+        /// <summary>
+        /// コンテキストを削除します。
+        /// </summary>
+        /// <param name="contextType"></param>
+        public void UnregisterContext(Type contextType)
+        {
+            if (!Contexts.Contains(contextType))
+                Contexts.Remove(contextType);
+        }
+        
+        /// <summary>
+        /// コンテキストをインスタンス化して返します。
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="server"></param>
+        /// <param name="session"></param>
+        /// <returns></returns>
         public Context GetContext<T>(Server server, Session session) where T : Context, new()
         {
             Context ctx = new T { Server = server, Session = session };
@@ -287,6 +322,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             return ctx;
         }
         
+        /// <summary>
+        /// コンテキストをインスタンス化して返します。
+        /// </summary>
+        /// <param name="t"></param>
+        /// <param name="server"></param>
+        /// <param name="session"></param>
+        /// <returns></returns>
         public Context GetContext(Type t, Server server, Session session)
         {
             Context ctx = Activator.CreateInstance(t) as Context;

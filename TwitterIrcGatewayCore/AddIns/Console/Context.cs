@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Text;
@@ -57,7 +58,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
         #region Context Base Implementation
         [Description("コマンドの一覧または説明を表示します")]
-        public void Help([Description("コマンド名")]String commandName)
+        public virtual void Help([Description("コマンド名")]String commandName)
         {
             if (String.IsNullOrEmpty(commandName))
             {
@@ -117,7 +118,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         [Description("設定を表示します")]
-        public void Show([Description("設定項目名(指定しない場合にはすべて表示)")]String configName)
+        public virtual void Show([Description("設定項目名(指定しない場合にはすべて表示)")]String configName)
         {
             foreach (var config in Configurations)
             {
@@ -157,7 +158,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
         
         [Description("設定を変更します")]
-        public void Set([Description("設定項目名")]String configName, [Description("設定する値")]String value)
+        public virtual void Set([Description("設定項目名")]String configName, [Description("設定する値")]String value)
         {
             if (String.IsNullOrEmpty(configName))
             {
@@ -225,7 +226,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         [Description("コマンドのエイリアスを設定します")]
-        public void Alias([Description("[エイリアス名] [設定するコマンド]")]String value)
+        public virtual void Alias([Description("[エイリアス名] [設定するコマンド]")]String value)
         {
             String[] values = value.Trim().Split(new char[] {' '}, 2, StringSplitOptions.RemoveEmptyEntries);
             if (values.Length == 0)
@@ -262,12 +263,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         [Description("コンテキストを一つ前のものに戻します")]
-        public void Exit()
+        public virtual void Exit()
         {
             Console.PopContext();
         }
         #endregion
-
+            
         #region Context Helpers
         
         [Browsable(false)]
@@ -296,11 +297,37 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        [Browsable(false)]
+        public virtual IDictionary<String, String> GetCommands()
+        {
+            MethodInfo[] methodInfoArr = this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
+            Type t = typeof(Context);
+
+            Dictionary<String, String> commands = new Dictionary<string, string>();
+            foreach (var methodInfo in methodInfoArr)
+            {
+                if (t.IsAssignableFrom(methodInfo.DeclaringType) && !methodInfo.IsConstructor && !methodInfo.IsFinal && !methodInfo.IsSpecialName)
+                {
+                    Object[] attrs = methodInfo.GetCustomAttributes(typeof(BrowsableAttribute), true);
+                    if (attrs.Length != 0 && !((BrowsableAttribute)attrs[0]).Browsable)
+                        continue;
+
+                    commands.Add(methodInfo.Name, GetDescription(methodInfo));
+                }
+            }
+
+            return commands;
+        }
+
+        /// <summary>
         /// コマンドを名前で取得します。
         /// </summary>
         /// <param name="commandName"></param>
         [Browsable(false)]
-        public MethodInfo GetCommand(String commandName)
+        public virtual MethodInfo GetCommand(String commandName)
         {
             MethodInfo methodInfo = this.GetType().GetMethod(commandName,
                                                                  BindingFlags.Instance | BindingFlags.Public |

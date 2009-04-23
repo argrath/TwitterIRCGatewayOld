@@ -85,6 +85,7 @@
     <Compile Include="AddIns\Console\Contexts\GroupContext.cs" />
     <Compile Include="AddIns\Console\Contexts\SystemContext.cs" />
     <Compile Include="AddIns\Console\GenericConfig.cs" />
+    <Compile Include="AddIns\DLRIntegration\DLRContextProxy.cs" />
     <Compile Include="AddIns\DLRIntegration\DLRIntegrationAddIn.cs" />
     <Compile Include="AddIns\ExtensionCommands.cs" />
     <Compile Include="AddIns\IAddIn.cs" />
