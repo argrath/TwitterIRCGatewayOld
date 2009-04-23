@@ -31,7 +31,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             Session.AddInsLoadCompleted += (sender, e) =>
             {
                 Session.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<DLRContext>();
-                ReloadScripts((fileName, ex) => { Trace.WriteLine("Script Executed: " + fileName); if (ex != null) { Trace.WriteLine(ex.ToString()); } });
+                ReloadScripts((fileName, ex) => {
+                    Trace.WriteLine("Script Executed: " + fileName);
+                    if (ex != null)
+                    {
+                        if (ex is SyntaxErrorException)
+                        {
+                            SyntaxErrorException syntaxEx = ex as SyntaxErrorException;
+                            Trace.WriteLine(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Line, syntaxEx.SourcePath));
+                        }
+                        Trace.WriteLine(ex.ToString());
+                    }
+                });
             };
         }
 
@@ -180,8 +191,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                                                                                    Console.NotifyMessage("ファイル " + fileName + " を読み込みました。");
                                                                                    if (ex != null)
                                                                                    {
-                                                                                        Console.NotifyMessage("実行時にエラーが発生しました:");
-                                                                                        Console.NotifyMessage(ex.Message);
+                                                                                       Console.NotifyMessage("実行時にエラーが発生しました:");
+                                                                                       Console.NotifyMessage(ex.Message);
+                                                                                       if (ex is SyntaxErrorException)
+                                                                                       {
+                                                                                           SyntaxErrorException syntaxEx = ex as SyntaxErrorException;
+                                                                                           Console.NotifyMessage(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Line, syntaxEx.SourcePath));
+                                                                                       }
                                                                                    }
                                                                                });
             Console.NotifyMessage("スクリプトを再読み込みしました。");
