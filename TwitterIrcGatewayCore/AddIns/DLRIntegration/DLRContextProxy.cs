@@ -42,7 +42,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
         public override IDictionary<string, string> GetCommands()
         {
-            return _site.GetCommands();
+            var commands =_site.GetCommands();
+            // いくつか削除する
+            commands.Remove("Equals");
+            commands.Remove("MemberwiseClone");
+            commands.Remove("ToString");
+            commands.Remove("GetHashCode");
+            return commands;
         }
 
         public override bool  OnCallMissingCommand(string commandName, string rawInputLine)

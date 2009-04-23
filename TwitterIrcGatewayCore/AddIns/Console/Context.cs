@@ -75,17 +75,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 }
 
                 Console.NotifyMessage("[Commands]");
-                MethodInfo[] methodInfoArr = this.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public);
-                Type t = typeof(Context);
-                foreach (var methodInfo in methodInfoArr)
+                foreach (var command in GetCommands())
                 {
-                    if (t.IsAssignableFrom(methodInfo.DeclaringType) && !methodInfo.IsConstructor && !methodInfo.IsFinal &&
-                        !methodInfo.IsSpecialName)
-                    {
-                        if (IsBrowsable(methodInfo))
-                            Console.NotifyMessage(String.Format("{0} - {1}", methodInfo.Name,
-                                                                     GetDescription(methodInfo)));
-                    }
+                    Console.NotifyMessage(String.Format("{0} - {1}", command.Key, command.Value));
                 }
             }
             else
@@ -311,8 +303,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             {
                 if (t.IsAssignableFrom(methodInfo.DeclaringType) && !methodInfo.IsConstructor && !methodInfo.IsFinal && !methodInfo.IsSpecialName)
                 {
-                    Object[] attrs = methodInfo.GetCustomAttributes(typeof(BrowsableAttribute), true);
-                    if (attrs.Length != 0 && !((BrowsableAttribute)attrs[0]).Browsable)
+                    if (!IsBrowsable(methodInfo))
                         continue;
 
                     commands.Add(methodInfo.Name, GetDescription(methodInfo));
