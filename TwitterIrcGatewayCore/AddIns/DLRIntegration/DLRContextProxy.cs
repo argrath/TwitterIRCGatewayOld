@@ -44,6 +44,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         {
             var commands =_site.GetCommands();
             // いくつか削除する
+            commands.Remove("OnConfigurationChanged");
             commands.Remove("Equals");
             commands.Remove("MemberwiseClone");
             commands.Remove("ToString");
@@ -51,9 +52,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             return commands;
         }
 
-        public override bool  OnCallMissingCommand(string commandName, string rawInputLine)
+        public override bool OnCallMissingCommand(string commandName, string rawInputLine)
         {
             return _site.OnCallMissingCommand(commandName, rawInputLine);
+        }
+
+        public override void Dispose()
+        {
+            _site.Dispose();
         }
         
         public override MethodInfo GetCommand(string commandName)

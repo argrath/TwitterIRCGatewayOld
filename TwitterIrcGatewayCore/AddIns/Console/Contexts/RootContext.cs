@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net;
 using System.Text;
@@ -14,7 +16,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     [Browsable(false)]
     public class RootContext : Context
     {
-        public override Type[] Contexts { get { return Console.Contexts.ToArray(); } }
+        public override ICollection<ContextInfo> Contexts { get { return Console.Contexts.Values; } }
 
         [Description("Twitter 検索を利用して検索します")]
         public void Search(String keywords)
@@ -126,6 +128,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             FollowOrRemove(false, screenNames);
         }
 
+        [Description("指定したユーザを block します")]
+        public void Block(params String[] screenNames)
+        {
+            BlockOrUnblock(true, screenNames);
+        }
+
+        [Description("指定したユーザを unblock します")]
+        public void Unblock(params String[] screenNames)
+        {
+            BlockOrUnblock(false, screenNames);
+        }
         //
         [Browsable(false)]
         private void FollowOrRemove(Boolean follow, String[] screenNames)
@@ -139,6 +152,32 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     var user = follow
                                    ? Session.TwitterService.CreateFriendship(screenName)
                                    : Session.TwitterService.DestroyFriendship(screenName);
+                    Console.NotifyMessage(String.Format("ユーザ {0} を {1} しました。", screenName, action));
+                }
+                catch (TwitterServiceException te)
+                {
+                    Console.NotifyMessage(String.Format("ユーザ {0} を {1} する際にエラーが発生しました:", screenName, action));
+                    Console.NotifyMessage(te.Message);
+                }
+                catch (WebException we)
+                {
+                    Console.NotifyMessage(String.Format("ユーザ {0} を {1} する際にエラーが発生しました:", screenName, action));
+                    Console.NotifyMessage(we.Message);
+                }
+            }
+        }
+        [Browsable(false)]
+        private void BlockOrUnblock(Boolean block, String[] screenNames)
+        {
+            String action = block ? "block" : "unblock";
+
+            foreach (var screenName in screenNames)
+            {
+                try
+                {
+                    var user = block
+                                   ? Session.TwitterService.CreateBlock(screenName)
+                                   : Session.TwitterService.DestroyBlock(screenName);
                     Console.NotifyMessage(String.Format("ユーザ {0} を {1} しました。", screenName, action));
                 }
                 catch (TwitterServiceException te)

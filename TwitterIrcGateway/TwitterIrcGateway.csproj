@@ -118,6 +118,6 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>robocopy "$(SolutionDir)TwitterIrcGatewayCore\AddIns\DLRIntegration\Libraries" "$(TargetDir)Libraries" /e /xd .svn /xo</PostBuildEvent>
+    <PostBuildEvent>rem robocopy "$(SolutionDir)TwitterIrcGatewayCore\AddIns\DLRIntegration\Libraries" "$(TargetDir)Libraries" /e /xd .svn /xo</PostBuildEvent>
   </PropertyGroup>
 </Project>

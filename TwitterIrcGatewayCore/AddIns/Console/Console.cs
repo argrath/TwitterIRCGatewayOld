@@ -16,10 +16,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
         public GeneralConfig Config { get; private set; }
 
-        internal List<Type> Contexts { get; private set; }
-        
+        internal IDictionary<Type, ContextInfo> Contexts { get; private set; }
+
         private Session Session { get; set; }
         private Server Server { get; set; }
+
+        private Type _rootContextType;
 
         /// <summary>
         /// コンソールを有効にします。
@@ -41,13 +43,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             Session.PostMessageReceived += new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
 
             // Default Context
-            CurrentContext = this.GetContext(rootContextType, Server, Session);
+            _rootContextType = rootContextType;
+            CurrentContext = GetContext(rootContextType, Server, Session);
             if (CurrentContext == null)
                 throw new ArgumentException("指定されたコンテキストは登録されていません。", "rootContextType");
 
             ContextStack = new Stack<Context>();
             Config = Session.AddInManager.GetConfig<GeneralConfig>();
-            Contexts = new List<Type>();
+            Contexts = new Dictionary<Type, ContextInfo>();
         
             LoadAliases();
 
@@ -135,14 +138,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             }
 
             // コンテキスト
-            foreach (var ctx in CurrentContext.Contexts)
+            foreach (var ctxInfo in CurrentContext.Contexts)
             {
-                if (ctx == typeof(RootContext))
+                if (ctxInfo.Type == _rootContextType)
                     continue;
 
-                if (String.Compare(ctx.Name.Replace("Context", ""), args[0], true) == 0)
+                if (String.Compare(ctxInfo.DisplayName.Replace("Context", ""), args[0], true) == 0)
                 {
-                    this.PushContext(this.GetContext(ctx, Server, Session));
+                    PushContext(GetContext(ctxInfo.Type, Server, Session));
 
                     // 続く文字列をもう一度処理し直す
                     if (args.Length > 1)
@@ -281,13 +284,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <param name="contextType"></param>
         public void RegisterContext(Type contextType)
         {
+            RegisterContext(contextType, contextType.Name, AttributeUtil.GetDescription(contextType));
+        }
+
+        /// <summary>
+        /// コンテキストを追加します。
+        /// </summary>
+        /// <param name="contextType"></param>
+        public void RegisterContext(Type contextType, String contextName, String description)
+        {
             if (!typeof(Context).IsAssignableFrom(contextType))
                 throw new ArgumentException("指定された型は Context クラスを継承していません。", "contextType");
             if (contextType.IsAbstract)
                 throw new ArgumentException("指定された型は抽象型です。", "contextType");
             
-            if (!Contexts.Contains(contextType))
-                Contexts.Add(contextType);
+            if (!Contexts.ContainsKey(contextType))
+                Contexts.Add(contextType, new ContextInfo() { Type = contextType, Description = description, DisplayName = contextName });
         }
         /// <summary>
         /// コンテキストを削除します。
@@ -304,7 +316,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <param name="contextType"></param>
         public void UnregisterContext(Type contextType)
         {
-            if (!Contexts.Contains(contextType))
+            if (!Contexts.ContainsKey(contextType))
                 Contexts.Remove(contextType);
         }
         
@@ -454,9 +466,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             if (ContextStack.Count > 0)
             {
+                CurrentContext.Dispose();
                 CurrentContext = ContextStack.Pop();
                 NotifyMessage("コンテキストを変更しました。");
                 ShowCommandsAsUsers();
+
             }
         }
         #endregion

@@ -7,6 +7,24 @@ using System.Text;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {
+    public class ContextInfo
+    {
+        public Type Type { get; set; }
+        public String DisplayName { get; set; }
+        public String Description { get; set; }
+    
+        public ContextInfo()
+        {
+        }
+    
+        public ContextInfo(Type t)
+        {
+            Type = t;
+            DisplayName = t.Name;
+            Description = AttributeUtil.GetDescription(t);
+        }
+    }
+    
     /// <summary>
     /// 
     /// </summary>
@@ -22,7 +40,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Browsable(false)]
         public Console Console { get; internal set; }
 
-        public virtual Type[] Contexts { get { return new Type[0]; } }
+        public virtual ICollection<ContextInfo> Contexts { get { return new List<ContextInfo>().AsReadOnly(); } }
         public virtual IConfiguration[] Configurations { get { return new IConfiguration[0]; } }
         public virtual String ContextName { get { return this.GetType().Name; } }
         
@@ -63,14 +81,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             if (String.IsNullOrEmpty(commandName))
             {
                 // コマンドの一覧
-                if (this.Contexts.Length > 0)
+                if (Contexts.Count > 0)
                 {
                     Console.NotifyMessage("[Contexts]");
-                    foreach (var ctx in this.Contexts)
+                    foreach (var ctxInfo in Contexts)
                     {
-                        if (IsBrowsable(ctx))
-                            Console.NotifyMessage(String.Format("{0} - {1}", ctx.Name.Replace("Context", ""),
-                                                                     GetDescription(ctx)));
+                        if (AttributeUtil.IsBrowsable(ctxInfo.Type))
+                            Console.NotifyMessage(String.Format("{0} - {1}", ctxInfo.DisplayName.Replace("Context", ""), ctxInfo.Description));
                     }
                 }
 
@@ -90,7 +107,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     return;
                 }
 
-                String desc = GetDescription(methodInfo);
+                String desc = AttributeUtil.GetDescription(methodInfo);
                 if (!String.IsNullOrEmpty(desc))
                     Console.NotifyMessage(desc);
                 
@@ -100,7 +117,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     Console.NotifyMessage("引数:");
                     foreach (var paramInfoItem in paramInfo)
                     {
-                        desc = GetDescription(paramInfoItem);
+                        desc = AttributeUtil.GetDescription(paramInfoItem);
                         Console.NotifyMessage(String.Format("- {0}: {1}",
                                                                  (String.IsNullOrEmpty(desc) ? paramInfoItem.Name : desc),
                                                                  paramInfoItem.ParameterType));
@@ -124,7 +141,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 
                 foreach (var memberInfo in memberInfoArr)
                 {
-                    if (!IsBrowsable(memberInfo))
+                    if (!AttributeUtil.IsBrowsable(memberInfo))
                         continue;
 
                     PropertyInfo pi = memberInfo as PropertyInfo;
@@ -138,7 +155,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     // さがしているのが一個の時は説明を出して終わり
                     if (!String.IsNullOrEmpty(configName))
                     {
-                        String desc = GetDescription(memberInfo);
+                        String desc = AttributeUtil.GetDescription(memberInfo);
                         if (!String.IsNullOrEmpty(desc))
                             Console.NotifyMessage(desc);
                         return;
@@ -169,7 +186,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 
                 foreach (var memberInfo in memberInfoArr)
                 {
-                    if (!IsBrowsable(memberInfo))
+                    if (!AttributeUtil.IsBrowsable(memberInfo))
                         continue;
 
                     PropertyInfo pi = memberInfo as PropertyInfo;
@@ -303,10 +320,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             {
                 if (t.IsAssignableFrom(methodInfo.DeclaringType) && !methodInfo.IsConstructor && !methodInfo.IsFinal && !methodInfo.IsSpecialName)
                 {
-                    if (!IsBrowsable(methodInfo))
+                    if (!AttributeUtil.IsBrowsable(methodInfo) || (commands.ContainsKey(methodInfo.Name)))
                         continue;
-
-                    commands.Add(methodInfo.Name, GetDescription(methodInfo));
+                    
+                    commands.Add(methodInfo.Name, AttributeUtil.GetDescription(methodInfo));
                 }
             }
 
@@ -324,33 +341,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                                                                  BindingFlags.Instance | BindingFlags.Public |
                                                                  BindingFlags.IgnoreCase);
 
-            if (methodInfo != null &&(methodInfo.IsFinal || methodInfo.IsConstructor || methodInfo.IsSpecialName || IsBrowsable(methodInfo)))
+            if (methodInfo != null &&(methodInfo.IsFinal || methodInfo.IsConstructor || methodInfo.IsSpecialName || AttributeUtil.IsBrowsable(methodInfo)))
             {
                 return methodInfo;
             }
 
             return null;
-        }
-        
-        private Boolean IsBrowsable(Type t)
-        {
-            Object[] attrs = t.GetCustomAttributes(typeof(BrowsableAttribute), true);
-            return !(attrs.Length != 0 && !((BrowsableAttribute)attrs[0]).Browsable);
-        }
-        private Boolean IsBrowsable(ICustomAttributeProvider customAttributeProvider)
-        {
-            Object[] attrs = customAttributeProvider.GetCustomAttributes(typeof(BrowsableAttribute), true);
-            return !(attrs.Length != 0 && !((BrowsableAttribute)attrs[0]).Browsable);
-        }
-        private String GetDescription(Type t)
-        {
-            Object[] attrs = t.GetCustomAttributes(typeof(DescriptionAttribute), true);
-            return (attrs.Length == 0) ? "" : ((DescriptionAttribute)attrs[0]).Description;
-        }
-        private String GetDescription(ICustomAttributeProvider customAttributeProvider)
-        {
-            Object[] attrs = customAttributeProvider.GetCustomAttributes(typeof(DescriptionAttribute), true);
-            return (attrs.Length == 0) ? "" : ((DescriptionAttribute)attrs[0]).Description;
         }
         #endregion
 

@@ -65,6 +65,6 @@
   <PropertyGroup>
     <PostBuildEvent>mkdir "$(TargetDir)AddIns"
 del "$(TargetDir)AddIns\$(TargetFileName)"
-move "$(TargetPath)" "$(TargetDir)AddIns"</PostBuildEvent>
+move "$(TargetPath)" "$(TargetDir)AddIns\$(TargetFileName)"</PostBuildEvent>
   </PropertyGroup>
 </Project>

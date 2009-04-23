@@ -31,18 +31,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             Session.AddInsLoadCompleted += (sender, e) =>
             {
                 Session.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<DLRContext>();
-                ReloadScripts((fileName, ex) => {
-                    Trace.WriteLine("Script Executed: " + fileName);
-                    if (ex != null)
-                    {
-                        if (ex is SyntaxErrorException)
-                        {
-                            SyntaxErrorException syntaxEx = ex as SyntaxErrorException;
-                            Trace.WriteLine(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Line, syntaxEx.SourcePath));
-                        }
-                        Trace.WriteLine(ex.ToString());
-                    }
-                });
+                ReloadScripts((fileName, ex) => { Trace.WriteLine("Script Executed: " + fileName); if (ex != null) { Trace.WriteLine(ex.ToString()); } });
             };
         }
 
@@ -163,7 +152,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
     [Description("DLR統合 コンテキストに切り替えます")]
     public class DLRContext : Context
     {
-        public override Type[] Contexts { get { return (IsEvalEnabled ? new Type[] {typeof (IpyContext)} : new Type[0]); } }
+        public override ICollection<ContextInfo> Contexts { get { return (IsEvalEnabled ? new ContextInfo[] { new ContextInfo(typeof(IpyContext)) } : new ContextInfo[0]); } }
         public Boolean IsEvalEnabled { get { return File.Exists(Path.Combine(Session.UserConfigDirectory, "EnableDLRDebug")); } }
         
         [Description("読み込まれているスクリプトを一覧表示します")]
@@ -191,13 +180,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                                                                                    Console.NotifyMessage("ファイル " + fileName + " を読み込みました。");
                                                                                    if (ex != null)
                                                                                    {
-                                                                                       Console.NotifyMessage("実行時にエラーが発生しました:");
-                                                                                       Console.NotifyMessage(ex.Message);
-                                                                                       if (ex is SyntaxErrorException)
-                                                                                       {
-                                                                                           SyntaxErrorException syntaxEx = ex as SyntaxErrorException;
-                                                                                           Console.NotifyMessage(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Line, syntaxEx.SourcePath));
-                                                                                       }
+                                                                                        Console.NotifyMessage("実行時にエラーが発生しました:");
+                                                                                        Console.NotifyMessage(ex.Message);
                                                                                    }
                                                                                });
             Console.NotifyMessage("スクリプトを再読み込みしました。");
@@ -250,13 +234,27 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             _virtualConsole.SetLine(rawInputLine);
             return true;
         }
-        
+
+        [Browsable(false)]
+        public override void Help(string commandName)
+        {
+        }
 
         [Description("IronPython コンソールを終了します")]
         public new void Exit()
         {
-            _consoleThread.Abort();
+            Dispose();
             base.Exit();
+        }
+
+        public override void Dispose()
+        {
+            if (_consoleThread != null)
+            {
+                _consoleThread.Abort();
+                _consoleThread = null;
+            }
+            base.Dispose();
         }
 
         private class VirtualWriter : TextWriter
