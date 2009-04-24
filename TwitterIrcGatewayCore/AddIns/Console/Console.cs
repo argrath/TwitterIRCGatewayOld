@@ -10,6 +10,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {
     public class Console : MarshalByRefObject
     {
+        public Boolean IsAttached { get; private set; }
         public String ConsoleChannelName { get; private set; }
         public Context CurrentContext { get; set; }
         public Stack<Context> ContextStack { get; set; }
@@ -45,6 +46,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <param name="autoJoin"></param>
         public void Attach(String channelName, Server server, Session session, Type rootContextType, Boolean autoJoin) 
         {
+            if (IsAttached)
+                throw new InvalidOperationException("コンソールはすでにアタッチされています。");
+            
             if (!channelName.StartsWith("#") && channelName.Length > 0)
                 throw new ArgumentException("チャンネル名は # から始まる2文字以上の文字列を指定する必要があります。", "channelName");
             
@@ -81,6 +85,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
                 Session.SendServer(new JoinMessage(ConsoleChannelName, ""));
             }
+
+            IsAttached = true;
         }
         
         /// <summary>
@@ -88,10 +94,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// </summary>
         public void Detach()
         {
+            if (!IsAttached)
+                throw new InvalidOperationException("コンソールはアタッチされていません。");
+            
             Session.PreMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
             Session.PostMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
         
             CurrentContext.Dispose();
+
+            IsAttached = false;
         }
 
         /// <summary>
