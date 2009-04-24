@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 using Microsoft;
 using Misuzilla.Applications.TwitterIrcGateway.AddIns.Console;
 using System.ComponentModel;
@@ -10,9 +11,25 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 {
     public static class DLRContextHelper
     {
+        private static AssemblyName _asmName;
+        private static AssemblyBuilder _asmBuilder;
+        private static ModuleBuilder _modBuilder;
+        static DLRContextHelper()
+        {
+            _asmName = new AssemblyName(@"Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration.DynamicAssembly.DLRContextHelper");
+            _asmBuilder = System.Threading.Thread.GetDomain().DefineDynamicAssembly(_asmName, AssemblyBuilderAccess.Run);
+            _modBuilder = _asmBuilder.DefineDynamicModule("DLRContextModule");
+        }
+
         public static Type Wrap(String contextName, Object dlrContextType)
         {
-            Type genCtxType = typeof(DLRContextBase<>).MakeGenericType(dlrContextType.GetType());
+            Type type = _modBuilder.GetType(contextName);
+            if (type == null)
+            {
+                TypeBuilder typeBuilder = _modBuilder.DefineType(contextName);
+                type = typeBuilder.CreateType();
+            }
+            Type genCtxType = typeof(DLRContextBase<>).MakeGenericType(type);
             return genCtxType.InvokeMember("GetProxyType", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod, null, null, new Object[] {contextName, dlrContextType}) as Type;
         }
     }
@@ -23,11 +40,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         [Obsolete("DLRContextHelper.Wrap を利用してください。")]
         public static Type GetProxyType(String contextName, Object scriptType)
         {
-            return DLRContextBase<T>.GetProxyType(contextName, scriptType);
+            return DLRContextHelper.Wrap(contextName, scriptType);
         }
     }
     
-    public class DLRContextBase<T> : Context where T : class
+    internal class DLRContextBase<T> : Context where T : class
     {
         private DLRIntegrationAddIn _dlrAddIn;
         private ScriptRuntime _scriptRuntime;
