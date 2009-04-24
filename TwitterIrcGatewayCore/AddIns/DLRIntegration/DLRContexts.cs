@@ -96,7 +96,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
         public override bool OnPreProcessInput(string inputLine)
         {
-            if (inputLine.Trim().ToLower() == "exit" && inputLine == " ")
+            if (inputLine.Trim().ToLower() == "exit")
                 return false;
 
             _virtualConsole.SetLine((inputLine == " ") ? "" : inputLine);
