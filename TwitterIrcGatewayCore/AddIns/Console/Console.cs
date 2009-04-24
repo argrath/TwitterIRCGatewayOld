@@ -90,6 +90,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             Session.PreMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
             Session.PostMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
+        
+            CurrentContext.Dispose();
         }
 
         /// <summary>

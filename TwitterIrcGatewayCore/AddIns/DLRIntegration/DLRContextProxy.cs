@@ -8,7 +8,26 @@ using Microsoft.Scripting.Hosting;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 {
+    public static class DLRContextHelper
+    {
+        public static Type Wrap(String contextName, Object dlrContextType)
+        {
+            Type genCtxType = typeof(DLRContextBase<>).MakeGenericType(dlrContextType.GetType());
+            return genCtxType.InvokeMember("GetProxyType", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod, null, null, new Object[] {contextName, dlrContextType}) as Type;
+        }
+    }
+
+    [Obsolete("DLRContextHelperを利用してください。")]
     public class DLRContext<T> : Context where T : class
+    {
+        [Obsolete("DLRContextHelper.Wrap を利用してください。")]
+        public static Type GetProxyType(String contextName, Object scriptType)
+        {
+            return DLRContextBase<T>.GetProxyType(contextName, scriptType);
+        }
+    }
+    
+    public class DLRContextBase<T> : Context where T : class
     {
         private DLRIntegrationAddIn _dlrAddIn;
         private ScriptRuntime _scriptRuntime;
@@ -18,11 +37,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
         public override string ContextName { get { return _contextName; } }
         
-        public static Type GetProxyType(String contextName, Object scriptType)
+        internal static Type GetProxyType(String contextName, Object scriptType)
         {
             _scriptType = scriptType;
             _contextName = contextName;
-            return typeof(DLRContext<T>);
+            return typeof(DLRContextBase<T>);
         }
         
         public override void Initialize()
@@ -30,6 +49,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             _dlrAddIn = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>();
             _scriptRuntime = _dlrAddIn.ScriptRuntime;
             _site = _scriptRuntime.Operations.CreateInstance(_scriptType) as Context;
+            if (_site == null)
+                throw new ArgumentException("指定された型はContext クラスを継承していないためインスタンス化できません。");
+            
             _site.Server = Server;
             _site.Session = Session;
             _site.Console = Console;

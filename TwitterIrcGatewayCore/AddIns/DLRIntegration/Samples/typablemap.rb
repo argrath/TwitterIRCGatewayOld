@@ -37,7 +37,7 @@ end
 Misuzilla::IronRuby::TypableMap.register("rt", "ReTweet Command") do |p, msg, status, args|
   System::Diagnostics::Trace.WriteLine("RT: #{status.to_string}")
 
-  Session.RunCheck(Procedure.new{
+  Session.RunCheck(Misuzilla::Applications::TwitterIrcGateway::Procedure.new{
     updated_status = Session.update_status("RT: #{status.text} (via @#{status.user.screen_name})")
     Session.send_channel_message(updated_status.text)
   }, System::Action[System::Exception].new{|ex|
