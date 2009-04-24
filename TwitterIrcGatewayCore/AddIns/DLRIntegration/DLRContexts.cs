@@ -128,7 +128,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             public override Encoding Encoding { get { return Encoding.UTF8; } }
             public override void Write(string value)
             {
-                Trace.WriteLine(String.Format("VirtualWriter.Write: {0}", value));
                 if (!String.IsNullOrEmpty(value.Trim()))
                     _console.NotifyMessage(value);
             }
