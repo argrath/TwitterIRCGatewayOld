@@ -512,6 +512,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
         public void Dispose()
         {
+            System.Diagnostics.Trace.WriteLine(ConsoleChannelName + ": Dispose");
             if (ContextStack != null)
             {
                 foreach (var ctx in ContextStack)
@@ -543,6 +544,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         #endregion
+    
+        ~Console()
+        {
+            Dispose();
+        }
     }
 
 }

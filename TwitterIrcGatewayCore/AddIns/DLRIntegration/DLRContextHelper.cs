@@ -6,9 +6,13 @@ using Microsoft;
 using Misuzilla.Applications.TwitterIrcGateway.AddIns.Console;
 using System.ComponentModel;
 using Microsoft.Scripting.Hosting;
+using System.Diagnostics;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 {
+    /// <summary>
+    /// DLRの型をContextとして登録するためのヘルパーメソッドを提供します。
+    /// </summary>
     public static class DLRContextHelper
     {
         private static AssemblyName _asmName;
@@ -21,6 +25,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             _modBuilder = _asmBuilder.DefineDynamicModule("DLRContextModule");
         }
 
+        /// <summary>
+        /// 指定したDLRのContextを登録できるようラップした型を返します。
+        /// </summary>
+        /// <param name="contextName">コンテキスト名</param>
+        /// <param name="dlrContextType">DLRの型オブジェクト(PythonTypeなど)</param>
+        /// <returns></returns>
         public static Type Wrap(String contextName, Object dlrContextType)
         {
             Type type = _modBuilder.GetType(contextName);
@@ -88,6 +98,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             commands.Remove("MemberwiseClone");
             commands.Remove("ToString");
             commands.Remove("GetHashCode");
+            commands.Remove("Finalize");
             return commands;
         }
 
@@ -98,7 +109,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
         public override void Dispose()
         {
-            _site.Dispose();
+            try
+            {
+                if (_site != null)
+                    _site.Dispose();
+                _site = null;
+            }
+            catch { }
+            
+            base.Dispose();
         }
         
         public override MethodInfo GetCommand(string commandName)

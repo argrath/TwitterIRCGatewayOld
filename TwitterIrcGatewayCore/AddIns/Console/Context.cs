@@ -365,6 +365,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Browsable(false)]
         public virtual void Dispose()
         {
+            System.Diagnostics.Trace.WriteLine(ContextName + ": Dispose");
             GC.SuppressFinalize(this);
         }
         #endregion
