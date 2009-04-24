@@ -145,7 +145,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         void ProcessMessage(PrivMsgMessage privMsg)
         {
             String msgText = privMsg.Content;//.Trim();
-            ProcessInput(msgText, true);
+            if (!CurrentContext.OnPreProcessInput(msgText))
+                ProcessInput(msgText, true);
         }
         
         /// <summary>

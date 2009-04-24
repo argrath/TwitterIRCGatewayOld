@@ -73,6 +73,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             return false;
         }
+        
+        /// <summary>
+        /// コンソールでコマンドを解釈する前に実行する処理
+        /// </summary>
+        /// <param name="inputLine"></param>
+        /// <returns>処理を横取りして、コマンド解釈を行なわない場合にはtrueを返します。</returns>
+        [Browsable(false)]
+        public virtual Boolean OnPreProcessInput(String inputLine)
+        {
+            return false;
+        }
 
         #region Context Base Implementation
         [Description("コマンドの一覧または説明を表示します")]

@@ -94,9 +94,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             base.Initialize();
         }
 
-        public override bool OnCallMissingCommand(string commandName, string rawInputLine)
+        public override bool OnPreProcessInput(string inputLine)
         {
-            _virtualConsole.SetLine(rawInputLine);
+            if (inputLine.Trim().ToLower() == "exit" && inputLine == " ")
+                return false;
+
+            _virtualConsole.SetLine((inputLine == " ") ? "" : inputLine);
             return true;
         }
 
