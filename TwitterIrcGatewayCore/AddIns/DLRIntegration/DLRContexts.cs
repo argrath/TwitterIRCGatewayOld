@@ -111,7 +111,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         [Description("IronPython コンソールを終了します")]
         public new void Exit()
         {
-            Dispose();
             base.Exit();
         }
 
