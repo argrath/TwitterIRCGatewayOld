@@ -8,7 +8,7 @@ using Misuzilla.Net.Irc;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {
-    public class Console : MarshalByRefObject
+    public class Console : MarshalByRefObject, IDisposable
     {
         public Boolean IsAttached { get; private set; }
         public String ConsoleChannelName { get; private set; }
@@ -100,7 +100,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             Session.PreMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
             Session.PostMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
         
-            CurrentContext.Dispose();
+            try { CurrentContext.Dispose(); } catch {} 
+            foreach (Context ctx in ContextStack)
+                try { ctx.Dispose(); } catch {}
+            CurrentContext = null;
 
             IsAttached = false;
         }
@@ -503,6 +506,42 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
             }
         }
+        #endregion
+
+        #region IDisposable メンバ
+
+        public void Dispose()
+        {
+            if (ContextStack != null)
+            {
+                foreach (var ctx in ContextStack)
+                {
+                    try
+                    {
+                        ctx.Dispose();
+                    }
+                    catch
+                    {
+                    }
+                }
+                ContextStack = null;
+            }
+
+            if (CurrentContext != null)
+            {
+                try
+                {
+                    CurrentContext.Dispose();
+                }
+                catch
+                {
+                }
+                CurrentContext = null;
+            }
+        
+            GC.SuppressFinalize(this);
+        }
+
         #endregion
     }
 

@@ -365,7 +365,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Browsable(false)]
         public virtual void Dispose()
         {
+            GC.SuppressFinalize(this);
         }
         #endregion
+    
+        ~Context()
+        {
+            Dispose();
+        }
     }
 }
