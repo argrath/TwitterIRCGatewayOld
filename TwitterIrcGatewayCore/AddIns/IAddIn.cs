@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
@@ -34,6 +35,41 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
     /// </remarks>
     public interface IConfiguration
     {
+    }
+
+    /// <summary>
+    /// カスタム設定情報であることを示すインターフェースです。
+    /// </summary>
+    /// <remarks>
+    /// 設定情報クラスはこのインターフェースを実装する必要があります。
+    /// </remarks>
+    public interface ICustomConfiguration : IConfiguration
+    {
+        ICollection<ConfigurationPropertyInfo> GetConfigurationPropertyInfo();
+        void SetValue(String Name, Object value);
+        Object GetValue(String Name);
+    }
+    /// <summary>
+    /// 設定可能なパラメータを表すクラスです。
+    /// </summary>
+    public class ConfigurationPropertyInfo
+    {
+        /// <summary>
+        /// 設定名
+        /// </summary>
+        public String Name { get; set; }
+        /// <summary>
+        /// 設定の説明
+        /// </summary>
+        public String Description { get; set; }
+        /// <summary>
+        /// 設定の型
+        /// </summary>
+        public Type Type { get; set; }
+        /// <summary>
+        /// 値を取得がプロパティまたはフィールド経由の場合はPropertyInfoまたはFieldInfoを指定します
+        /// </summary>
+        public MemberInfo MemberInfo { get; set; }
     }
 
     /// <summary>

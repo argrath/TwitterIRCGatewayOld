@@ -7,24 +7,6 @@ using System.Text;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {
-    public class ContextInfo
-    {
-        public Type Type { get; set; }
-        public String DisplayName { get; set; }
-        public String Description { get; set; }
-    
-        public ContextInfo()
-        {
-        }
-    
-        public ContextInfo(Type t)
-        {
-            Type = t;
-            DisplayName = t.Name;
-            Description = AttributeUtil.GetDescription(t);
-        }
-    }
-    
     /// <summary>
     /// 
     /// </summary>
@@ -84,6 +66,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <summary>
         /// 
         /// </summary>
+        [Browsable(false)]
         protected virtual void OnUninitialize()
         {
         }
@@ -176,41 +159,42 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Description("設定を表示します")]
         public virtual void Show([Description("設定項目名(指定しない場合にはすべて表示)")]String configName)
         {
+            Boolean isConfigNameSpecified = !String.IsNullOrEmpty(configName);
+            Boolean hasConfigEntry = false;
+            
             foreach (var config in Configurations)
             {
-                MemberInfo[] memberInfoArr;
-                
-                // プロパティ一覧または一つだけ
-                if (String.IsNullOrEmpty(configName))
-                    memberInfoArr = config.GetType().GetMembers(BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance);
-                else
-                    memberInfoArr = config.GetType().GetMember(configName, BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance);
-                
-                foreach (var memberInfo in memberInfoArr)
+                foreach (var configPropInfo in GetConfigurationPropertiesFromConfiguration(config))
                 {
-                    if (!AttributeUtil.IsBrowsable(memberInfo))
+                    // プロパティが指定されているけど違う名前はスキップ
+                    if (isConfigNameSpecified && String.Compare(configPropInfo.Name, configName, true) != 0)
                         continue;
 
-                    PropertyInfo pi = memberInfo as PropertyInfo;
-                    FieldInfo fi = memberInfo as FieldInfo;
+                    // 値を表示
+                    Object value = null;
+                    if (configPropInfo.MemberInfo is PropertyInfo)
+                        value = ((PropertyInfo)configPropInfo.MemberInfo).GetValue(config, null);
+                    else if (configPropInfo.MemberInfo is FieldInfo)
+                        value = ((FieldInfo)configPropInfo.MemberInfo).GetValue(config);
+                    else if (config is ICustomConfiguration)
+                        value = ((ICustomConfiguration) config).GetValue(configPropInfo.Name);
+                    Console.NotifyMessage(String.Format("{0}({1}) = {2}", configPropInfo.Name, configPropInfo.Type.Name, Inspect(value)));
 
-                    if (pi != null && pi.CanWrite)
-                        Console.NotifyMessage(String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.Name, Inspect(pi.GetValue(config, null))));
-                    else if (fi != null && !fi.IsInitOnly)
-                        Console.NotifyMessage(String.Format("{0} ({1}) = {2}", fi.Name, fi.FieldType.Name, Inspect(fi.GetValue(config))));
+                    hasConfigEntry = true;
 
                     // さがしているのが一個の時は説明を出して終わり
-                    if (!String.IsNullOrEmpty(configName))
+                    if (isConfigNameSpecified)
                     {
-                        String desc = AttributeUtil.GetDescription(memberInfo);
-                        if (!String.IsNullOrEmpty(desc))
-                            Console.NotifyMessage(desc);
+                        Console.NotifyMessage(configPropInfo.Description);
                         return;
                     }
                 }
             }
-            if (!String.IsNullOrEmpty(configName))
+
+            if (isConfigNameSpecified)
                 Console.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
+            else if (!hasConfigEntry)
+                Console.NotifyMessage("このコンテキストに設定項目は存在しません。");
         }
         
         [Description("設定を変更します")]
@@ -229,21 +213,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             
             foreach (var config in Configurations)
             {
-                MemberInfo[] memberInfoArr = config.GetType().GetMember(configName, BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance);
-                
-                foreach (var memberInfo in memberInfoArr)
+                foreach (var configPropInfo in GetConfigurationPropertiesFromConfiguration(config))
                 {
-                    if (!AttributeUtil.IsBrowsable(memberInfo))
+                    if (String.Compare(configPropInfo.Name, configName, true) != 0)
                         continue;
 
-                    PropertyInfo pi = memberInfo as PropertyInfo;
-                    FieldInfo fi = memberInfo as FieldInfo;
-                    
-                    if (pi == null && fi == null)
-                        continue;
-                    
                     // TypeConverterで文字列から変換する
-                    Type type = (pi != null) ? pi.PropertyType : fi.FieldType;
+                    Type type = configPropInfo.Type;
                     TypeConverter tConv = TypeDescriptor.GetConverter(type);
                     if (!tConv.CanConvertFrom(typeof(String)))
                     {
@@ -254,17 +230,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     try
                     {
                         Object convertedValue = tConv.ConvertFromString(value);
-                        if (pi != null && pi.CanWrite)
-                        {
-                            pi.SetValue(config, convertedValue, null);
-                            Console.NotifyMessage(String.Format("{0} ({1}) = {2}", pi.Name, pi.PropertyType.Name, Inspect(pi.GetValue(config, null))));
-                        }
-                        else if (fi != null && !fi.IsInitOnly)
-                        {
-                            fi.SetValue(config, convertedValue);
-                            Console.NotifyMessage(String.Format("{0} ({1}) = {2}", fi.Name, fi.FieldType.Name, Inspect(fi.GetValue(config))));
-                        }
-                        OnConfigurationChanged(config, memberInfo, convertedValue);
+                        if (configPropInfo.MemberInfo is PropertyInfo)
+                            ((PropertyInfo)configPropInfo.MemberInfo).SetValue(config, convertedValue, null);
+                        else if (configPropInfo.MemberInfo is FieldInfo)
+                            ((FieldInfo)configPropInfo.MemberInfo).SetValue(config, convertedValue);
+                        else if (config is ICustomConfiguration)
+                            ((ICustomConfiguration) config).SetValue(configPropInfo.Name, convertedValue);
+                    
+                        Console.NotifyMessage(String.Format("{0} ({1}) = {2}", configPropInfo.Name, configPropInfo.Type.Name, Inspect(convertedValue)));
+                        OnConfigurationChanged(config, configPropInfo.MemberInfo, convertedValue);
                     }
                     catch (Exception ex)
                     {
@@ -395,6 +369,39 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
             return null;
         }
+
+        #endregion
+
+        #region Internal Implementation
+        private ICollection<ConfigurationPropertyInfo> GetConfigurationPropertiesFromConfiguration(IConfiguration config)
+        {
+            List<ConfigurationPropertyInfo> propInfoList = new List<ConfigurationPropertyInfo>();
+            
+            // 既存のIConfigurationから作り出す
+            MemberInfo[] memberInfoArr = config.GetType().GetMembers(BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance);
+            foreach (var memberInfo in memberInfoArr)
+            {
+                if (!AttributeUtil.IsBrowsable(memberInfo))
+                    continue;
+
+                PropertyInfo pi = memberInfo as PropertyInfo;
+                FieldInfo fi = memberInfo as FieldInfo;
+                if (pi == null && fi == null)
+                    continue;
+
+                String name = (pi == null) ? fi.Name : pi.Name;
+                Type type = (pi == null) ? fi.FieldType : pi.PropertyType;
+                propInfoList.Add(new ConfigurationPropertyInfo { Description = AttributeUtil.GetDescription(memberInfo), Name = name, Type = type, MemberInfo = memberInfo });
+            }
+            
+            // ICustomConfiguration
+            if (config is ICustomConfiguration)
+            {
+                propInfoList.AddRange(((ICustomConfiguration)config).GetConfigurationPropertyInfo());
+            }
+
+            return propInfoList;
+        }
         #endregion
 
         #region IDisposable メンバ
@@ -413,6 +420,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         ~Context()
         {
             Dispose();
+        }
+    }
+
+    public class ContextInfo
+    {
+        public Type Type { get; set; }
+        public String DisplayName { get; set; }
+        public String Description { get; set; }
+
+        public ContextInfo()
+        {
+        }
+
+        public ContextInfo(Type t)
+        {
+            Type = t;
+            DisplayName = t.Name;
+            Description = AttributeUtil.GetDescription(t);
         }
     }
 }

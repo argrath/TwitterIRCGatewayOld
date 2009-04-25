@@ -1,16 +1,19 @@
 import clr
-import System
 
+from System import *
+from System.Collections.Generic import *
 from System.Diagnostics import Trace
 import Misuzilla.Applications.TwitterIrcGateway
 import Misuzilla.Applications.TwitterIrcGateway.AddIns
 import Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
+from Misuzilla.Applications.TwitterIrcGateway.AddIns import IConfiguration
 from Misuzilla.Applications.TwitterIrcGateway.AddIns.Console import ConsoleAddIn, Console, Context
-from Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration import DLRIntegrationAddIn, DLRContextHelper
+from Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration import DLRIntegrationAddIn, DLRBasicConfiguration, DLRContextHelper
 
 class TestContext(Context):
 	def Initialize(self):
+		self.config = DLRBasicConfiguration(self.CurrentSession, "TestContext", Dictionary[String,String]({ "Hauhau": "設定項目の説明" }))
 		pass
 
 	def GetCommands(self):
@@ -18,15 +21,26 @@ class TestContext(Context):
 		dict["Hauhau"] = "Say Hauhau!"
 		return dict
 
+	def OnUninitialize(self):
+		pass
+
+	def get_Configurations(self):
+		return Array[IConfiguration]([ self.config ])
+
+	# Implementation
 	def hauhau(self, args):
 		self.Console.NotifyMessage(("Hauhau: %s" % (args)))
 
+# コンソールチャンネルを追加する
+console = Misuzilla.Applications.TwitterIrcGateway.AddIns.Console.Console()
+console.Attach("#TestConsole", Server, Session, DLRContextHelper.Wrap("Test", TestContext))
+
+# 普通の #Console にコンテキストを追加する
+Session.AddInManager.GetAddIn[ConsoleAddIn]().RegisterContext(DLRContextHelper.Wrap("DLRTest", TestContext), "DLRTest", "Context DLR implementation sample")
+
+# 後片付け
 def onBeforeUnload(sender, e):
 	Session.AddInManager.GetAddIn[ConsoleAddIn]().UnregisterContext(DLRContextHelper.Wrap("DLRTest", TestContext))
-	console.Detatch()
-
-console = Misuzilla.Applications.TwitterIrcGateway.AddIns.Console.Console()
-console.Attach("#TestContext", Server, Session, DLRContextHelper.Wrap("Test", TestContext))
+	console.Detach()
 
 Session.AddInManager.GetAddIn[DLRIntegrationAddIn]().BeforeUnload += onBeforeUnload
-Session.AddInManager.GetAddIn[ConsoleAddIn]().RegisterContext(DLRContextHelper.Wrap("DLRTest", TestContext), "DLRTest", "Context DLR implementation sample")

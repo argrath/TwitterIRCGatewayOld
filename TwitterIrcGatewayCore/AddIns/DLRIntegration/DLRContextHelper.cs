@@ -7,6 +7,7 @@ using Misuzilla.Applications.TwitterIrcGateway.AddIns.Console;
 using System.ComponentModel;
 using Microsoft.Scripting.Hosting;
 using System.Diagnostics;
+using System.IO;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 {
@@ -43,32 +44,139 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             return genCtxType.InvokeMember("GetProxyType", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod, null, null, new Object[] {contextName, dlrContextType}) as Type;
         }
     }
-
-    [Obsolete("DLRContextHelperを利用してください。")]
-    public class DLRContext<T> : Context where T : class
+    
+    /// <summary>
+    /// DLRで利用できる設定クラスです。
+    /// </summary>
+    public class DLRBasicConfiguration : ICustomConfiguration
     {
-        [Obsolete("DLRContextHelper.Wrap を利用してください。")]
-        public static Type GetProxyType(String contextName, Object scriptType)
+        private DLRConfigurationStore _configurationStore;
+        private List<ConfigurationPropertyInfo> _configurationPropInfoList;
+        private String _configStoreName;
+        private Session _session;
+        
+        public DLRBasicConfiguration() { }
+
+        public DLRBasicConfiguration(Session session, String configStoreName, IDictionary<String, String> configEntries)
         {
-            return DLRContextHelper.Wrap(contextName, scriptType);
+            _session = session;
+            _configurationPropInfoList = new List<ConfigurationPropertyInfo>();
+            _configStoreName = configStoreName;
+            _configurationStore = _session.AddInManager.GetConfig<DLRConfigurationStore>();
+
+            foreach (var kv in configEntries)
+            {
+                _configurationPropInfoList.Add(new ConfigurationPropertyInfo{ Description = kv.Value, Name = kv.Key, Type = typeof(String) });
+            }
         }
+
+        #region ICustomConfiguration メンバ
+        public ICollection<ConfigurationPropertyInfo> GetConfigurationPropertyInfo()
+        {
+            return _configurationPropInfoList;
+        }
+
+        public void SetValue(string name, object value)
+        {
+            _configurationStore.SetValue(_configStoreName, name, value.ToString());
+            _session.AddInManager.SaveConfig(_configurationStore);
+        }
+
+        public object GetValue(string name)
+        {
+            return _configurationStore.GetValue(_configStoreName, name);
+        }
+        #endregion
     }
     
+    /// <summary>
+    /// TwitterIrcGateway内部で利用するDLR設定の保存クラスです。
+    /// </summary>
+    public class DLRConfigurationStore : IConfiguration
+    {
+        public String Content { get; set; }
+        public DLRConfigurationStore()
+        {
+            Content = "";
+        }
+
+        private Dictionary<String, Dictionary<String, String>> _contentDict;
+        private void BuildDictionary()
+        {
+            _contentDict = new Dictionary<string, Dictionary<string, string>>();
+            using (StringReader stringReader = new StringReader(Content))
+            {
+                String line;
+                while ((line = stringReader.ReadLine()) != null)
+                {
+                    String[] parts = line.Split(new char[] {'\t'}, 3);
+                    if (parts.Length != 3)
+                    {
+                        Trace.WriteLine("Invalid configuration line:");
+                        Trace.WriteLine(line);
+                        continue;
+                    }
+                    
+                    if (!_contentDict.ContainsKey(parts[0]))
+                        _contentDict[parts[0]] = new Dictionary<string, string>();
+
+                    _contentDict[parts[0]][parts[1]] = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(parts[2]));
+                }
+            }
+        }
+        private void Save()
+        {
+            StringWriter stringWriter = new StringWriter();
+            foreach (var valueByStore in _contentDict)
+            {
+                foreach (var keyValue in valueByStore.Value)
+                {
+                    stringWriter.WriteLine("{0}\t{1}\t{2}", valueByStore.Key, keyValue.Key,
+                                           Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(keyValue.Value)));
+                }
+            }
+            Content = stringWriter.ToString();
+        }
+
+        public String GetValue(String storeName, String configName)
+        {
+            BuildDictionary();
+            
+            if (!_contentDict.ContainsKey(storeName))
+                return null;
+            if (!_contentDict[storeName].ContainsKey(configName))
+                return null;
+            return _contentDict[storeName][configName];
+        }
+        public void SetValue(String storeName, String configName, String value)
+        {
+            BuildDictionary();
+            
+            if (!_contentDict.ContainsKey(storeName))
+                _contentDict[storeName] = new Dictionary<string, string>();
+            _contentDict[storeName][configName] = value;
+
+            Save();
+        }
+    }
+
     internal class DLRContextBase<T> : Context where T : class
     {
         private DLRIntegrationAddIn _dlrAddIn;
+        private DLRBasicConfiguration _basicConfiguration;
         private ScriptRuntime _scriptRuntime;
         private Context _site;
         private static Object _scriptType;
         private static String _contextName;
 
         public override string ContextName { get { return _contextName; } }
+        public override IConfiguration[] Configurations { get { return _site.Configurations; } }
         
         internal static Type GetProxyType(String contextName, Object scriptType)
         {
             _scriptType = scriptType;
             _contextName = contextName;
-            return typeof(DLRContextBase<T>);
+            return typeof (DLRContextBase<T>);
         }
         
         public override void Initialize()
