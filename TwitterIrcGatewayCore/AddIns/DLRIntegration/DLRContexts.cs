@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using IronPython.Hosting;
+using Microsoft.Scripting;
 using Microsoft.Scripting.Hosting.Shell;
 using Microsoft.Scripting.Runtime;
 using Misuzilla.Applications.TwitterIrcGateway.AddIns.Console;
@@ -45,6 +46,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                 {
                     Console.NotifyMessage("実行時にエラーが発生しました:");
                     Console.NotifyMessage(ex.Message);
+                    if (ex is SyntaxErrorException)
+                    {
+                        SyntaxErrorException syntaxEx = ex as SyntaxErrorException;
+                        Trace.WriteLine(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Line,
+                                                      syntaxEx.SourcePath));
+                    }
                 }
             });
             Console.NotifyMessage("スクリプトを再読み込みしました。");

@@ -26,7 +26,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             CurrentSession.AddInsLoadCompleted += (sender, e) =>
             {
                 CurrentSession.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<DLRContext>();
-                ReloadScripts((fileName, ex) => { Trace.WriteLine("Script Executed: " + fileName); if (ex != null) { Trace.WriteLine(ex.ToString()); } });
+                ReloadScripts((fileName, ex) =>
+                {
+                    Trace.WriteLine("Script Executed: " + fileName);
+                    if (ex != null)
+                    {
+                        Trace.WriteLine(ex.ToString()); if (ex is SyntaxErrorException)
+                        {
+                            SyntaxErrorException syntaxEx = ex as SyntaxErrorException;
+                            Trace.WriteLine(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Line,
+                                                          syntaxEx.SourcePath));
+                        }
+                    }
+                });
             };
         }
 
