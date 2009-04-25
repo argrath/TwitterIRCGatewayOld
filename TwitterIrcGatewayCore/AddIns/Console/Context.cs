@@ -30,6 +30,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     /// </summary>
     public abstract class Context : IDisposable
     {
+        private Boolean _isUninitialized = false;
+        
         /// 関連づけられているサーバのインスタンスを取得します。
         /// このプロパティは古い形式です。
         /// </summary>
@@ -69,6 +71,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// </summary>
         [Browsable(false)]
         public virtual void Initialize()
+        {
+        }
+        
+        [Browsable(false)]
+        public virtual void Uninitialize()
+        {
+            OnUninitialize();
+            _isUninitialized = true;
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        protected virtual void OnUninitialize()
         {
         }
 
@@ -386,6 +402,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         public virtual void Dispose()
         {
             System.Diagnostics.Trace.WriteLine(ContextName + ": Dispose");
+            if (!_isUninitialized)
+            {
+                Uninitialize();
+            }
             GC.SuppressFinalize(this);
         }
         #endregion
