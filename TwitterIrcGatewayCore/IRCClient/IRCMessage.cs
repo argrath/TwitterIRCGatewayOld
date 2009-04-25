@@ -313,7 +313,7 @@ namespace Misuzilla.Net.Irc
 		{
 			try {
 				return _replyNumber.ToString("000") + ": " + this.CommandParam;
-			} catch (ArgumentException e) {
+			} catch (ArgumentException) {
 				//Trace.WriteLine(e);
 				return _replyNumber.ToString("000") + ": " + this.CommandParam;
 			}

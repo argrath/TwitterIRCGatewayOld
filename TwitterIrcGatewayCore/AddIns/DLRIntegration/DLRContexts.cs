@@ -21,7 +21,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         [Description("読み込まれているスクリプトを一覧表示します")]
         public void List()
         {
-            DLRIntegrationAddIn addIn = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>();
+            DLRIntegrationAddIn addIn = CurrentSession.AddInManager.GetAddIn<DLRIntegrationAddIn>();
             if (addIn.ScriptScopes.Keys.Count == 0)
             {
                 Console.NotifyMessage("スクリプトは現在読み込まれていません。");
@@ -38,7 +38,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         public void Reload()
         {
             Console.NotifyMessage("スクリプトを再読み込みします。");
-            Session.AddInManager.GetAddIn<DLRIntegrationAddIn>().ReloadScripts((fileName, ex) =>
+            CurrentSession.AddInManager.GetAddIn<DLRIntegrationAddIn>().ReloadScripts((fileName, ex) =>
             {
                 Console.NotifyMessage("ファイル " + fileName + " を読み込みました。");
                 if (ex != null)
@@ -58,7 +58,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         {
             if (IsEvalEnabled)
             {
-                Object retVal = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>().Eval(languageName, expression);
+                Object retVal = CurrentSession.AddInManager.GetAddIn<DLRIntegrationAddIn>().Eval(languageName, expression);
                 Console.NotifyMessage(retVal == null ? "(null)" : retVal.ToString());
             }
             else
@@ -78,11 +78,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
         public override void Initialize()
         {
-            DLRIntegrationAddIn addIn = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>();
-            _virtualConsole = new VirtualConsole(Session, this.Console);
+            DLRIntegrationAddIn addIn = CurrentSession.AddInManager.GetAddIn<DLRIntegrationAddIn>();
+            _virtualConsole = new VirtualConsole(CurrentSession, Console);
             addIn.ScriptRuntime.IO.SetOutput(MemoryStream.Null, _virtualConsole.Output);
             addIn.ScriptRuntime.IO.SetErrorOutput(MemoryStream.Null, _virtualConsole.Output);
-            _pythonCommandLine = new PythonCommandLine2(Server, Session);
+            _pythonCommandLine = new PythonCommandLine2(CurrentServer, CurrentSession);
             PythonConsoleOptions consoleOptions = new PythonConsoleOptions();
 
             _consoleThread = new Thread(t =>

@@ -81,6 +81,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
                     catch (Exception e)
                     {
+                        Trace.WriteLine(e);
                     }
                 }
             }

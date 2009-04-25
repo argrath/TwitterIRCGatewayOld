@@ -8,7 +8,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
     {
         public override void Initialize()
         {
-            Session.PostFilterProcessTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PostFilterProcessTimelineStatus);
+            CurrentSession.PostFilterProcessTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PostFilterProcessTimelineStatus);
             //Session.PreSendUpdateStatus += new EventHandler<StatusUpdateEventArgs>(Session_PreSendUpdateStatus);
         }
 
@@ -20,7 +20,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         void Session_PostFilterProcessTimelineStatus(object sender, TimelineStatusEventArgs e)
         {
             // TinyURL
-            e.Text = (Session.Config.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(e.Text) : e.Text;
+            e.Text = (CurrentSession.Config.ResolveTinyUrl) ? Utility.ResolveTinyUrlInMessage(e.Text) : e.Text;
         }
     }
 }

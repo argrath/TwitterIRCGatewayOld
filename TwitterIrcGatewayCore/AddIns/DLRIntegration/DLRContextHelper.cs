@@ -73,14 +73,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         
         public override void Initialize()
         {
-            _dlrAddIn = Session.AddInManager.GetAddIn<DLRIntegrationAddIn>();
+            _dlrAddIn = CurrentSession.AddInManager.GetAddIn<DLRIntegrationAddIn>();
             _scriptRuntime = _dlrAddIn.ScriptRuntime;
             _site = _scriptRuntime.Operations.CreateInstance(_scriptType) as Context;
             if (_site == null)
                 throw new ArgumentException("指定された型はContext クラスを継承していないためインスタンス化できません。");
             
-            _site.Server = Server;
-            _site.Session = Session;
+            _site.CurrentServer = CurrentServer;
+            _site.CurrentSession = CurrentSession;
             _site.Console = Console;
             _site.Initialize();
 

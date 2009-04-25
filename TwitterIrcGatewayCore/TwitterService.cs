@@ -381,7 +381,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         /// <exception cref="WebException"></exception>
         /// <exception cref="TwitterServiceException"></exception>
+        [Obsolete]
         public Statuses GetReplies()
+        {
+            return GetMentions();
+        }
+        /// <summary>
+        /// mentions を取得します。
+        /// </summary>
+        /// <exception cref="WebException"></exception>
+        /// <exception cref="TwitterServiceException"></exception>
+        public Statuses GetMentions()
         {
             return ExecuteRequest<Statuses>(() =>
             {
@@ -626,7 +636,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return ExecuteRequest<User>(() =>
             {
                 String responseBody = POST(String.Format("/friendships/create/{0}.xml", screenName), new byte[0]);
-                Status status;
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -648,7 +657,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return ExecuteRequest<User>(() =>
             {
                 String responseBody = POST(String.Format("/friendships/destroy/{0}.xml", screenName), new byte[0]);
-                Status status;
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;

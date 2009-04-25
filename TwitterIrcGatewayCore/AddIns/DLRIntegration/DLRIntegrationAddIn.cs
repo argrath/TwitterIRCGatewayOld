@@ -23,9 +23,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
         public override void Initialize()
         {
-            Session.AddInsLoadCompleted += (sender, e) =>
+            CurrentSession.AddInsLoadCompleted += (sender, e) =>
             {
-                Session.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<DLRContext>();
+                CurrentSession.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<DLRContext>();
                 ReloadScripts((fileName, ex) => { Trace.WriteLine("Script Executed: " + fileName); if (ex != null) { Trace.WriteLine(ex.ToString()); } });
             };
         }
@@ -88,16 +88,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             
             _scriptScopes = new Dictionary<string, ScriptScope>();
             PrepareScriptScopeByPath("*Eval*");
-            _scriptRuntime.Globals.SetVariable("Session", Session);
-            _scriptRuntime.Globals.SetVariable("Server", Server);
-            _scriptRuntime.Globals.SetVariable("CurrentSession", Session);
-            _scriptRuntime.Globals.SetVariable("CurrentServer", Server);
+            _scriptRuntime.Globals.SetVariable("Session", CurrentSession);
+            _scriptRuntime.Globals.SetVariable("Server", CurrentServer);
+            _scriptRuntime.Globals.SetVariable("CurrentSession", CurrentSession);
+            _scriptRuntime.Globals.SetVariable("CurrentServer", CurrentServer);
 
             // 共通のスクリプトを読む
             LoadScriptsFromDirectory(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "GlobalScripts"), scriptExecutionCallback);
 
             // ユーザごとのスクリプトを読む
-            LoadScriptsFromDirectory(Path.Combine(Session.UserConfigDirectory, "Scripts"), scriptExecutionCallback);
+            LoadScriptsFromDirectory(Path.Combine(CurrentSession.UserConfigDirectory, "Scripts"), scriptExecutionCallback);
         }
         
         /// <summary>
@@ -133,10 +133,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         private ScriptScope PrepareScriptScopeByPath(String path)
         {
             ScriptScope scriptScope = _scriptRuntime.CreateScope();
-            scriptScope.SetVariable("Session", Session);
-            scriptScope.SetVariable("Server", Server);
-            scriptScope.SetVariable("CurrentSession", Session);
-            scriptScope.SetVariable("CurrentServer", Server);
+            scriptScope.SetVariable("Session", CurrentSession);
+            scriptScope.SetVariable("Server", CurrentServer);
+            scriptScope.SetVariable("CurrentSession", CurrentSession);
+            scriptScope.SetVariable("CurrentServer", CurrentServer);
 
             return _scriptScopes[path] = scriptScope;
         }

@@ -14,7 +14,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         
         public override void Initialize()
         {
-            Session.PostSendUpdateStatus += (sender, e) =>
+            CurrentSession.PostSendUpdateStatus += (sender, e) =>
                                             {
                                                 _lastUpdateStatusList.Add(e.CreatedStatus);
                                                 if (_lastUpdateStatusList.Count > MaxUndoCount)
@@ -22,7 +22,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                                                     _lastUpdateStatusList.RemoveAt(0);
                                                 }
                                             };
-            Session.UpdateStatusRequestReceived += (sender, e) =>
+            CurrentSession.UpdateStatusRequestReceived += (sender, e) =>
                                            {
                                                if (String.Compare(e.Text.Trim(), UndoCommandString, true) == 0)
                                                {
@@ -30,7 +30,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 
                                                    if (_lastUpdateStatusList.Count == 0)
                                                    {
-                                                       Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
+                                                       CurrentSession.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
                                                                                             "ステータスアップデートの取り消しできません。"));
                                                        return;
                                                    }
@@ -40,8 +40,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                                                    {
                                                        Status status =
                                                            _lastUpdateStatusList[_lastUpdateStatusList.Count - 1];
-                                                       Session.TwitterService.DestroyStatus(status.Id);
-                                                       Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
+                                                       CurrentSession.TwitterService.DestroyStatus(status.Id);
+                                                       CurrentSession.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
                                                                                             String.Format(
                                                                                                 "ステータス \"{0}\" ({1}) を削除しました。",
                                                                                                 status.Text, status.Id)));
@@ -49,14 +49,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                                                    }
                                                    catch (TwitterServiceException te)
                                                    {
-                                                       Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
+                                                       CurrentSession.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
                                                                                             String.Format(
                                                                                                 "ステータスの削除に失敗しました: {0}",
                                                                                                 te.Message)));
                                                    }
                                                    catch (WebException we)
                                                    {
-                                                       Session.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
+                                                       CurrentSession.SendServer(new NoticeMessage(e.ReceivedMessage.Receiver,
                                                                                             String.Format(
                                                                                                 "ステータスの削除に失敗しました: {0}",
                                                                                                 we.Message)));

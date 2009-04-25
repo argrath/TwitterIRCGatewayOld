@@ -19,8 +19,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
         internal IDictionary<Type, ContextInfo> Contexts { get; private set; }
 
-        private Session Session { get; set; }
-        private Server Server { get; set; }
+        private Session CurrentSession { get; set; }
+        private Server CurrentServer { get; set; }
 
         private Type _rootContextType;
 
@@ -53,20 +53,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 throw new ArgumentException("チャンネル名は # から始まる2文字以上の文字列を指定する必要があります。", "channelName");
             
             ConsoleChannelName = channelName;
-            Server = server;
-            Session = session;
+            CurrentServer = server;
+            CurrentSession = session;
             
-            Session.PreMessageReceived += new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
-            Session.PostMessageReceived += new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
+            CurrentSession.PreMessageReceived += new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
+            CurrentSession.PostMessageReceived += new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
 
             // Default Context
             _rootContextType = rootContextType;
-            CurrentContext = GetContext(rootContextType, Server, Session);
+            CurrentContext = GetContext(rootContextType, CurrentServer, CurrentSession);
             if (CurrentContext == null)
                 throw new ArgumentException("指定されたコンテキストは登録されていません。", "rootContextType");
 
             ContextStack = new Stack<Context>();
-            Config = Session.AddInManager.GetConfig<GeneralConfig>();
+            Config = CurrentSession.AddInManager.GetConfig<GeneralConfig>();
             Contexts = new Dictionary<Type, ContextInfo>();
         
             LoadAliases();
@@ -75,15 +75,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             if (autoJoin)
             {
                 Group group;
-                if (!Session.Groups.TryGetValue(ConsoleChannelName, out group))
+                if (!CurrentSession.Groups.TryGetValue(ConsoleChannelName, out group))
                 {
                     group = new Group(ConsoleChannelName);
-                    Session.Groups.Add(ConsoleChannelName, group);
+                    CurrentSession.Groups.Add(ConsoleChannelName, group);
                 }
                 group.IsSpecial = true;
                 group.IsJoined = true;
 
-                Session.SendServer(new JoinMessage(ConsoleChannelName, ""));
+                CurrentSession.SendServer(new JoinMessage(ConsoleChannelName, ""));
             }
 
             IsAttached = true;
@@ -97,8 +97,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             if (!IsAttached)
                 throw new InvalidOperationException("コンソールはアタッチされていません。");
             
-            Session.PreMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
-            Session.PostMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
+            CurrentSession.PreMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
+            CurrentSession.PostMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
         
             try { CurrentContext.Dispose(); } catch {} 
             foreach (Context ctx in ContextStack)
@@ -140,7 +140,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             // 二回目以降はサーバ側がJOINを送り出すのでこない。
 
             // IsSpecial を True にすることでチャンネルにタイムラインが流れないようにする
-            Session.Groups[ConsoleChannelName].IsSpecial = true;
+            CurrentSession.Groups[ConsoleChannelName].IsSpecial = true;
 
             ShowCommandsAsUsers();
         }
@@ -178,7 +178,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
                 if (String.Compare(ctxInfo.DisplayName.Replace("Context", ""), args[0], true) == 0)
                 {
-                    PushContext(GetContext(ctxInfo.Type, Server, Session));
+                    PushContext(GetContext(ctxInfo.Type, CurrentServer, CurrentSession));
 
                     // 続く文字列をもう一度処理し直す
                     if (args.Length > 1)
@@ -273,7 +273,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             foreach (var line in message.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                Session.Send(new NoticeMessage(ConsoleChannelName, line) { SenderHost = "twitter@" + Server.ServerName, SenderNick = senderNick });
+                CurrentSession.Send(new NoticeMessage(ConsoleChannelName, line) { SenderHost = "twitter@" + Server.ServerName, SenderNick = senderNick });
             }
         }
 
@@ -298,8 +298,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 }
             }
 
-            Session.SendNumericReply(NumericReply.RPL_NAMREPLY, "=", ConsoleChannelName, "@"+Session.Nick+" "+ String.Join(" ", users.ToArray()));
-            Session.SendNumericReply(NumericReply.RPL_ENDOFNAMES, ConsoleChannelName, "End of NAMES list");
+            CurrentSession.SendNumericReply(NumericReply.RPL_NAMREPLY, "=", ConsoleChannelName, "@"+CurrentSession.Nick+" "+ String.Join(" ", users.ToArray()));
+            CurrentSession.SendNumericReply(NumericReply.RPL_ENDOFNAMES, ConsoleChannelName, "End of NAMES list");
         }
         
         /// <summary>
@@ -362,7 +362,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <returns></returns>
         public Context GetContext<T>(Server server, Session session) where T : Context, new()
         {
-            Context ctx = new T { Server = server, Session = session };
+            Context ctx = new T { CurrentServer = server, CurrentSession = session };
             ctx.Initialize();
             return ctx;
         }
@@ -377,8 +377,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         public Context GetContext(Type t, Server server, Session session)
         {
             Context ctx = Activator.CreateInstance(t) as Context;
-            ctx.Server = server;
-            ctx.Session = session;
+            ctx.CurrentServer = server;
+            ctx.CurrentSession = session;
             ctx.Console = this;
             ctx.Initialize();
             return ctx;
@@ -454,7 +454,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             }
 
             Config.ConsoleAliases = configAliases;
-            Session.AddInManager.SaveConfig(Config);
+            CurrentSession.AddInManager.SaveConfig(Config);
         }
         private void LoadAliases()
         {

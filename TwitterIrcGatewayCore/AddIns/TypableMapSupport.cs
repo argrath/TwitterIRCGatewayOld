@@ -12,32 +12,32 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         
         public override void Initialize()
         {
-            Session.UpdateStatusRequestReceived += new EventHandler<StatusUpdateEventArgs>(Session_UpdateStatusRequestReceived);
-            Session.PreSendMessageTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PreSendMessageTimelineStatus);
-            Session.ConfigChanged += new EventHandler<EventArgs>(Session_ConfigChanged);
+            CurrentSession.UpdateStatusRequestReceived += new EventHandler<StatusUpdateEventArgs>(Session_UpdateStatusRequestReceived);
+            CurrentSession.PreSendMessageTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PreSendMessageTimelineStatus);
+            CurrentSession.ConfigChanged += new EventHandler<EventArgs>(Session_ConfigChanged);
 
-            if (Session.Config.EnableTypableMap)
-                _typableMapCommands = new TypableMapCommandProcessor(Session.TwitterService, Session, Session.Config.TypableMapKeySize);
+            if (CurrentSession.Config.EnableTypableMap)
+                _typableMapCommands = new TypableMapCommandProcessor(CurrentSession.TwitterService, CurrentSession, CurrentSession.Config.TypableMapKeySize);
         }
 
         void Session_PreSendMessageTimelineStatus(object sender, TimelineStatusEventArgs e)
         {
             // TypableMap
-            if (Session.Config.EnableTypableMap)
+            if (CurrentSession.Config.EnableTypableMap)
             {
                 String typableMapId = _typableMapCommands.TypableMap.Add(e.Status);
                 // TypableMapKeyColorNumber = -1 の場合には色がつかなくなる
-                if (Session.Config.TypableMapKeyColorNumber < 0)
+                if (CurrentSession.Config.TypableMapKeyColorNumber < 0)
                     e.Text = String.Format("{0} ({1})", e.Text, typableMapId);
                 else
-                    e.Text = String.Format("{0} \x0003{1}({2})", e.Text, Session.Config.TypableMapKeyColorNumber, typableMapId);
+                    e.Text = String.Format("{0} \x0003{1}({2})", e.Text, CurrentSession.Config.TypableMapKeyColorNumber, typableMapId);
             }
         }
 
         void Session_UpdateStatusRequestReceived(object sender, StatusUpdateEventArgs e)
         {
             // Typable Map コマンド?
-            if (Session.Config.EnableTypableMap)
+            if (CurrentSession.Config.EnableTypableMap)
             {
                 if (_typableMapCommands.Process(e.ReceivedMessage))
                 {
@@ -49,12 +49,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 
         void Session_ConfigChanged(object sender, EventArgs e)
         {
-            if (Session.Config.EnableTypableMap)
+            if (CurrentSession.Config.EnableTypableMap)
             {
                 if (_typableMapCommands == null)
-                    _typableMapCommands = new TypableMapCommandProcessor(Session.TwitterService, Session, Session.Config.TypableMapKeySize);
-                if (_typableMapCommands.TypableMapKeySize != Session.Config.TypableMapKeySize)
-                    _typableMapCommands.TypableMapKeySize = Session.Config.TypableMapKeySize;
+                    _typableMapCommands = new TypableMapCommandProcessor(CurrentSession.TwitterService, CurrentSession, CurrentSession.Config.TypableMapKeySize);
+                if (_typableMapCommands.TypableMapKeySize != CurrentSession.Config.TypableMapKeySize)
+                    _typableMapCommands.TypableMapKeySize = CurrentSession.Config.TypableMapKeySize;
             }
             else
             {

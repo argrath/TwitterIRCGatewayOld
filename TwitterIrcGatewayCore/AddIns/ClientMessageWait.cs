@@ -9,14 +9,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
     {
         public override void Initialize()
         {
-            Session.PostSendMessageTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PostSendMessageTimelineStatus);
+            CurrentSession.PostSendMessageTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PostSendMessageTimelineStatus);
         }
 
         void Session_PostSendMessageTimelineStatus(object sender, TimelineStatusEventArgs e)
         {
             // ウェイト
-            if (Session.Config.ClientMessageWait > 0)
-                Thread.Sleep(Session.Config.ClientMessageWait);
+            if (CurrentSession.Config.ClientMessageWait > 0)
+                Thread.Sleep(CurrentSession.Config.ClientMessageWait);
         }
     }
 }

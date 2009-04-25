@@ -22,7 +22,7 @@ class Scraping
 	end
 	
 	def self.fetch_home
-		home = Session.TwitterService.GETWithCookie("/home").to_s
+		home = CurrentSession.TwitterService.GETWithCookie("/home").to_s
 		if statuses = home.scan(%r{(<li class="hentry status.*?</li>)})
 			statuses.reverse.each do |status1|
 				status = status1[0]
@@ -34,7 +34,7 @@ class Scraping
 					s.User = @@user_cache[m[2]]
 				else
 					#begin
-					#	s.User = Session.TwitterService.GetUser(m[2])
+					#	s.User = CurrentSession.TwitterService.GetUser(m[2])
 					#	@@user_cache[m[2]] = s.User
 					#rescue
 						s.User            = User.new
@@ -52,7 +52,7 @@ class Scraping
 				
 				# 送信
 				#System::Diagnostics::Trace::WriteLine(s)
-				Session.TwitterService.ProcessStatus(s, System::Action[Status].new{|s1| Session.ProcessTimelineStatus(s, false, false) })
+				Session.TwitterService.ProcessStatus(s, System::Action[Status].new{|s1| CurrentSession.ProcessTimelineStatus(s, false, false) })
 			end
 		end
 	end
@@ -60,7 +60,7 @@ end
 
 Scraping.thread = Thread.new do
 	# ちゃんとThreadを終わらせないと大変残念なことになる
-	dlr_addin = Session.AddInManager.GetAddIn(Misuzilla::Applications::TwitterIrcGateway::AddIns::DLRIntegration::DLRIntegrationAddIn.to_clr_type)
+	dlr_addin = CurrentSession.AddInManager.GetAddIn(Misuzilla::Applications::TwitterIrcGateway::AddIns::DLRIntegration::DLRIntegrationAddIn.to_clr_type)
 	dlr_addin.BeforeUnload do |sender, e|
 		Scraping.interval = 0
 		Scraping.thread.join

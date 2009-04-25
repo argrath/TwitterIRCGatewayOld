@@ -13,15 +13,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Description("存在するフィルタをすべて表示します")]
         public void List()
         {
-            if (Session.Filters.Items.Length == 0)
+            if (CurrentSession.Filters.Items.Length == 0)
             {
                 Console.NotifyMessage("フィルタは現在設定されていません。");
                 return;
             }
             
-            for (var i = 0; i < Session.Filters.Items.Length; i++)
+            for (var i = 0; i < CurrentSession.Filters.Items.Length; i++)
             {
-                FilterItem filter = Session.Filters.Items[i];
+                FilterItem filter = CurrentSession.Filters.Items[i];
                 Console.NotifyMessage(String.Format("{0}: {1}", i, filter.ToString()));
             }
         }
@@ -42,8 +42,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         public void Remove(String args)
         {
             FindAt(args, item => {
-                Session.Filters.Remove(item);
-                Session.SaveFilters();
+                CurrentSession.Filters.Remove(item);
+                CurrentSession.SaveFilters();
                 Console.NotifyMessage(String.Format("フィルタ {0} を削除しました。", item));
             });
         }
@@ -55,8 +55,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                              {
                                  Type genericType = typeof (EditFilterContext<>).MakeGenericType(item.GetType());
                                  Context ctx = Activator.CreateInstance(genericType, item) as Context;
-                                 ctx.Server = Server;
-                                 ctx.Session = Session;
+                                 ctx.CurrentServer = CurrentServer;
+                                 ctx.CurrentSession = CurrentSession;
 
                                  Console.PushContext(ctx);
                              });
@@ -72,13 +72,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 return;
             }
             Type genericType = typeof (EditFilterContext<>).MakeGenericType(filterType);
-            Console.PushContext(Console.GetContext(genericType, Server, Session));
+            Console.PushContext(Console.GetContext(genericType, CurrentServer, CurrentSession));
         }
 
         [Description("フィルタを再読み込みします")]
         public void Reload()
         {
-            Session.LoadFilters();
+            CurrentSession.LoadFilters();
             Console.NotifyMessage("フィルタを再読み込みしました。");
         }
 
@@ -86,14 +86,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             FindAt(args, item => {
                 item.Enabled = enable;
-                Session.SaveFilters();
+                CurrentSession.SaveFilters();
                 Console.NotifyMessage(String.Format("フィルタ {0} を{1}化しました。", item, (enable ? "有効" : "無効")));
             });
         }
         private void FindAt(String args, Action<FilterItem> action)
         {
             Int32 index;
-            FilterItem[] items = Session.Filters.Items;
+            FilterItem[] items = CurrentSession.Filters.Items;
             if (Int32.TryParse(args, out index))
             {
                 if (index < items.Length && index > -1)
@@ -152,8 +152,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Description("フィルタを保存してコンテキストを終了します")]
         public void Save()
         {
-            Session.Filters.Add(_filter);
-            Session.SaveFilters();
+            CurrentSession.Filters.Add(_filter);
+            CurrentSession.SaveFilters();
             Console.NotifyMessage(String.Format("フィルタを{0}しました。", (_isNewRecord ? "新規作成" : "保存")));
             Exit();
         }

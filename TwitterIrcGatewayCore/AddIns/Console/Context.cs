@@ -30,10 +30,30 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
     /// </summary>
     public abstract class Context : IDisposable
     {
+        /// 関連づけられているサーバのインスタンスを取得します。
+        /// このプロパティは古い形式です。
+        /// </summary>
         [Browsable(false)]
-        public Session Session { get; set; }
+        [Obsolete("このプロパティは古い形式です。CurrentServer プロパティを利用してください。")]
+        public Server Server { get { return CurrentServer; } set { CurrentServer = value; } }
+        /// <summary>
+        /// 関連づけられているセッション情報のインスタンスを取得します。
+        /// このプロパティは古い形式です。
+        /// </summary>
         [Browsable(false)]
-        public Server Server { get; set; }
+        [Obsolete("このプロパティは古い形式です。CurrentSession プロパティを利用してください。")]
+        public Session Session { get { return CurrentSession; } set { CurrentSession = value; } }
+        /// <summary>
+        /// 関連づけられているサーバのインスタンスを取得します。
+        /// </summary>
+        [Browsable(false)]
+        public Server CurrentServer { get; set; }
+        /// <summary>
+        /// 関連づけられているセッション情報のインスタンスを取得します。
+        /// </summary>
+        [Browsable(false)]
+        public Session CurrentSession { get; set; }
+
         [Browsable(false)]
         [Obsolete("ConsoleAddIn プロパティは古い形式です。Console プロパティを利用してください。このプロパティは常に ConsoleAddIn クラスの唯一のインスタンスを返します。")]
         public ConsoleAddIn ConsoleAddIn { get { return Session.AddInManager.GetAddIn<ConsoleAddIn>(); } }

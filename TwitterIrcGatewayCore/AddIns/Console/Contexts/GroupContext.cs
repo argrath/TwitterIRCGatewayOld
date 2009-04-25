@@ -27,9 +27,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
             for (var i = 1; i < channelNameAndUserNames.Length; i++)
             {
-                Group group = Session.Groups[channelNameAndUserNames[0]];
+                Group group = CurrentSession.Groups[channelNameAndUserNames[0]];
                 String userName = channelNameAndUserNames[i];
-                if (!group.Exists(userName) && (String.Compare(userName, Session.Nick, true) != 0))
+                if (!group.Exists(userName) && (String.Compare(userName, CurrentSession.Nick, true) != 0))
                 {
                     group.Add(userName);
                     if (group.IsJoined)
@@ -39,13 +39,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                             SenderHost = "twitter@" + Server.ServerName,
                             SenderNick = userName
                         };
-                        Session.Send(joinMsg);
+                        CurrentSession.Send(joinMsg);
                     }
                 }
 
             }
 
-            Session.SaveGroups();
+            CurrentSession.SaveGroups();
         }
     }
 }

@@ -10,8 +10,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
     {
         public override void Initialize()
         {
-            Session.MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGGC);
-            Session.MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGLOADFILTER);
+            CurrentSession.MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGGC);
+            CurrentSession.MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGLOADFILTER);
         }
 
         void MessageReceived_TIGGC(object sender, MessageReceivedEventArgs e)
@@ -19,13 +19,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
             if (String.Compare(e.Message.Command, "TIGGC", true) != 0) return;
             Int64 memUsage = GC.GetTotalMemory(false);
             GC.Collect();
-            Session.SendTwitterGatewayServerMessage(String.Format("Garbage Collect: {0:###,##0} bytes -> {1:###,##0} bytes", memUsage, GC.GetTotalMemory(false)));
+            CurrentSession.SendTwitterGatewayServerMessage(String.Format("Garbage Collect: {0:###,##0} bytes -> {1:###,##0} bytes", memUsage, GC.GetTotalMemory(false)));
         }
 
         void MessageReceived_TIGLOADFILTER(object sender, MessageReceivedEventArgs e)
         {
             if (String.Compare(e.Message.Command, "TIGLOADFILTER", true) != 0) return;
-            Session.LoadFilters();
+            CurrentSession.LoadFilters();
         }
     }
 }

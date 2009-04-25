@@ -70,7 +70,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             {
                 try
                 {
-                    var retStatuses = Session.TwitterService.GetTimelineByScreenName(screenName, new DateTime(), Console.Config.SearchCount);
+                    var retStatuses = CurrentSession.TwitterService.GetTimelineByScreenName(screenName, new DateTime(), Console.Config.SearchCount);
                     statuses.AddRange(retStatuses.Status);
                 }
                 catch (TwitterServiceException te)
@@ -96,7 +96,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             {
                 try
                 {
-                    var retStatuses = Session.TwitterService.GetFavoritesByScreenName(screenName, 1);
+                    var retStatuses = CurrentSession.TwitterService.GetFavoritesByScreenName(screenName, 1);
                     statuses.AddRange(retStatuses.Status);
                     if (statuses.Count > Console.Config.FavoritesCount)
                         statuses.RemoveRange(10, statuses.Count - 10);
@@ -150,8 +150,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 try
                 {
                     var user = follow
-                                   ? Session.TwitterService.CreateFriendship(screenName)
-                                   : Session.TwitterService.DestroyFriendship(screenName);
+                                   ? CurrentSession.TwitterService.CreateFriendship(screenName)
+                                   : CurrentSession.TwitterService.DestroyFriendship(screenName);
                     Console.NotifyMessage(String.Format("ユーザ {0} を {1} しました。", screenName, action));
                 }
                 catch (TwitterServiceException te)
@@ -176,8 +176,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 try
                 {
                     var user = block
-                                   ? Session.TwitterService.CreateBlock(screenName)
-                                   : Session.TwitterService.DestroyBlock(screenName);
+                                   ? CurrentSession.TwitterService.CreateBlock(screenName)
+                                   : CurrentSession.TwitterService.DestroyBlock(screenName);
                     Console.NotifyMessage(String.Format("ユーザ {0} を {1} しました。", screenName, action));
                 }
                 catch (TwitterServiceException te)

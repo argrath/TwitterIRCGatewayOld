@@ -43,12 +43,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
     {
         /// <summary>
         /// 関連づけられているサーバのインスタンスを取得します。
+        /// このプロパティは古い形式です。
         /// </summary>
-        protected Server Server { get; private set; }
+        [Obsolete("このプロパティは古い形式です。CurrentServer プロパティを利用してください。")]
+        protected Server Server { get { return CurrentServer; } }
+        /// <summary>
+        /// 関連づけられているセッション情報のインスタンスを取得します。
+        /// このプロパティは古い形式です。
+        /// </summary>
+        [Obsolete("このプロパティは古い形式です。CurrentSession プロパティを利用してください。")]
+        protected Session Session { get { return CurrentSession; } }
+        /// <summary>
+        /// 関連づけられているサーバのインスタンスを取得します。
+        /// </summary>
+        protected Server CurrentServer { get; private set; }
         /// <summary>
         /// 関連づけられているセッション情報のインスタンスを取得します。
         /// </summary>
-        protected Session Session { get; private set; }
+        protected Session CurrentSession { get; private set; }
         
         /// <summary>
         /// サーバインスタンスへのプロキシを取得・設定します。
@@ -74,8 +86,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
             SessionProxy = new EventMangedProxy<Session>(session);
             ServerProxy = new EventMangedProxy<Server>(server);
 
-            Server = (Server)ServerProxy.GetTransparentProxy();
-            Session = (Session)SessionProxy.GetTransparentProxy();
+            CurrentServer = (Server)ServerProxy.GetTransparentProxy();
+            CurrentSession = (Session)SessionProxy.GetTransparentProxy();
 
             Initialize();
         }

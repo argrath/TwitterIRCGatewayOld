@@ -20,16 +20,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SocialRemoveRedundantS
         {
             try
             {
-                Configuration config = Session.AddInManager.GetConfig<Configuration>();
-                Session.AddInManager.SaveConfig(config);
+                Configuration config = CurrentSession.AddInManager.GetConfig<Configuration>();
+                CurrentSession.AddInManager.SaveConfig(config);
                 UpdateList();
             }
             catch (WebException ex)
             {
                 Trace.WriteLine("Download Failed: " + ex.Message);
             }
-            Session.PostFilterProcessTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PostFilterProcessTimelineStatus);
-            Session.AddInsLoadCompleted += (sender, e) => Session.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<SocialRemoveRedundantSuffixContext>();
+            CurrentSession.PostFilterProcessTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PostFilterProcessTimelineStatus);
+            CurrentSession.AddInsLoadCompleted += (sender, e) => CurrentSession.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<SocialRemoveRedundantSuffixContext>();
         }
 
         public void UpdateList()
@@ -38,13 +38,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SocialRemoveRedundantS
             {
                 using (WebClient webClient = new WebClient())
                 {
-                    Configuration config = Session.AddInManager.GetConfig<Configuration>();
+                    Configuration config = CurrentSession.AddInManager.GetConfig<Configuration>();
                     String url = config.BlackListUrl;
                     Trace.WriteLine("Download Blacklist: " + url);
                     webClient.Encoding = Encoding.UTF8;
                     _blackList = webClient.DownloadString(url);
                     config.BlackListCache = _blackList;
-                    Session.AddInManager.SaveConfig(config);
+                    CurrentSession.AddInManager.SaveConfig(config);
                 }
             }
             finally
@@ -89,11 +89,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SocialRemoveRedundantS
         [Description("ブラックリストを更新します")]
         public void Update()
         {
-            Configuration config = Session.AddInManager.GetConfig<Configuration>();
+            Configuration config = CurrentSession.AddInManager.GetConfig<Configuration>();
             Console.NotifyMessage("ブラックリストを " + config.BlackListUrl + " から取得しています。");
             try
             {
-                Session.AddInManager.GetAddIn<SocialRemoveRedundantSuffixAddIn>().UpdateList();
+                CurrentSession.AddInManager.GetAddIn<SocialRemoveRedundantSuffixAddIn>().UpdateList();
                 Console.NotifyMessage("ブラックリストを更新しました。");
             }
             catch (WebException ex)
@@ -105,11 +105,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SocialRemoveRedundantS
         [Description("ブラックリストのURLを設定します")]
         public void BlackListUrl(String url)
         {
-            Configuration config = Session.AddInManager.GetConfig<Configuration>();
+            Configuration config = CurrentSession.AddInManager.GetConfig<Configuration>();
             if (!String.IsNullOrEmpty(url))
                 config.BlackListUrl = url;
             Console.NotifyMessage("BlackListUrl = " + config.BlackListUrl);
-            Session.AddInManager.SaveConfig(config);
+            CurrentSession.AddInManager.SaveConfig(config);
         }
     }
 }

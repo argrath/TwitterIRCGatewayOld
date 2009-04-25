@@ -13,16 +13,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         
         public override void Initialize()
         {
-            Session.PostFilterProcessTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PostFilterProcessTimelineStatus);
-            Session.ConfigChanged += new EventHandler<EventArgs>(Session_ConfigChanged);
-            
-            if (Session.Config.EnableRemoveRedundantSuffix)
+            CurrentSession.PostFilterProcessTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PostFilterProcessTimelineStatus);
+            CurrentSession.ConfigChanged += new EventHandler<EventArgs>(Session_ConfigChanged);
+
+            if (CurrentSession.Config.EnableRemoveRedundantSuffix)
                 _lastStatusFromFriends = new Dictionary<int, LinkedList<string>>();
         }
 
         void Session_ConfigChanged(object sender, EventArgs e)
         {
-            if (_lastStatusFromFriends == null && Session.Config.EnableRemoveRedundantSuffix)
+            if (_lastStatusFromFriends == null && CurrentSession.Config.EnableRemoveRedundantSuffix)
             {
                 _lastStatusFromFriends = new Dictionary<int, LinkedList<string>>();
             }
@@ -35,7 +35,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         void Session_PostFilterProcessTimelineStatus(object sender, TimelineStatusEventArgs e)
         {
             // Remove Redundant Suffixes
-            if (Session.Config.EnableRemoveRedundantSuffix)
+            if (CurrentSession.Config.EnableRemoveRedundantSuffix)
             {
                 if (!_lastStatusFromFriends.ContainsKey(e.Status.User.Id))
                 {
