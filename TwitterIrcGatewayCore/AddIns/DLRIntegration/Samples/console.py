@@ -30,6 +30,7 @@ class TestContext(Context):
 	# Implementation
 	def hauhau(self, args):
 		self.Console.NotifyMessage(("Hauhau: %s" % (args)))
+		self.Console.NotifyMessage(("Hauhau(Config): %s" % (self.config.GetValue("Hauhau"))))
 
 # コンソールチャンネルを追加する
 console = Misuzilla.Applications.TwitterIrcGateway.AddIns.Console.Console()
