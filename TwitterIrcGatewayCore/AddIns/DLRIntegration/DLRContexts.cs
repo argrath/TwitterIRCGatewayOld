@@ -49,8 +49,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                     if (ex is SyntaxErrorException)
                     {
                         SyntaxErrorException syntaxEx = ex as SyntaxErrorException;
-                        Trace.WriteLine(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Line,
-                                                      syntaxEx.SourcePath));
+                        Console.NotifyMessage(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Column, syntaxEx.SourcePath));
                     }
                 }
             });

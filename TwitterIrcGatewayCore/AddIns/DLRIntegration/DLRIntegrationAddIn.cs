@@ -31,11 +31,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                     Trace.WriteLine("Script Executed: " + fileName);
                     if (ex != null)
                     {
-                        Trace.WriteLine(ex.ToString()); if (ex is SyntaxErrorException)
+                        Trace.WriteLine(ex.ToString());
+                        if (ex is SyntaxErrorException)
                         {
                             SyntaxErrorException syntaxEx = ex as SyntaxErrorException;
-                            Trace.WriteLine(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Line,
-                                                          syntaxEx.SourcePath));
+                            Trace.WriteLine(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Column, syntaxEx.SourcePath));
                         }
                     }
                 });
