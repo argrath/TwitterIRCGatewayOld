@@ -60,7 +60,7 @@ class Scraping(Object):
 			s.Id        = int(self.re_status_id.search(status).group(1), 10)
 			s.CreatedAt = DateTime.Now
 			
-			Trace.WriteLine(s.ToString())
+			#Trace.WriteLine(s.ToString())
 			CurrentSession.TwitterService.ProcessStatus(s, Action[Status](lambda s1: CurrentSession.ProcessTimelineStatus(s1, False, False)))
 
 	def onBeforeUnload(self, sender, e):
