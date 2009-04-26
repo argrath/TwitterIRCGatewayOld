@@ -1252,7 +1252,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #region Cookie アクセス
 
         private CookieCollection _cookies = null;
-        [Obsolete("Cookieによる認証はサポートされません。代わりにGET(POST)を利用してください。")]
+        //[Obsolete("Cookieによる認証はサポートされません。代わりにGET(POST)を利用してください。")]
         public String GETWithCookie(String url)
         {
             Boolean isRetry = false;
