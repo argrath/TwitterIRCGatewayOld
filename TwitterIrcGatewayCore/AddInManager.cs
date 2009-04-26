@@ -21,7 +21,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Session _session;
         private Server _server;
         private AppDomain _addInDomain;
-
+        
+        /// <summary>
+        /// サーバインスタンスへのプロキシを取得・設定します。
+        /// </summary>
+        /// <remarks>
+        /// このプロキシは接続されているイベントを管理して、アドインが破棄されるときにすべてのイベントを解除できるようにします。
+        /// 特別な理由がない限り、<see cref="Session" />を利用してください。
+        /// </remarks>
+        protected EventMangedProxy<Session> SessionProxy { get; set; }
+        /// <summary>
+        /// セッション情報インスタンスへのプロキシを取得・設定します。
+        ///</summary>
+        /// <remarks>
+        /// このプロキシは接続されているイベントを管理して、アドインが破棄されるときにすべてのイベントを解除できるようにします。
+        /// 特別な理由がない限り、<see cref="Server" />を利用してください。
+        /// </remarks>
+        protected EventMangedProxy<Server> ServerProxy { get; set; }
+        
         /// <summary>
         /// 読み込まれているアドインのコレクションを取得します
         /// </summary>
@@ -39,8 +56,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="session">接続中のセッション情報のインスタンス</param>
         public AddInManager(Server server, Session session)
         {
-            _session = session;
-            _server = server;
+            SessionProxy = new EventMangedProxy<Session>(session);
+            ServerProxy = new EventMangedProxy<Server>(server);
+
+            _server = ServerProxy.GetTransparentProxy() as Server;
+            _session = SessionProxy.GetTransparentProxy() as Session;
         }
 
         //public static AddInManager CreateInstanceWithAppDomain(Server server, Session session)
@@ -136,6 +156,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     Trace.WriteLine("Exception at Uninitialize(Ignore): " + String.Format("{0}\n{1}", addIn.GetType(), e.Message));
                 }
             }
+
+            SessionProxy.RemoveAllEvents();
+            ServerProxy.RemoveAllEvents();
 
             _addIns = new List<IAddIn>();
         }

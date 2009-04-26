@@ -64,6 +64,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     _eventHandlers[eventInfo].Remove((Delegate)methodMessage.Args[0]);
 
             }
+            
             return RemotingServices.ExecuteMessage(_targetObject, (IMethodCallMessage)msg);
         }
     }

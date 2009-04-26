@@ -81,9 +81,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
     
         public void ReloadScripts(ScriptExecutionCallback scriptExecutionCallback)
         {
-            SessionProxy.RemoveAllEvents();
-            ServerProxy.RemoveAllEvents();
-            
             Shutdown();
 
             ScriptRuntimeSetup scriptRuntimeSetup = new ScriptRuntimeSetup();
@@ -95,10 +92,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             scriptRuntimeSetup.LanguageSetups[1].Options["KCode"] = RubyEncoding.KCodeUTF8;
             scriptRuntimeSetup.LanguageSetups[1].ExceptionDetail = true;
             _scriptRuntime = ScriptRuntime.CreateRemote(AppDomain.CurrentDomain, scriptRuntimeSetup);
-            
+
             foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
                 _scriptRuntime.LoadAssembly(asm);
-            
+
             _scriptScopes = new Dictionary<string, ScriptScope>();
             PrepareScriptScopeByPath("*Eval*");
             _scriptRuntime.Globals.SetVariable("Session", CurrentSession);

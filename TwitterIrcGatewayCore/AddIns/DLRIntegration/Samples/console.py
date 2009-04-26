@@ -34,14 +34,14 @@ class TestContext(Context):
 
 # コンソールチャンネルを追加する
 console = Misuzilla.Applications.TwitterIrcGateway.AddIns.Console.Console()
-console.Attach("#TestConsole", Server, Session, DLRContextHelper.Wrap("Test", TestContext))
+console.Attach("#TestConsole", Server, Session, DLRContextHelper.Wrap(CurrentSession, "Test", TestContext))
 
 # 普通の #Console にコンテキストを追加する
-Session.AddInManager.GetAddIn[ConsoleAddIn]().RegisterContext(DLRContextHelper.Wrap("DLRTest", TestContext), "DLRTest", "Context DLR implementation sample")
+Session.AddInManager.GetAddIn[ConsoleAddIn]().RegisterContext(DLRContextHelper.Wrap(CurrentSession, "DLRTest", TestContext), "DLRTest", "Context DLR implementation sample")
 
 # 後片付け
 def onBeforeUnload(sender, e):
-	Session.AddInManager.GetAddIn[ConsoleAddIn]().UnregisterContext(DLRContextHelper.Wrap("DLRTest", TestContext))
+	Session.AddInManager.GetAddIn[ConsoleAddIn]().UnregisterContext(DLRContextHelper.Wrap(CurrentSession, "DLRTest", TestContext))
 	console.Detach()
 
 Session.AddInManager.GetAddIn[DLRIntegrationAddIn]().BeforeUnload += onBeforeUnload

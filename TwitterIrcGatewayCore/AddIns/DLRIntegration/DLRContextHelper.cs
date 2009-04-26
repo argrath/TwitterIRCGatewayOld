@@ -29,10 +29,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         /// <summary>
         /// 指定したDLRのContextを登録できるようラップした型を返します。
         /// </summary>
+        /// <param name="session">保持しているセッション</param>
         /// <param name="contextName">コンテキスト名</param>
         /// <param name="dlrContextType">DLRの型オブジェクト(PythonTypeなど)</param>
         /// <returns></returns>
-        public static Type Wrap(String contextName, Object dlrContextType)
+        public static Type Wrap(Session session, String contextName, Object dlrContextType)
         {
             Type type = _modBuilder.GetType(contextName);
             if (type == null)
@@ -41,7 +42,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                 type = typeBuilder.CreateType();
             }
             Type genCtxType = typeof(DLRContextBase<>).MakeGenericType(type);
-            return genCtxType.InvokeMember("GetProxyType", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod, null, null, new Object[] {contextName, dlrContextType}) as Type;
+            return genCtxType.InvokeMember("GetProxyType", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod, null, null, new Object[] { session, contextName, dlrContextType}) as Type;
         }
     }
     
@@ -159,6 +160,21 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             Save();
         }
     }
+    
+    internal class WeakReferenceSessionEqualityComparer : IEqualityComparer<WeakReference>
+    {
+        #region IEqualityComparer<WeakReference> メンバ
+        public bool Equals(WeakReference x, WeakReference y)
+        {
+            return (x.IsAlive && y.IsAlive) ? x.Target == y.Target
+                                            : false;
+        }
+        public int GetHashCode(WeakReference obj)
+        {
+            return obj.IsAlive ? obj.Target.GetHashCode() : obj.GetHashCode();
+        }
+        #endregion
+    }
 
     internal class DLRContextBase<T> : Context where T : class
     {
@@ -166,16 +182,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         private DLRBasicConfiguration _basicConfiguration;
         private ScriptRuntime _scriptRuntime;
         private Context _site;
-        private static Object _scriptType;
-        private static String _contextName;
-
-        public override string ContextName { get { return _contextName; } }
+        private static Dictionary<WeakReference, Object> _scriptTypes = new Dictionary<WeakReference, object>(new WeakReferenceSessionEqualityComparer());
+        private static Dictionary<WeakReference, String> _contextNames = new Dictionary<WeakReference, string>(new WeakReferenceSessionEqualityComparer());
+        public override string ContextName { get { return _contextNames[new WeakReference(CurrentSession, false)]; } }
         public override IConfiguration[] Configurations { get { return _site.Configurations; } }
         
-        internal static Type GetProxyType(String contextName, Object scriptType)
+        internal static Type GetProxyType(Session session, String contextName, Object scriptType)
         {
-            _scriptType = scriptType;
-            _contextName = contextName;
+            WeakReference weakRef = new WeakReference(session, false);
+            _scriptTypes[weakRef] = scriptType;
+            _contextNames[weakRef] = contextName;
+
             return typeof (DLRContextBase<T>);
         }
         
@@ -183,7 +200,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         {
             _dlrAddIn = CurrentSession.AddInManager.GetAddIn<DLRIntegrationAddIn>();
             _scriptRuntime = _dlrAddIn.ScriptRuntime;
-            _site = _scriptRuntime.Operations.CreateInstance(_scriptType) as Context;
+            _site = _scriptRuntime.Operations.CreateInstance(_scriptTypes[new WeakReference(CurrentSession, false)]) as Context;
             if (_site == null)
                 throw new ArgumentException("指定された型はContext クラスを継承していないためインスタンス化できません。");
             

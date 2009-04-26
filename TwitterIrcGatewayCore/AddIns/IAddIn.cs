@@ -97,33 +97,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         /// 関連づけられているセッション情報のインスタンスを取得します。
         /// </summary>
         protected Session CurrentSession { get; private set; }
-        
-        /// <summary>
-        /// サーバインスタンスへのプロキシを取得・設定します。
-        /// </summary>
-        /// <remarks>
-        /// このプロキシは接続されているイベントを管理して、アドインが破棄されるときにすべてのイベントを解除できるようにします。
-        /// 特別な理由がない限り、<see cref="Session" />を利用してください。
-        /// </remarks>
-        protected EventMangedProxy<Session> SessionProxy;
-        /// <summary>
-        /// セッション情報インスタンスへのプロキシを取得・設定します。
-        ///</summary>
-        /// <remarks>
-        /// このプロキシは接続されているイベントを管理して、アドインが破棄されるときにすべてのイベントを解除できるようにします。
-        /// 特別な理由がない限り、<see cref="Server" />を利用してください。
-        /// </remarks>
-        protected EventMangedProxy<Server> ServerProxy;
-        
+
         #region IAddIn メンバ
 
         public void Initialize(Server server, Session session)
         {
-            SessionProxy = new EventMangedProxy<Session>(session);
-            ServerProxy = new EventMangedProxy<Server>(server);
-
-            CurrentServer = (Server)ServerProxy.GetTransparentProxy();
-            CurrentSession = (Session)SessionProxy.GetTransparentProxy();
+            CurrentServer = server;
+            CurrentSession = session;
 
             Initialize();
         }
@@ -143,8 +123,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         /// </remarks>
         public virtual void Uninitialize()
         {
-            SessionProxy.RemoveAllEvents();
-            ServerProxy.RemoveAllEvents();
         }
 
         #endregion

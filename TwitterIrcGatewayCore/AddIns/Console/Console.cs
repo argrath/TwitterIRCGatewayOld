@@ -97,15 +97,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             if (!IsAttached)
                 throw new InvalidOperationException("コンソールはアタッチされていません。");
             
+            IsAttached = false;
+
             CurrentSession.PreMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PreMessageReceived);
             CurrentSession.PostMessageReceived -= new EventHandler<MessageReceivedEventArgs>(Session_PostMessageReceived);
         
             try { CurrentContext.Dispose(); } catch {} 
             foreach (Context ctx in ContextStack)
                 try { ctx.Dispose(); } catch {}
-            CurrentContext = null;
 
-            IsAttached = false;
+            CurrentContext = null;
         }
 
         /// <summary>
@@ -256,6 +257,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <param name="message">メッセージ</param>
         public void NotifyMessage(String message)
         {
+            if (!IsAttached) return;
             StringBuilder sb = new StringBuilder();
             foreach (Context ctx in ContextStack)
                 sb.Insert(0, ctx.ContextName.Replace("Context", "") + "\\");
@@ -271,6 +273,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <param name="message">メッセージ</param>
         public void NotifyMessage(String senderNick, String message)
         {
+            if (!IsAttached) return;
             foreach (var line in message.Split(new string[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 CurrentSession.Send(new NoticeMessage(ConsoleChannelName, line) { SenderHost = "twitter@" + Server.ServerName, SenderNick = senderNick });
