@@ -39,7 +39,7 @@ class Scraping(Object):
 				self.fetchHome()
 			except Exception, ex:
 				Trace.WriteLine(ex.ToString())
-			time.sleep(self.interval)
+			Thread.Sleep(self.interval * 1000)
 
 	def fetchHome(self):
 		home = CurrentSession.TwitterService.GETWithCookie("/home")
