@@ -24,7 +24,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             try
             {
                 XmlDocument xmlDoc = new XmlDocument();
-                xmlDoc.Load("http://pcod.no-ip.org/yats/search?rss&query=" + Utility.UrlEncode(keywords));
+                using (WebClient webClient = new WebClient())
+                {
+                    webClient.Headers["Accept"] = "application/xml, text/xml";
+                    webClient.Headers["User-Agent"] = "TwitterIrcGateway/2.0";
+                    webClient.Encoding = Encoding.UTF8;
+                    String xmlString = webClient.DownloadString("http://pcod.no-ip.org/yats/search?rss&query=" + Utility.UrlEncode(keywords));
+                    xmlDoc.LoadXml(xmlString);
+                }
                 XmlNamespaceManager nsMgr = new XmlNamespaceManager(xmlDoc.NameTable);
                 nsMgr.AddNamespace("a", "http://www.w3.org/2005/Atom");
 
