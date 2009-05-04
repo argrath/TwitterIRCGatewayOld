@@ -292,8 +292,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {}
             finally
             {
-                OnSessionEnded();
-                this.Close();
+                Close();
             }
         }
         
@@ -1201,13 +1200,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="msg"></param>
         public void Send(IRCMessage msg)
         {
-            CheckDisposed();
+            //CheckDisposed();
             lock (_writer)
             {
-                if (_tcpClient != null && _tcpClient.Connected && _writer.BaseStream.CanWrite)
+                try
                 {
-                    _writer.WriteLine(msg.RawMessage);
-                    _writer.Flush();
+                    if (_tcpClient != null && _tcpClient.Connected && _writer.BaseStream.CanWrite)
+                    {
+                        _writer.WriteLine(msg.RawMessage);
+                        _writer.Flush();
+                    }
+                }
+                catch (IOException)
+                {
+                    Close();
                 }
             }
         }
@@ -1717,7 +1723,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public void Close()
         {
-            this.Dispose();
+            if (_tcpClient != null && _tcpClient.Connected)
+            {
+                _tcpClient.Close();
+            }
+            OnSessionEnded();
+
+            Dispose();
         }
 
         /// <summary>

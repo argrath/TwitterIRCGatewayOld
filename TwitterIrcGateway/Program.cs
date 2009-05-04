@@ -92,8 +92,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         void Application_ApplicationExit(object sender, EventArgs e)
         {
-            _notifyIcon.Visible = false;
             _server.Stop();
+            _notifyIcon.Visible = false;
         }
 
         void _server_SessionStartedReceived(object sender, SessionStartedEventArgs e)

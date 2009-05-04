@@ -126,5 +126,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 }
             }
         }
+    
+        [Description("TwitterIrcGatewayへの接続を切断します")]
+        public void Disconnect()
+        {
+            CurrentSession.Close();
+        }
     }
 }

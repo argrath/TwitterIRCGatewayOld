@@ -93,22 +93,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public void Stop()
         {
-            lock (_runningServers)
+            lock (this)
             {
-                _runningServers.Remove(this);
-            }
-            
-            lock (_sessions)
-            {
-                foreach (Session session in _sessions)
+                if (_tcpListener != null)
                 {
-                    session.Close();
+                    _tcpListener.Stop();
+                    _tcpListener = null;
                 }
-            }
-            if (_tcpListener != null)
-            {
-                _tcpListener.Stop();
-                _tcpListener = null;
+                lock (_runningServers)
+                {
+                    _runningServers.Remove(this);
+                }
+                lock (_sessions)
+                {
+                    foreach (Session session in _sessions.ToArray())
+                    {
+                        session.Close();
+                    }
+                }
             }
         }
 
@@ -120,11 +122,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #region Internal Implementation
         void AcceptHandled(IAsyncResult ar)
         {
-            if (_tcpListener != null && ar.IsCompleted)
-            {
-                TcpClient tcpClient = _tcpListener.EndAcceptTcpClient(ar);
-                _tcpListener.BeginAcceptTcpClient(AcceptHandled, this);
+            TcpClient tcpClient = null;
 
+            if (_tcpListener != null)
+            {
+                lock (this)
+                    lock (_tcpListener)
+                    {
+                        if (_tcpListener != null && ar.IsCompleted)
+                        {
+                            tcpClient = _tcpListener.EndAcceptTcpClient(ar);
+                            _tcpListener.BeginAcceptTcpClient(AcceptHandled, this);
+                        }
+                    }
+            }
+
+            if (tcpClient != null && tcpClient.Connected)
+            {
                 Trace.WriteLine(String.Format("Client Connected: RemoteEndPoint={0}", tcpClient.Client.RemoteEndPoint));
                 Session session = new Session(this, tcpClient);
                 lock (_sessions)

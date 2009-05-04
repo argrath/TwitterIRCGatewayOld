@@ -1091,12 +1091,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
             catch (TwitterServiceException ex2)
             {
-                OnCheckError(new ErrorEventArgs(ex2));
+                try { OnCheckError(new ErrorEventArgs(ex2)); } catch { }
                 return false;
             }
             catch (Exception ex3)
             {
-                OnCheckError(new ErrorEventArgs(ex3));
+                try { OnCheckError(new ErrorEventArgs(ex3)); } catch { }
                 Trace.WriteLine("RunCheck(Unhandled Exception): "+ex3.Message);
                 return false;
             }
