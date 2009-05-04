@@ -130,6 +130,7 @@
     <Compile Include="AddIns\ResolveTinyUrl.cs" />
     <Compile Include="AddIns\TypableMapSupport.cs" />
     <Compile Include="AddIns\UndoStatusUpdate.cs" />
+    <Compile Include="AddIns\UnhandledExceptionTestAddIn.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="EventArgs.cs" />
     <Compile Include="EventManagedProxy.cs" />

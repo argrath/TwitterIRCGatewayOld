@@ -132,5 +132,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         {
             CurrentSession.Close();
         }
+        
+        [Description("Twitterへの接続管理を再起動します")]
+        public void RestartTwitterService()
+        {
+            CurrentSession.TwitterService.Stop();
+            CurrentSession.TwitterService.Start();
+        }
     }
 }
