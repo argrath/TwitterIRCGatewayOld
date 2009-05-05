@@ -26,7 +26,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
             {
                 _lastStatusFromFriends = new Dictionary<int, LinkedList<string>>();
             }
-            else
+            else if (!CurrentSession.Config.EnableRemoveRedundantSuffix)
             {
                 _lastStatusFromFriends = null;
             }
