@@ -46,6 +46,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// 文中の bitly を展開します。
+        /// タイムアウトするまでの時間は1秒です。
+        /// </summary>
+        /// <param name="message">メッセージ</param>
+        /// <returns></returns>
+        public static String ResolveBitlyInMessage(String message)
+        {
+            return ResolveBitlyInMessage(message, 1000);
+        }
+
+        /// <summary>
         /// 文中の TinyURL を展開します。
         /// </summary>
         /// <param name="message">メッセージ</param>
@@ -55,17 +66,30 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return Regex.Replace(message, @"http://tinyurl\.com/[A-Za-z0-9_/.;%&\-]+", delegate(Match m)
             {
-                return ResolveTinyUrl(m.Value, timeOut);
+                return ResolveRedirectUrl(m.Value, timeOut);
             }, RegexOptions.IgnoreCase);
         }
 
+        /// <summary>
+        /// 文中の bitly を展開します。
+        /// </summary>
+        /// <param name="message">メッセージ</param>
+        /// <param name="timeOut">タイムアウトするまでの時間</param>
+        /// <returns></returns>
+        public static String ResolveBitlyInMessage(String message, Int32 timeOut)
+        {
+            return Regex.Replace(message, @"http://bit\.ly/[A-Za-z0-9_/.;%&\-]+", delegate(Match m)
+            {
+                return ResolveRedirectUrl(m.Value, timeOut);
+            }, RegexOptions.IgnoreCase);
+        }
         /// <summary>
         /// TinyURLをリダイレクト先のURLに展開します。
         /// </summary>
         /// <param name="url">TinyURLのURL</param>
         /// <param name="timeOut">タイムアウトするまでの時間</param>
         /// <returns></returns>
-        public static String ResolveTinyUrl(String url, Int32 timeOut)
+        public static String ResolveRedirectUrl(String url, Int32 timeOut)
         {
             HttpWebResponse res = null;
             try
@@ -74,6 +98,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 req.AllowAutoRedirect = false;
                 req.Timeout = timeOut;
                 req.Method = "HEAD";
+                req.UserAgent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)";
                 res = req.GetResponse() as HttpWebResponse;
 
                 if (res.StatusCode == HttpStatusCode.MovedPermanently)
