@@ -816,7 +816,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     // ほかのグループに送信する
                     SendChannelMessage(message.Receiver, _nick, message.Content, false, true, true, false);
                 }
-                else if (String.Compare(message.Receiver, "trace", true) == 0)
+                else if (String.Compare(message.Receiver, "trace", true) != 0)
                 {
                     // 人に対する場合はDirect Message
                     _twitter.SendDirectMessage(message.Receiver, message.Content);
