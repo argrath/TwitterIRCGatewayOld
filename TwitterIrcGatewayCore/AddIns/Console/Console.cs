@@ -372,7 +372,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         /// <returns></returns>
         public Context GetContext<T>(Server server, Session session) where T : Context, new()
         {
-            Context ctx = new T { CurrentServer = server, CurrentSession = session };
+            Context ctx = new T { CurrentServer = server, CurrentSession = session, Console = this };
             ctx.Initialize();
             return ctx;
         }
