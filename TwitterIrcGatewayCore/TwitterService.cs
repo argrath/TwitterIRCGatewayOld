@@ -318,11 +318,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         /// <exception cref="WebException"></exception>
         /// <exception cref="TwitterServiceException"></exception>
-        public User GetUser(String id)
+        public User GetUser(String screenName)
         {
             return ExecuteRequest<User>(() =>
             {
-                String responseBody = GET(String.Format("/users/show/{0}.xml", id), false);
+                String responseBody = GET(String.Format("/users/show.xml?screen_name={0}", screenName), false);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -501,7 +501,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 if (count > 0)
                     sb.Append("count=").Append(count).Append("&");
 
-                String responseBody = GET(String.Format("/statuses/user_timeline/{0}.xml?{1}", screenName, sb.ToString()));
+                String responseBody = GET(String.Format("/statuses/user_timeline.xml?screen_name={0}&{1}", screenName, sb.ToString()));
                 Statuses statuses;
                 if (NilClasses.CanDeserialize(responseBody))
                 {
@@ -537,7 +537,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 if (page > 0)
                     sb.Append("page=").Append(page).Append("&");
 
-                String responseBody = GET(String.Format("/favorites/{0}.xml?{1}", screenName, sb.ToString()));
+                String responseBody = GET(String.Format("/favorites.xml?screen_name={0}&{1}", screenName, sb.ToString()));
                 Statuses statuses;
                 if (NilClasses.CanDeserialize(responseBody))
                 {
@@ -635,7 +635,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                String responseBody = POST(String.Format("/friendships/create/{0}.xml", screenName), new byte[0]);
+                String responseBody = POST(String.Format("/friendships/create.xml?screen_name={0}", screenName), new byte[0]);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -656,7 +656,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                String responseBody = POST(String.Format("/friendships/destroy/{0}.xml", screenName), new byte[0]);
+                String responseBody = POST(String.Format("/friendships/destroy.xml?screen_name={0}", screenName), new byte[0]);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -677,7 +677,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                String responseBody = POST(String.Format("/blocks/create/{0}.xml", screenName), new byte[0]);
+                User user = GetUser(screenName);
+                String responseBody = POST(String.Format("/blocks/create/{0}.xml", user.Id), new byte[0]);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -698,7 +699,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                String responseBody = POST(String.Format("/blocks/destroy/{0}.xml", screenName), new byte[0]);
+                User user = GetUser(screenName);
+                String responseBody = POST(String.Format("/blocks/destroy/{0}.xml", user.Id), new byte[0]);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;

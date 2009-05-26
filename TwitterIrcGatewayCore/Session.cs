@@ -1332,6 +1332,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="forceNotice">送信メッセージを設定にかかわらずNOTICEにするかどうかを指定します</param>
         public void SendChannelMessage(String receivedChannel, String sender, String content, Boolean sendToTargetChannel, Boolean withEchoBack, Boolean setTopic, Boolean forceNotice)
         {
+            // 改行は削除しておく
+            content = content.Replace("\n", "").Replace("\r", "");
+
             // topicに設定する
             if (_config.SetTopicOnStatusChanged && setTopic)
             {
