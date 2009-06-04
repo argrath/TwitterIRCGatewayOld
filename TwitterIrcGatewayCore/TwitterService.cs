@@ -254,14 +254,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 指定されたユーザにダイレクトメッセージを送信します。
         /// </summary>
-        /// <param name="targetId"></param>
+        /// <param name="screenName"></param>
         /// <param name="message"></param>
-        public void SendDirectMessage(String targetId, String message)
+        public void SendDirectMessage(String screenName, String message)
         {
             String encodedMessage = TwitterService.EncodeMessage(message);
             ExecuteRequest(() =>
             {
-                String responseBody = POST(String.Format("/direct_messages/new.xml?user={0}&text={1}", targetId, encodedMessage), new Byte[0]);
+                String responseBody = POST(String.Format("/direct_messages/new.xml?user={0}&text={1}", GetUserId(screenName), encodedMessage), new Byte[0]);
             });
         }
 
@@ -677,8 +677,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                User user = GetUser(screenName);
-                String responseBody = POST(String.Format("/blocks/create/{0}.xml", user.Id), new byte[0]);
+                String responseBody = POST(String.Format("/blocks/create/{0}.xml", GetUserId(screenName)), new byte[0]);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -699,8 +698,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                User user = GetUser(screenName);
-                String responseBody = POST(String.Format("/blocks/destroy/{0}.xml", user.Id), new byte[0]);
+                String responseBody = POST(String.Format("/blocks/destroy/{0}.xml", GetUserId(screenName)), new byte[0]);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -946,7 +944,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     OnDirectMessageReceived(new DirectMessageEventArgs(message, _isFirstTimeDirectMessage));
                     
                     // 最終更新時刻
-                    if (_lastAccessDirectMessageId == 0 || message.CreatedAt > _lastAccessDirectMessage)
+                    if (message.Id > _lastAccessDirectMessageId)
                     {
                         _lastAccessDirectMessage = message.CreatedAt;
                         _lastAccessDirectMessageId = message.Id;
@@ -1015,6 +1013,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private static String EncodeMessage(String s)
         {
             return Utility.UrlEncode(s);
+        }
+        
+        /// <summary>
+        /// 必要に応じてIDに変換する
+        /// </summary>
+        /// <param name="screenName"></param>
+        /// <returns></returns>
+        private String GetUserId(String screenName)
+        {
+            Int32 id;
+            if (Int32.TryParse(screenName, out id))
+            {
+                return GetUser(screenName).Id.ToString();
+            }
+            else
+            {
+                return screenName;
+            }
         }
         #endregion
 
