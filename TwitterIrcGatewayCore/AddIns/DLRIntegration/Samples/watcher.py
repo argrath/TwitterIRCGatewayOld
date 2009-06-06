@@ -101,7 +101,7 @@ class Watcher(Object):
 
 		self.config = DLRBasicConfiguration(CurrentSession, "WatcherContext", Dictionary[String,String]({ "Interval": "取得間隔", "Targets": "ウォッチ対象" }))
 		self.targets = filter(lambda x: x != "", (self.config.GetValue("Targets") or "").split(","))
-		self.interval = (int(self.config.GetValue("Interval"), 10) or 30)
+		self.interval = int(self.config.GetValue("Interval") or "30", 10)
 		self.running = False
 
 		self.thread = None
