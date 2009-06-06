@@ -87,11 +87,11 @@ class WatcherContext(Context):
 		self.Console.NotifyMessage("現在 %d 人を監視しています。" % len(targets))
 
 class Watcher(Object):
+	@classmethod
 	def instance(klass):
-		if not klass.__dict__.has_key('instance_'):
+		if not hasattr(klass, 'instance_'):
 			klass.instance_ = Watcher()
 		return klass.instance_
-	instance = classmethod(instance)
 	
 	def __init__(self):
 		CurrentSession.AddInManager.GetAddIn[DLRIntegrationAddIn]().BeforeUnload += self.onBeforeUnload
