@@ -19,6 +19,7 @@ from Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration import DLRIn
 
 class WatcherContext(Context):
 	def Initialize(self):
+		self.watcher = Watcher.instance()
 		self.config = DLRBasicConfiguration(self.CurrentSession, "WatcherContext", Dictionary[String,String]({ "Interval": "取得間隔", "Targets": "ウォッチ対象" }))
 		pass
 
@@ -42,10 +43,10 @@ class WatcherContext(Context):
 			self.Console.NotifyMessage("取得間隔を指定してください。")
 			return
 		interval = int(args, 10)
-		watcher.interval = interval
+		self.watcher.interval = interval
 		self.config.SetValue("Interval", interval)
 		self.Console.NotifyMessage("取得間隔を %s 秒に設定しました。" % args)
-		watcher.start()
+		self.watcher.start()
 
 	def Watch(self, args):
 		if String.IsNullOrEmpty(args):
@@ -60,8 +61,8 @@ class WatcherContext(Context):
 		targets.append(args)
 		self.config.SetValue("Targets", ",".join(targets))
 		self.Console.NotifyMessage("%s を監視対象に追加しました。" % args)
-		watcher.targets = targets
-		watcher.start()
+		self.watcher.targets = targets
+		self.watcher.start()
 
 	def Unwatch(self, args):
 		if String.IsNullOrEmpty(args):
@@ -76,8 +77,8 @@ class WatcherContext(Context):
 		targets = filter(lambda x: String.Compare(x, args, True) != 0, targets)
 		self.config.SetValue("Targets", ",".join(targets))
 		self.Console.NotifyMessage("%s を監視対象から削除しました。" % args)
-		watcher.targets = targets
-		watcher.start()
+		self.watcher.targets = targets
+		self.watcher.start()
 
 	def Watchlist(self, args):
 		targets = filter(lambda x: x != "", (self.config.GetValue("Targets") or "").split(","))
@@ -86,12 +87,11 @@ class WatcherContext(Context):
 		self.Console.NotifyMessage("現在 %d 人を監視しています。" % len(targets))
 
 class Watcher(Object):
-	targets = property(lambda self: self._targets, lambda self, value: self.__setattr__("_targets", value))
-	interval = property(lambda self: self._interval, lambda self, value: self.__setattr__("_interval", value))
-	running = property(lambda self: self._running, lambda self, value: self.__setattr__("_running", value))
-	_targets = []
-	_interval = 30
-	_running = False
+	def instance(klass):
+		if not klass.__dict__.has_key('instance_'):
+			klass.instance_ = Watcher()
+		return klass.instance_
+	instance = classmethod(instance)
 	
 	def __init__(self):
 		CurrentSession.AddInManager.GetAddIn[DLRIntegrationAddIn]().BeforeUnload += self.onBeforeUnload
@@ -101,8 +101,9 @@ class Watcher(Object):
 
 		self.config = DLRBasicConfiguration(CurrentSession, "WatcherContext", Dictionary[String,String]({ "Interval": "取得間隔", "Targets": "ウォッチ対象" }))
 		self.targets = filter(lambda x: x != "", (self.config.GetValue("Targets") or "").split(","))
-		self.interval = (int(self.config.GetValue("Interval"), 10) or self._interval)
+		self.interval = (int(self.config.GetValue("Interval"), 10) or 30)
 		self.running = False
+
 		self.thread = None
 		self.re_source = re.compile(r"<span>from (.*?)</span>")
 		self.re_statuses = re.compile(r"<li class=\"hentry status.*?</li>")
@@ -164,5 +165,5 @@ class Watcher(Object):
 		self.interval = 0
 		self.thread.Join()
 
-watcher = Watcher()
+watcher = Watcher.instance()
 watcher.start()
