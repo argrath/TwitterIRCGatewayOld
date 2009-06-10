@@ -738,6 +738,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             // Twitte Service Setup
             //
             _twitter = new TwitterService(_username, _password);
+            _twitter.BufferSize = _config.BufferSize;
             _twitter.Interval = _config.Interval;
             _twitter.IntervalDirectMessage = _config.IntervalDirectMessage;
             _twitter.IntervalReplies = _config.IntervalReplies;

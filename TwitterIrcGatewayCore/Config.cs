@@ -38,6 +38,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         [Description("@で返信した際に最後に受信したステータスに対して返すかどうかを指定します")]
         public Boolean EnableOldStyleReply { get; set; }
 
+        [Description("TwitterIrcGateway内部に保持するStatusの数を指定します。")]
+        public Int32 BufferSize { get; set; }
+
         /// <summary>
         /// チェックする間隔を指定します。
         /// </summary>
@@ -133,6 +136,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             DisabledAddInsList = new List<string>();
             EnableOldStyleReply = false;
             FetchCount = 50;
+            BufferSize = 250;
 
             if (Default != null)
             {

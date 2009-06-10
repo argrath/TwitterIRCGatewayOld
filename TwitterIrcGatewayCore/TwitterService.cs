@@ -34,7 +34,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Boolean _isFirstTimeReplies = true;
         private Boolean _isFirstTimeDirectMessage = true;
 
-        private Int32 _bufferSize = 250;
         private LinkedList<Status> _statusBuffer;
         private LinkedList<Status> _repliesBuffer;
 
@@ -101,6 +100,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Interval = 90;
             IntervalDirectMessage = 360;
             IntervalReplies = 120;
+            BufferSize = 250;
         
             POSTFetchMode = false;
         }
@@ -149,6 +149,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             get { return _enableDropProtection; }
             set { _enableDropProtection = value; }
+        }
+
+        /// <summary>
+        /// 内部で重複チェックするためのバッファサイズを指定します。
+        /// </summary>
+        public Int32 BufferSize
+        {
+            get;
+            set;
         }
 
         /// <summary>
@@ -777,7 +786,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         return false;
 
                     statusBuffer.AddLast(status);
-                    if (statusBuffer.Count > _bufferSize)
+                    if (statusBuffer.Count > BufferSize)
                     {
                         // 一番古いのを消す
                         //Status oldStatus = null;
