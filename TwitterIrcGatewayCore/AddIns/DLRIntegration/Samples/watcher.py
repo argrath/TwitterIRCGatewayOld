@@ -97,7 +97,7 @@ class Watcher(Object):
 		CurrentSession.AddInManager.GetAddIn[DLRIntegrationAddIn]().BeforeUnload += self.onBeforeUnload
 
 		# 普通の #Console にコンテキストを追加する
-		CurrentSession.AddInManager.GetAddIn[ConsoleAddIn]().RegisterContext(DLRContextHelper.Wrap(CurrentSession, "WatcherContext", WatcherContext), "Watcher", "Watcher")
+		CurrentSession.AddInManager.GetAddIn[ConsoleAddIn]().RegisterContext(DLRContextHelper.Wrap(CurrentSession, "WatcherContext", WatcherContext), "Watcher", "指定したユーザを監視します。")
 
 		self.config = DLRBasicConfiguration(CurrentSession, "WatcherContext", Dictionary[String,String]({ "Interval": "取得間隔", "Targets": "ウォッチ対象" }))
 		self.targets = filter(lambda x: x != "", (self.config.GetValue("Targets") or "").split(","))
@@ -105,6 +105,7 @@ class Watcher(Object):
 		self.running = False
 
 		self.thread = None
+		self.buffer = {}
 		self.re_source = re.compile(r"<span>from (.*?)</span>")
 		self.re_statuses = re.compile(r"<li class=\"hentry status.*?</li>")
 		self.re_content = re.compile(r"class=\"entry-content\">(.*?)</span>")
@@ -147,6 +148,9 @@ class Watcher(Object):
 		user.Name       = m_name.group(1)
 		user.ScreenName = m_screen_name.group(1)
 
+		if not self.buffer.has_key(user.ScreenName):
+			self.buffer[user.ScreenName] = []
+
 		for status in statuses:
 			s = Status()
 
@@ -158,7 +162,13 @@ class Watcher(Object):
 			s.CreatedAt = DateTime.Now
 			
 			#Trace.WriteLine(s.ToString())
-			CurrentSession.TwitterService.ProcessStatus(s, Action[Status](lambda s1: CurrentSession.ProcessTimelineStatus(s1, False, False)))
+			#Trace.WriteLine(repr(self.buffer[user.ScreenName]))
+			# 流れていないものだけ流す
+			if not s.Id in self.buffer[user.ScreenName]:
+				self.buffer[user.ScreenName].append(s.Id)
+				CurrentSession.TwitterService.ProcessStatus(s, Action[Status](lambda s1: CurrentSession.ProcessTimelineStatus(s1, False, False)))
+				if len(self.buffer[user.ScreenName]) > 50:
+					self.buffer[user.ScreenName].pop(0)
 
 	def onBeforeUnload(self, sender, e):
 		CurrentSession.AddInManager.GetAddIn[ConsoleAddIn]().UnregisterContext(DLRContextHelper.Wrap(CurrentSession, "WatcherContext", WatcherContext))
