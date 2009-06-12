@@ -24,8 +24,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private String _clientHost;
         private TwitterService _twitter;
         private TwitterIMService _twitterIm;
-        private LinkedList<Int32> _lastStatusIdsFromGateway;
-        private Dictionary<String, Int32> _lastStatusIdsByScreenName;
+        private LinkedList<Int64> _lastStatusIdsFromGateway;
+        private Dictionary<String, Int64> _lastStatusIdsByScreenName;
         private Groups _groups;
         private Filters _filter;
         private Config _config;
@@ -165,8 +165,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             _server = server;
             _tcpClient = tcpClient;
-            _lastStatusIdsFromGateway = new LinkedList<int>();
-            _lastStatusIdsByScreenName = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
+            _lastStatusIdsFromGateway = new LinkedList<Int64>();
+            _lastStatusIdsByScreenName = new Dictionary<string, Int64>(StringComparer.InvariantCultureIgnoreCase);
             
             _addinManager = new AddInManager(_server, this);
             //_addinManager = AddInManager.CreateInstanceWithAppDomain(_server, this);
@@ -869,7 +869,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="message"></param>
         /// <param name="inReplyToStatusId"></param>
         /// <returns></returns>
-        public Status UpdateStatus(String message, Int32 inReplyToStatusId)
+        public Status UpdateStatus(String message, Int64 inReplyToStatusId)
         {
             StatusUpdateEventArgs eventArgs = new StatusUpdateEventArgs(message, inReplyToStatusId);
             if (!FireEvent(PreSendUpdateStatus, eventArgs)) return null;

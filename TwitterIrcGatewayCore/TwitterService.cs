@@ -29,7 +29,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private DateTime _lastAccessTimeline = new DateTime();
         private DateTime _lastAccessReplies = new DateTime();
         private DateTime _lastAccessDirectMessage = DateTime.Now;
-        private Int32 _lastAccessDirectMessageId = 0;
+        private Int64 _lastAccessDirectMessageId = 0;
         private Boolean _isFirstTime = true;
         private Boolean _isFirstTimeReplies = true;
         private Boolean _isFirstTimeDirectMessage = true;
@@ -242,7 +242,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         /// <param name="message"></param>
         /// <param name="inReplyToStatusId"></param>
-        public Status UpdateStatus(String message, Int32 inReplyToStatusId)
+        public Status UpdateStatus(String message, Int64 inReplyToStatusId)
         {
             String encodedMessage = TwitterService.EncodeMessage(message);
             return ExecuteRequest<Status>(() =>
@@ -468,7 +468,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="sinceId">最後に取得したID</param>
         /// <exception cref="WebException"></exception>
         /// <exception cref="TwitterServiceException"></exception>
-        public DirectMessages GetDirectMessages(Int32 sinceId)
+        public DirectMessages GetDirectMessages(Int64 sinceId)
         {
             return ExecuteRequest<DirectMessages>(() =>
             {
@@ -572,7 +572,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Status CreateFavorite(Int32 id)
+        public Status CreateFavorite(Int64 id)
         {
             return ExecuteRequest<Status>(() =>
             {
@@ -595,7 +595,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Status DestroyFavorite(Int32 id)
+        public Status DestroyFavorite(Int64 id)
         {
             return ExecuteRequest<Status>(() =>
             {
@@ -618,7 +618,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public Status DestroyStatus(Int32 id)
+        public Status DestroyStatus(Int64 id)
         {
             return ExecuteRequest<Status>(() =>
             {
@@ -1602,7 +1602,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     public class DirectMessage
     {
         [XmlElement("id")]
-        public Int32 Id;
+        public Int64 Id;
         [XmlElement("text")]
         public String _text;
         [XmlElement("sender_id")]
@@ -1760,7 +1760,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         [XmlElement("created_at")]
         public String _createdAtOriginal;
         [XmlElement("id")]
-        public Int32 Id;
+        public Int64 Id;
         [XmlElement("in_reply_to_status_id")]
         public String InReplyToStatusId;
         [XmlElement("in_reply_to_user_id")]
@@ -1837,7 +1837,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public override int GetHashCode()
         {
-            return this.Id;
+            return (Int32)(this.Id - Int32.MaxValue);
         }
 
         public override bool Equals(object obj)

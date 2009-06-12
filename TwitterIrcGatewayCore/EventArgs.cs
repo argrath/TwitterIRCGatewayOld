@@ -124,13 +124,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 返信先のステータスのIDを指定します。0を指定すると返信先を指定しなかったことになります。
         /// </summary>
-        public Int32 InReplyToStatusId { get; set; }
+        public Int64 InReplyToStatusId { get; set; }
         /// <summary>
         /// ステータスを更新してその結果のステータスを取得します。更新完了時のイベントでのみ利用できます。
         /// </summary>
         public Status CreatedStatus { get; set; }
 
-        public StatusUpdateEventArgs(String text, Int32 inReplyToStatusId)
+        public StatusUpdateEventArgs(String text, Int64 inReplyToStatusId)
         {
             Text = text;
             InReplyToStatusId = inReplyToStatusId;
