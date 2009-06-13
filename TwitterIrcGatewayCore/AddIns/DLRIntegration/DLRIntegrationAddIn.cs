@@ -21,6 +21,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         internal IDictionary<String, ScriptScope> ScriptScopes { get { return _scriptScopes; } }
         internal ScriptRuntime ScriptRuntime { get { return _scriptRuntime; } }
 
+        private EventMangedProxy<Session> _sessionProxy;
+        private EventMangedProxy<Server> _serverProxy;
+
         public override void Initialize()
         {
             CurrentSession.AddInsLoadCompleted += (sender, e) =>
@@ -40,6 +43,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                     }
                 });
             };
+
+            _sessionProxy = new EventMangedProxy<Session>(CurrentSession);
+            _serverProxy = new EventMangedProxy<Server>(CurrentServer);
         }
 
         public override void Uninitialize()
@@ -70,6 +76,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                 _scriptRuntime.Shutdown();
                 _scriptRuntime = null;
                 BeforeUnload = null;
+                
+                _sessionProxy.RemoveAllEvents();
+                _serverProxy.RemoveAllEvents();
             }
         }
         
@@ -98,10 +107,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 
             _scriptScopes = new Dictionary<string, ScriptScope>();
             PrepareScriptScopeByPath("*Eval*");
-            _scriptRuntime.Globals.SetVariable("Session", CurrentSession);
-            _scriptRuntime.Globals.SetVariable("Server", CurrentServer);
-            _scriptRuntime.Globals.SetVariable("CurrentSession", CurrentSession);
-            _scriptRuntime.Globals.SetVariable("CurrentServer", CurrentServer);
+            _scriptRuntime.Globals.SetVariable("Session", _sessionProxy.GetTransparentProxy());
+            _scriptRuntime.Globals.SetVariable("Server", _serverProxy.GetTransparentProxy());
+            _scriptRuntime.Globals.SetVariable("CurrentSession", _sessionProxy.GetTransparentProxy());
+            _scriptRuntime.Globals.SetVariable("CurrentServer", _serverProxy.GetTransparentProxy());
 
             // 共通のスクリプトを読む
             LoadScriptsFromDirectory(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "GlobalScripts"), scriptExecutionCallback);
@@ -143,10 +152,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         private ScriptScope PrepareScriptScopeByPath(String path)
         {
             ScriptScope scriptScope = _scriptRuntime.CreateScope();
-            scriptScope.SetVariable("Session", CurrentSession);
-            scriptScope.SetVariable("Server", CurrentServer);
-            scriptScope.SetVariable("CurrentSession", CurrentSession);
-            scriptScope.SetVariable("CurrentServer", CurrentServer);
+            scriptScope.SetVariable("Session", _sessionProxy.GetTransparentProxy());
+            scriptScope.SetVariable("Server", _serverProxy.GetTransparentProxy());
+            scriptScope.SetVariable("CurrentSession", _sessionProxy.GetTransparentProxy());
+            scriptScope.SetVariable("CurrentServer", _serverProxy.GetTransparentProxy());
 
             return _scriptScopes[path] = scriptScope;
         }
