@@ -1,3 +1,6 @@
+#
+# 独自のコンソールやコンテキストを実装するためのサンプルスクリプトです。
+#
 import clr
 
 from System import *
