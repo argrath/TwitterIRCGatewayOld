@@ -153,7 +153,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Description("フィルタを保存してコンテキストを終了します")]
         public void Save()
         {
-            CurrentSession.Filters.Add(_filter);
+            if (_isNewRecord)
+                CurrentSession.Filters.Add(_filter);
             CurrentSession.SaveFilters();
             Console.NotifyMessage(String.Format("フィルタを{0}しました。", (_isNewRecord ? "新規作成" : "保存")));
             Exit();
