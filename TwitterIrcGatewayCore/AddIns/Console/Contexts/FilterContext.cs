@@ -57,6 +57,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                                  Context ctx = Activator.CreateInstance(genericType, item) as Context;
                                  ctx.CurrentServer = CurrentServer;
                                  ctx.CurrentSession = CurrentSession;
+                                 ctx.Console = Console;
 
                                  Console.PushContext(ctx);
                              });
@@ -66,7 +67,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         public void New(String filterTypeName)
         {
             Type filterType = Type.GetType("Misuzilla.Applications.TwitterIrcGateway.Filter."+filterTypeName, false, true);
-            if (filterType == null || !filterType.IsSubclassOf(typeof(FilterItem)))
+            if (filterType == null || filterType == typeof(Process) || !filterType.IsSubclassOf(typeof(FilterItem)))
             {
                 Console.NotifyMessage("不明なフィルタの種類が指定されました。");
                 return;

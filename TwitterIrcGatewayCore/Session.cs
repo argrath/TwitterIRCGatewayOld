@@ -1556,6 +1556,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 // 捨てる
                 return;
             }
+            eventArgs.IRCMessageType = filterArgs.IRCMessageType;
             eventArgs.Text = filterArgs.Content;
 
             if (!FireEvent(PostFilterProcessTimelineStatus, eventArgs)) return;
