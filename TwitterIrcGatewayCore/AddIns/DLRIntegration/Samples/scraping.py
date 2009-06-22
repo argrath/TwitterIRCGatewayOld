@@ -9,17 +9,65 @@ import Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
 from System import *
 from System.Threading import Thread, ThreadStart
+from System.Collections.Generic import *
 from System.Diagnostics import Trace
 from Misuzilla.Applications.TwitterIrcGateway import Status, Statuses, User, Users, Utility
 from Misuzilla.Applications.TwitterIrcGateway.AddIns import IConfiguration
 from Misuzilla.Applications.TwitterIrcGateway.AddIns.Console import ConsoleAddIn, Console, Context
 from Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration import DLRIntegrationAddIn, DLRBasicConfiguration, DLRContextHelper
 
+class ScrapingContext(Context):
+	def Initialize(self):
+		self.scraping = Scraping.instance()
+		self.config = self.scraping.config
+		pass
+
+	def GetCommands(self):
+		dict = Context.GetCommands(self)
+		dict["Interval"] = "取得間隔を設定します。"
+		dict["Relogin"] = "再ログインします。"
+		return dict
+
+	def OnUninitialize(self):
+		pass
+
+	def get_Configurations(self):
+		return Array[IConfiguration]([ self.config ])
+
+	# Implementation
+	def Interval(self, args):
+		if String.IsNullOrEmpty(args):
+			self.Console.NotifyMessage("取得間隔を指定してください。")
+			return
+		interval = int(args, 10)
+		self.scraping.interval = interval
+		self.config.SetValue("Interval", interval)
+		self.Console.NotifyMessage("取得間隔を %s 秒に設定しました。" % args)
+		self.scraping.start()
+
+	def Relogin(self, args):
+		self.Console.NotifyMessage("ログインしています...")
+		CurrentSession.TwitterService.CookieLogin()
+		self.Console.NotifyMessage("ログインしました。")
+
 class Scraping(Object):
+	@classmethod
+	def instance(klass):
+		if not hasattr(klass, 'instance_'):
+			klass.instance_ = Scraping()
+		return klass.instance_
+
 	def __init__(self):
-		Session.AddInManager.GetAddIn[DLRIntegrationAddIn]().BeforeUnload += self.onBeforeUnload
+		# 普通の #Console にコンテキストを追加する
+		CurrentSession.AddInManager.GetAddIn[ConsoleAddIn]().RegisterContext(DLRContextHelper.Wrap(CurrentSession, "ScrapingContext", ScrapingContext), "Scraping", "スクレイピングの設定を行うコンテキストに切り替えます")
+		CurrentSession.AddInManager.GetAddIn[DLRIntegrationAddIn]().BeforeUnload += self.onBeforeUnload
+		CurrentSession.PostProcessTimelineStatuses += self.onPostProcessTimelineStatuses
+		self.running = False
 		self.thread = None
-		self.interval = 30
+		
+		self.config = DLRBasicConfiguration(CurrentSession, "ScrapingContext", Dictionary[String,String]({ "Interval": "取得間隔", "DisableTimelineApi": "APIによるタイムライン取得を停止するかどうか" }))
+		self.interval = int(self.config.GetValue("Interval") or "30", 10)
+
 		self.re_source = re.compile(r"<span>from (.*?)</span>")
 		self.re_statuses = re.compile(r"<li class=\"hentry status.*?</li>")
 		self.re_content = re.compile(r"class=\"entry-content\">(.*?)</span>")
@@ -27,19 +75,22 @@ class Scraping(Object):
 		self.re_anchor = re.compile(r"<a href=\"(http://[^\"]*)\"[^>]*>.*?</a>")
 		self.re_tag = re.compile(r"<[^>]*>")
 		self.re_status_id = re.compile(r"id=\"status_(\d+)\"")
-		
+
 	def start(self):
-		CurrentSession.TwitterService.CookieLogin()
-		self.thread = Thread(ThreadStart(self.runProc))
-		self.thread.Start()
+		if not self.running:
+			CurrentSession.TwitterService.CookieLogin()
+			self.thread = Thread(ThreadStart(self.runProc))
+			self.thread.Start()
 
 	def runProc(self):
+		self.running = True
 		while self.interval > 0:
 			try:
 				self.fetchHome()
-			except Exception, ex:
+			except:
 				Trace.WriteLine(ex.ToString())
 			Thread.Sleep(self.interval * 1000)
+		self.running = False
 
 	def fetchHome(self):
 		home = CurrentSession.TwitterService.GETWithCookie("/home")
@@ -63,9 +114,20 @@ class Scraping(Object):
 			#Trace.WriteLine(s.ToString())
 			CurrentSession.TwitterService.ProcessStatus(s, Action[Status](lambda s1: CurrentSession.ProcessTimelineStatus(s1, False, False)))
 
+	def onPostProcessTimelineStatuses(self, sender, e):
+		if e.IsFirstTime and self.requireDisableApi():
+			CurrentSession.TwitterService.Interval = 360000
+			CurrentSession.TwitterService.Stop()
+			CurrentSession.TwitterService.Start()
+
 	def onBeforeUnload(self, sender, e):
+		CurrentSession.AddInManager.GetAddIn[ConsoleAddIn]().UnregisterContext(DLRContextHelper.Wrap(CurrentSession, "ScrapingContext", ScrapingContext))
+		CurrentSession.PostProcessTimelineStatuses -= self.onPostProcessTimelineStatuses
 		self.interval = 0
 		self.thread.Join()
+		
+	def requireDisableApi(self):
+		return (self.config.GetValue("DisableTimelineApi") or "") != ""
 
-Scraping().start()
-
+scraping = Scraping.instance()
+scraping.start()

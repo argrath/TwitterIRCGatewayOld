@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.Remoting;
 using Microsoft;
 using Misuzilla.Applications.TwitterIrcGateway.AddIns.Console;
 using System.ComponentModel;
 using Microsoft.Scripting.Hosting;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.Remoting.Proxies;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
 {
@@ -175,6 +177,41 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         }
         #endregion
     }
+    internal class TransparentProxiedSessionComparer : IEqualityComparer<Session>
+    {
+        #region IEqualityComparer<Session> メンバ
+        public bool Equals(Session x, Session y)
+        {
+            return GetRealSession(x) == GetRealSession(y);
+        }
+
+        public int GetHashCode(Session obj)
+        {
+            return GetRealSession(obj).GetHashCode();
+        }
+        #endregion
+    
+        private Session GetRealSession(Session s)
+        {
+            if (!RemotingServices.IsTransparentProxy(s))
+                return s;
+
+            try
+            {
+                EventManagedProxy<Session> proxy;
+                while (RemotingServices.IsTransparentProxy(s) &&
+                       (proxy = RemotingServices.GetRealProxy(s) as EventManagedProxy<Session>) != null)
+                {
+                    s = proxy.Target;
+                }
+            }
+            catch
+            {
+            }
+
+            return s;
+        }
+    }
 
     internal class DLRContextBase<T> : Context where T : class
     {
@@ -182,16 +219,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         private DLRBasicConfiguration _basicConfiguration;
         private ScriptRuntime _scriptRuntime;
         private Context _site;
-        private static Dictionary<WeakReference, Object> _scriptTypes = new Dictionary<WeakReference, object>(new WeakReferenceSessionEqualityComparer());
-        private static Dictionary<WeakReference, String> _contextNames = new Dictionary<WeakReference, string>(new WeakReferenceSessionEqualityComparer());
-        public override string ContextName { get { return _contextNames[new WeakReference(CurrentSession, false)]; } }
+        private static Dictionary<Session, Object> _scriptTypes = new Dictionary<Session, Object>(new TransparentProxiedSessionComparer());
+        private static Dictionary<Session, String> _contextNames = new Dictionary<Session, String>(new TransparentProxiedSessionComparer());
+        public override string ContextName { get { return _contextNames[CurrentSession]; } }
         public override IConfiguration[] Configurations { get { return _site.Configurations; } }
         
         internal static Type GetProxyType(Session session, String contextName, Object scriptType)
         {
-            WeakReference weakRef = new WeakReference(session, false);
-            _scriptTypes[weakRef] = scriptType;
-            _contextNames[weakRef] = contextName;
+            // TODO: TransparentProxy であることを期待しているので若干のメモリリークを許してる
+            _scriptTypes[session] = scriptType;
+            _contextNames[session] = contextName;
 
             return typeof (DLRContextBase<T>);
         }
@@ -200,7 +237,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         {
             _dlrAddIn = CurrentSession.AddInManager.GetAddIn<DLRIntegrationAddIn>();
             _scriptRuntime = _dlrAddIn.ScriptRuntime;
-            _site = _scriptRuntime.Operations.CreateInstance(_scriptTypes[new WeakReference(CurrentSession, false)]) as Context;
+            _site = _scriptRuntime.Operations.CreateInstance(_scriptTypes[CurrentSession]) as Context;
             if (_site == null)
                 throw new ArgumentException("指定された型はContext クラスを継承していないためインスタンス化できません。");
             

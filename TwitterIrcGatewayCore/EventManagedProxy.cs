@@ -12,7 +12,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     /// 接続されたイベントを管理するプロクシです。
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class EventMangedProxy<T> : RealProxy where T : MarshalByRefObject
+    public class EventManagedProxy<T> : RealProxy where T : MarshalByRefObject
     {
         private static readonly Dictionary<MethodInfo, EventInfo> EventsByAddMethods = new Dictionary<MethodInfo, EventInfo>();
         private static readonly Dictionary<MethodInfo, EventInfo> EventsByRemoveMethods = new Dictionary<MethodInfo, EventInfo>();
@@ -20,8 +20,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private T _targetObject;
         private Dictionary<EventInfo, List<Delegate>> _eventHandlers = new Dictionary<EventInfo, List<Delegate>>();
 
-        static EventMangedProxy()
+        public T Target { get { return _targetObject; } }
+
+        static EventManagedProxy()
         {
+            lock (EventsByAddMethods)
+            lock (EventsByRemoveMethods)
             foreach (var ev in typeof(T).GetEvents())
             {
                 EventsByAddMethods.Add(ev.GetAddMethod(), ev);
@@ -29,7 +33,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 
-        public EventMangedProxy(T aObj)
+        public EventManagedProxy(T aObj)
             : base(typeof(T))
         {
             _targetObject = aObj;

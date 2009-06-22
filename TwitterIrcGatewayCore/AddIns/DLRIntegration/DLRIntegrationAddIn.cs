@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Remoting;
 using System.Text;
 using IronRuby.Builtins;
 using Microsoft.Scripting;
@@ -21,8 +22,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         internal IDictionary<String, ScriptScope> ScriptScopes { get { return _scriptScopes; } }
         internal ScriptRuntime ScriptRuntime { get { return _scriptRuntime; } }
 
-        private EventMangedProxy<Session> _sessionProxy;
-        private EventMangedProxy<Server> _serverProxy;
+        private EventManagedProxy<Session> _sessionProxy;
+        private EventManagedProxy<Server> _serverProxy;
 
         public override void Initialize()
         {
@@ -44,8 +45,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                 });
             };
 
-            _sessionProxy = new EventMangedProxy<Session>(CurrentSession);
-            _serverProxy = new EventMangedProxy<Server>(CurrentServer);
+            // DLRのイベントをすべて解除するためにこのアドイン用のRealProxyを取得する
+            _sessionProxy = new EventManagedProxy<Session>(CurrentSession);
+            _serverProxy = new EventManagedProxy<Server>(CurrentServer);
         }
 
         public override void Uninitialize()
