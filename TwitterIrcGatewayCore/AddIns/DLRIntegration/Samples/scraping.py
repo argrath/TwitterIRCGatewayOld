@@ -1,3 +1,4 @@
+import sys
 import clr
 import re
 import thread
@@ -88,7 +89,7 @@ class Scraping(Object):
 			try:
 				self.fetchHome()
 			except:
-				Trace.WriteLine(ex.ToString())
+				Trace.WriteLine(sys.exc_info().ToString())
 			Thread.Sleep(self.interval * 1000)
 		self.running = False
 
