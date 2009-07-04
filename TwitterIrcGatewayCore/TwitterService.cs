@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
+using System.IO.Compression;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
@@ -101,6 +102,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             IntervalDirectMessage = 360;
             IntervalReplies = 120;
             BufferSize = 250;
+            EnableCompression = false;
         
             POSTFetchMode = false;
         }
@@ -200,6 +202,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// タイムラインの一回の取得につき何件取得するかを指定します。
         /// </summary>
         public Int32 FetchCount
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// gzip圧縮を利用するかどうかを指定します。
+        /// </summary>
+        public Boolean EnableCompression
         {
             get;
             set;
@@ -1202,6 +1213,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 webRequest.Headers["X-Twitter-Client"] = _twitterService.ClientName;
                 webRequest.Headers["X-Twitter-Client-Version"] = _twitterService.ClientVersion;
                 webRequest.Headers["X-Twitter-Client-URL"] = _twitterService.ClientUrl;
+                if (_twitterService.EnableCompression)
+                    webRequest.Headers["Accept-Encoding"] = "gzip";
 
                 return webRequest;
             }
@@ -1235,7 +1248,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 System.Diagnostics.Trace.WriteLine("GET: " + url);
                 HttpWebRequest webRequest = CreateHttpWebRequest(url, "GET");
                 HttpWebResponse webResponse = webRequest.GetResponse() as HttpWebResponse;
-                using (StreamReader sr = new StreamReader(webResponse.GetResponseStream()))
+                using (StreamReader sr = new StreamReader(GetResponseStream(webResponse)))
                     return sr.ReadToEnd();
             }
         }
@@ -1250,7 +1263,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 stream.Write(postData, 0, postData.Length);
             }
             HttpWebResponse webResponse = webRequest.GetResponse() as HttpWebResponse;
-            using (StreamReader sr = new StreamReader(webResponse.GetResponseStream()))
+            using (StreamReader sr = new StreamReader(GetResponseStream(webResponse)))
                 return sr.ReadToEnd();
         }
 
@@ -1268,12 +1281,25 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             webRequest.Headers["X-Twitter-Client-Version"] = ClientVersion;
             webRequest.Headers["X-Twitter-Client-URL"] = ClientUrl;
 
+            if (EnableCompression)
+                webRequest.Headers["Accept-Encoding"] = "gzip";
+
             Uri uri = new Uri(url);
 
             NetworkCredential cred = _credential.GetCredential(uri, "Basic");
             webRequest.Headers["Authorization"] = String.Format("Basic {0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", cred.UserName, cred.Password))));
 
             return webRequest as HttpWebRequest;
+        }
+        
+        private Stream GetResponseStream(WebResponse webResponse)
+        {
+            HttpWebResponse httpWebResponse = webResponse as HttpWebResponse;
+            if (httpWebResponse == null)
+                return webResponse.GetResponseStream();
+            if (String.Compare(httpWebResponse.ContentEncoding, "gzip", true) == 0)
+                return new GZipStream(webResponse.GetResponseStream(), CompressionMode.Decompress);
+            return webResponse.GetResponseStream();
         }
 
         #region Cookie アクセス
@@ -1315,7 +1341,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             request.Headers["Authorization"] = String.Format("Basic {0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(String.Format("{0}:{1}", cred.UserName, cred.Password))));
 
             HttpWebResponse response = request.GetResponse() as HttpWebResponse;
-            using (StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8))
+            using (StreamReader sr = new StreamReader(GetResponseStream(response), Encoding.UTF8))
             {
                 String responseBody = sr.ReadToEnd();
 
@@ -1347,6 +1373,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 httpRequest.Accept = "*/*";
                 httpRequest.CookieContainer = new CookieContainer();
                 httpRequest.Proxy = _proxy;
+
+                if (EnableCompression)
+                    httpRequest.Headers["Accept-Encoding"] = "gzip";
+
                 if (_cookies != null)
                 {
                     httpRequest.CookieContainer.Add(_cookies);
@@ -1444,7 +1474,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             try
             {
                 response = request.GetResponse();
-                using (StreamReader sr = new StreamReader(response.GetResponseStream()))
+                using (StreamReader sr = new StreamReader(GetResponseStream(response)))
                 {
                     return sr.ReadToEnd();
                 }

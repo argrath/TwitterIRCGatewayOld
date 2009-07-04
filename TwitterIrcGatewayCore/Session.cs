@@ -1792,8 +1792,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             if (!_isDisposed)
             {
-                AddInManager.Uninitialize();
-                
+                try
+                {
+                    if (AddInManager != null)
+                        AddInManager.Uninitialize();
+                }
+                catch {}
+
                 if (_config.EnableTrace)
                 {
                     Trace.Listeners.Remove(_traceListener);
