@@ -6,11 +6,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitterIrcGatewayCLI", "TwitterIrcGatewayCLI\TwitterIrcGatewayCLI.csproj", "{4FCEDBD3-FA87-4ADE-82E9-B3C5BA431F54}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitterIrcGatewayCore", "TwitterIrcGatewayCore\TwitterIrcGatewayCore.csproj", "{8A256703-BDC7-4E96-8AC3-89A56A2AFB86}"
-	ProjectSection(ProjectDependencies) = postProject
-		{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E} = {91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}
-	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "agsXMPP2008", "TwitterIrcGatewayCore\agsXMPP\agsXMPP2008.csproj", "{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitterIrcGatewayCLIBootstrap", "TwitterIrcGatewayCLIBootstrap\TwitterIrcGatewayCLIBootstrap.csproj", "{14BB28EE-ED27-4F95-A298-59B6B919D3A1}"
 EndProject
@@ -23,6 +18,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SocialRemoveRedundantSuffix", "ExtraAddIns\SocialRemoveRedundantSuffix\SocialRemoveRedundantSuffix.csproj", "{2155CDFA-F001-4537-BD68-2C2CAA283329}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CamouflageClient", "ExtraAddIns\CamouflageClient\CamouflageClient.csproj", "{92E20BBD-CC17-4C37-9BA2-54B4B4A268C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwitterIrcGatewayService", "TwitterIrcGatewayService\TwitterIrcGatewayService.csproj", "{BD0A16C9-F297-4A1C-A08D-BBC18D354553}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -56,14 +53,6 @@ Global
 		{8A256703-BDC7-4E96-8AC3-89A56A2AFB86}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8A256703-BDC7-4E96-8AC3-89A56A2AFB86}.Release|x86.ActiveCfg = Release|x86
 		{8A256703-BDC7-4E96-8AC3-89A56A2AFB86}.Release|x86.Build.0 = Release|x86
-		{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}.Debug|x86.ActiveCfg = Debug|x86
-		{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}.Debug|x86.Build.0 = Debug|x86
-		{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}.Release|x86.ActiveCfg = Release|x86
-		{91EA0D0B-D3BA-497F-AFEB-2CAD59DEBA0E}.Release|x86.Build.0 = Release|x86
 		{14BB28EE-ED27-4F95-A298-59B6B919D3A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{14BB28EE-ED27-4F95-A298-59B6B919D3A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14BB28EE-ED27-4F95-A298-59B6B919D3A1}.Debug|x86.ActiveCfg = Debug|x86
@@ -104,6 +93,13 @@ Global
 		{92E20BBD-CC17-4C37-9BA2-54B4B4A268C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{92E20BBD-CC17-4C37-9BA2-54B4B4A268C9}.Release|x86.ActiveCfg = Release|x86
 		{92E20BBD-CC17-4C37-9BA2-54B4B4A268C9}.Release|x86.Build.0 = Release|x86
+		{BD0A16C9-F297-4A1C-A08D-BBC18D354553}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD0A16C9-F297-4A1C-A08D-BBC18D354553}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD0A16C9-F297-4A1C-A08D-BBC18D354553}.Debug|x86.ActiveCfg = Debug|x86
+		{BD0A16C9-F297-4A1C-A08D-BBC18D354553}.Debug|x86.Build.0 = Debug|x86
+		{BD0A16C9-F297-4A1C-A08D-BBC18D354553}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD0A16C9-F297-4A1C-A08D-BBC18D354553}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD0A16C9-F297-4A1C-A08D-BBC18D354553}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

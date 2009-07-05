@@ -114,6 +114,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// データの取得にPOSTメソッドを利用するかどうかを指定します。
         /// </summary>
+        [Browsable(false)]
         [Description("データの取得にPOSTメソッドを利用するかどうかを指定します。")]
         public Boolean POSTFetchMode { get; set; }
         /// <summary>
@@ -121,6 +122,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         [Description("タイムラインの一回の取得につき何件取得するかを指定します。")]
         public Int32 FetchCount { get; set; }
+        /// <summary>
+        /// Twitterにアクセスする際にgzip圧縮を有効にするかどうかを指定します。
+        /// </summary>
+        [Description("Twitterにアクセスする際にgzip圧縮を有効にするかどうかを指定します。")]
+        [Browsable(false)] // TODO: ホスティングじゃない場合にはBrowsableをはずす
+        public Boolean EnableCompression { get; set; }
 
         /// <summary>
         /// デフォルトの設定
@@ -129,6 +136,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         
         public Config()
         {
+            ChannelName = "#Twitter";
             EnableTypableMap = false;
             TypableMapKeyColorNumber = 14;
             TypableMapKeySize = 2;
@@ -137,9 +145,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             EnableOldStyleReply = false;
             FetchCount = 50;
             BufferSize = 250;
+            EnableCompression = false;
 
             if (Default != null)
             {
+                ChannelName = Default.ChannelName;
                 Interval = Default.Interval;
                 IntervalDirectMessage = Default.IntervalDirectMessage;
                 EnableRepliesCheck = Default.EnableRepliesCheck;

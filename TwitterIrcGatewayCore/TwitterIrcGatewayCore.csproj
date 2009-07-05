@@ -130,6 +130,8 @@
     <Compile Include="AddIns\ResolveShortUrlServices.cs" />
     <Compile Include="AddIns\TypableMapSupport.cs" />
     <Compile Include="AddIns\UndoStatusUpdate.cs" />
+    <Compile Include="SessionIM.cs" />
+    <Compile Include="UserInfomation.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="EventArgs.cs" />
     <Compile Include="EventManagedProxy.cs" />
@@ -153,12 +155,6 @@
     <Compile Include="AddIns\TypableMap\TypableMap.cs" />
     <Compile Include="AddIns\TypableMap\TypableMapCommandProcessor.cs" />
     <Compile Include="Utility.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="agsXMPP\agsXMPP2008.csproj">
-      <Project>{DC39021C-FA24-4E34-AB4A-3260BB5314AF}</Project>
-      <Name>agsXMPP2008</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="AddIns\DLRIntegration\Samples\attach_event.py" />
