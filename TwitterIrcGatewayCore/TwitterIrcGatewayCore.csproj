@@ -131,7 +131,6 @@
     <Compile Include="AddIns\TypableMapSupport.cs" />
     <Compile Include="AddIns\UndoStatusUpdate.cs" />
     <Compile Include="SessionIM.cs" />
-    <Compile Include="UserInfomation.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="EventArgs.cs" />
     <Compile Include="EventManagedProxy.cs" />
