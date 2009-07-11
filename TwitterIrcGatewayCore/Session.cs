@@ -474,10 +474,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
 #endif
             // アドインの読み込み
+            SendTwitterGatewayServerMessage("* アドインを読み込んでいます...");
             _addinManager.Load();
             FireEvent(AddInsLoadCompleted, EventArgs.Empty);
 
-            SendTwitterGatewayServerMessage("* セッションを開始します");
+            SendTwitterGatewayServerMessage("* セッションを開始しました。");
             OnSessionStarted(_twitterUser.ScreenName);
             Trace.WriteLine(String.Format("SessionStarted: UserName={0}; Nickname={1}", Connections[0].UserInfo.UserName, CurrentNick));
             Trace.WriteLine(String.Format("User: Id={0}, ScreenName={1}, Name={2}", _twitterUser.Id, _twitterUser.ScreenName, _twitterUser.Name));
@@ -499,7 +500,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             String[] channelNames = joinMsg.Channel.Split(new Char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (String channelName in channelNames)
             {
-                if (!channelName.StartsWith("#") || channelName.Length < 3 || String.Compare(channelName, _config.ChannelName, true) == 0)
+                // メインチャンネルはスキップ
+                if (String.Compare(channelName, _config.ChannelName, true) == 0)
+                    continue;
+                
+                if (!channelName.StartsWith("#") || channelName.Length < 3)
                 {
                     Trace.WriteLine(String.Format("No nick/such channel: {0}", channelName));
                     SendErrorReply(ErrorReply.ERR_NOSUCHCHANNEL, "No such nick/channel");
@@ -531,7 +536,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             String[] channelNames = partMsg.Channel.Split(new Char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (String channelName in channelNames)
             {
-                if (!channelName.StartsWith("#") || channelName.Length < 3 || String.Compare(channelName, _config.ChannelName, true) == 0)
+                // メインチャンネルはスキップ
+                if (String.Compare(channelName, _config.ChannelName, true) == 0)
+                    continue;
+                
+                if (!channelName.StartsWith("#") || channelName.Length < 3)
                 {
                     SendErrorReply(ErrorReply.ERR_NOSUCHCHANNEL, "No such nick/channel");
                     continue;
