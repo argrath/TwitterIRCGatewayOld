@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using Misuzilla.Net.Irc;
+using System.Diagnostics;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 {
@@ -156,6 +157,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             catch (Exception e)
             {
                 NotifyMessage("エラー: " + e.Message);
+                Trace.WriteLine(e.ToString());
             }
         }
         

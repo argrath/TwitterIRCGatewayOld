@@ -232,10 +232,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// セッションを開始します。
         /// </summary>
-        public void Start()
+        private void Start()
         {
             CheckDisposed();
-            InitializeSession();
+
+            // アドインの読み込み
+            SendTwitterGatewayServerMessage("* アドインを読み込んでいます...");
+            _addinManager.Load();
+            FireEvent(AddInsLoadCompleted, EventArgs.Empty);
+
+            _twitter.Start();
+
             IsStarted = true;
         }
         
@@ -473,16 +480,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 ConnectToIMService(true);
             }
 #endif
-            // アドインの読み込み
-            SendTwitterGatewayServerMessage("* アドインを読み込んでいます...");
-            _addinManager.Load();
-            FireEvent(AddInsLoadCompleted, EventArgs.Empty);
-
             SendTwitterGatewayServerMessage("* セッションを開始しました。");
             OnSessionStarted(_twitterUser.ScreenName);
             Trace.WriteLine(String.Format("SessionStarted: UserName={0}; Nickname={1}", Connections[0].UserInfo.UserName, CurrentNick));
             Trace.WriteLine(String.Format("User: Id={0}, ScreenName={1}, Name={2}", _twitterUser.Id, _twitterUser.ScreenName, _twitterUser.Name));
-            _twitter.Start();
         }
 
         #region メッセージ処理イベント
@@ -567,6 +568,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     SendTwitterGatewayServerMessage("グループ \""+group.Name+"\" を削除しました。");
                 }
             }
+
+            SaveGroups();
         }
         private void MessageReceived_KICK(object sender, MessageReceivedEventArgs e)
         {
@@ -1561,8 +1564,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             lock (this)
             {
+                // セッションを初期化
                 if (!IsStarted)
-                    Start();
+                    InitializeSession();
                 
                 // メインチャンネルにJOIN
                 SendServer(new JoinMessage(_config.ChannelName, ""));
@@ -1579,6 +1583,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         JoinChannel(connection, group);
                     }
                 }
+
+                // 開始
+                if (!IsStarted)
+                    Start();
             }
         }
 

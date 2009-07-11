@@ -40,7 +40,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 
         void CurrentSession_ConnectionAttached(object sender, ConnectionAttachEventArgs e)
         {
-            foreach (Group group in CurrentSession.Groups.Values.Where(g => g.IsJoined && !g.IsSpecial))
+            foreach (Group group in CurrentSession.Groups.Values.Where(g => g.IsJoined && !g.IsSpecial && _recentStatuses.ContainsKey(g.Name)))
             {
                 foreach (Status status in _recentStatuses[group.Name])
                 {

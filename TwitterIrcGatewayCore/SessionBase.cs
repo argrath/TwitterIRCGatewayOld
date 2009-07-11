@@ -125,7 +125,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 Trace.WriteLine("Session Closing");
                 lock (_connections)
                 {
-                    foreach (ConnectionBase connection in _connections)
+                    List<ConnectionBase> connections = new List<ConnectionBase>(_connections);
+                    foreach (ConnectionBase connection in connections)
                     {
                         Detach(connection);
                         connection.Close();
@@ -143,8 +144,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="msg"></param>
         public void Send(IRCMessage msg)
         {
-            foreach (ConnectionBase connection in _connections)
-                connection.Send(msg);
+            lock (_connections)
+                foreach (ConnectionBase connection in _connections)
+                    connection.Send(msg);
         }
 
         /// <summary>
@@ -153,8 +155,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="msg"></param>
         public void SendServer(IRCMessage msg)
         {
-            foreach (ConnectionBase connection in _connections)
-                connection.SendServer(msg);
+            lock (_connections)
+                foreach (ConnectionBase connection in _connections)
+                    connection.SendServer(msg);
         }
 
         /// <summary>
@@ -163,8 +166,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="msg"></param>
         public void SendServerMessage(IRCMessage msg)
         {
-            foreach (ConnectionBase connection in _connections)
-                connection.SendServerMessage(msg);
+            lock (_connections)
+                foreach (ConnectionBase connection in _connections)
+                    connection.SendServerMessage(msg);
         }
 
         /// <summary>
@@ -173,8 +177,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="message"></param>
         public void SendGatewayServerMessage(String message)
         {
-            foreach (ConnectionBase connection in _connections)
-                connection.SendGatewayServerMessage(message);
+            lock (_connections)
+                foreach (ConnectionBase connection in _connections)
+                    connection.SendGatewayServerMessage(message);
         }
 
         /// <summary>
