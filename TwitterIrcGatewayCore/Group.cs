@@ -57,7 +57,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             foreach (Group group in groups)
             {
                 retGroups[group.Name] = group;
-                group.IsJoined = false;
+                //group.IsJoined = false;
                 group.ChannelModes = group.ChannelModes == null ? new List<ChannelMode>() : group.ChannelModes;
             }
 

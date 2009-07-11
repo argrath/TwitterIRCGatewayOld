@@ -29,7 +29,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 新たなセッションが開始されたイベント
         /// </summary>
-        public event EventHandler<SessionStartedEventArgs> SessionStartedReceived;
+        public event EventHandler<ConnectionAttachEventArgs> ConnectionAttached;
 
         /// <summary>
         /// 文字エンコーディングを取得・設定します
@@ -106,7 +106,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
                 lock (_sessions)
                 {
-                    foreach (Session session in _sessions.Values)
+                    List<Session> sessions = new List<Session>(_sessions.Values);
+                    foreach (Session session in sessions)
                     {
                         session.Close();
                     }
@@ -127,8 +128,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 if (!_sessions.ContainsKey(id))
                 {
                     _sessions[id] = new Session(user, this);
+                    _sessions[id].ConnectionAttached += new EventHandler<ConnectionAttachEventArgs>(Server_ConnectionAttached);
                 }
                 return _sessions[id];
+            }
+        }
+
+        void Server_ConnectionAttached(object sender, ConnectionAttachEventArgs e)
+        {
+            if (ConnectionAttached != null)
+            {
+                ConnectionAttached(sender, e);
             }
         }
 

@@ -12,7 +12,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 {
     public class Connection : ConnectionBase
     {
-        private User _twitterUser = null;
+        public User TwitterUser { get; private set; }
 
         public Connection(Server server, TcpClient tcpClient) : base(server, tcpClient)
         {
@@ -34,10 +34,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             // この段階でTwitterServiceは作っておく
             SendGatewayServerMessage("* アカウント認証を確認しています...");
             TwitterService twitter = new TwitterService(userInfo.UserName, userInfo.Password);
-            _twitterUser = null;
+            TwitterUser = null;
             try
             {
-                _twitterUser = twitter.VerifyCredential();
+                TwitterUser = twitter.VerifyCredential();
             }
             catch (WebException we)
             {
@@ -52,14 +52,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 Trace.WriteLine(ex.ToString());
                 return new AuthenticateResult(ErrorReply.ERR_PASSWDMISMATCH, "Password Incorrect");
             }
-            SendGatewayServerMessage(String.Format("* アカウント: {0} (ID:{1})", _twitterUser.ScreenName, _twitterUser.Id));
+            SendGatewayServerMessage(String.Format("* アカウント: {0} (ID:{1})", TwitterUser.ScreenName, TwitterUser.Id));
 
-            return new TwitterAuthenticateResult(_twitterUser); // 成功
+            return new TwitterAuthenticateResult(TwitterUser); // 成功
         }
 
         protected override void OnAuthenticateSucceeded()
         {
-            Session session = CurrentServer.GetOrCreateSession(_twitterUser);
+            Session session = CurrentServer.GetOrCreateSession(TwitterUser);
             session.Attach(this);
         }
 

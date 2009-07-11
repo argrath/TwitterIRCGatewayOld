@@ -25,7 +25,7 @@ namespace TwitterIrcGatewayService
             _server = new Server();
             _server.Encoding = new UTF8Encoding(false);
             //_server.Encoding = encoding;
-            _server.SessionStartedReceived += new EventHandler<SessionStartedEventArgs>(_server_SessionStartedReceived);
+            _server.ConnectionAttached += new EventHandler<ConnectionAttachEventArgs>(_server_ConnectionAttached);
             //_server.Proxy = proxy;
 
             // gzip を有効に
@@ -61,15 +61,17 @@ namespace TwitterIrcGatewayService
             EventLog.WriteEntry(sw.ToString(), EventLogEntryType.Information);
         }
 
-        void _server_SessionStartedReceived(object sender, SessionStartedEventArgs e)
+        void _server_ConnectionAttached(object sender, ConnectionAttachEventArgs e)
         {
             StringWriter sw = new StringWriter();
-            sw.WriteLine("ユーザ {0} が接続しました。", e.User.ScreenName);
+            User twitterUser = ((Connection)(e.Connection)).TwitterUser;
+            sw.WriteLine("ユーザ {0} が接続しました。", twitterUser.ScreenName);
             sw.WriteLine();
-            sw.WriteLine("IP: {0}", e.EndPoint);
-            sw.WriteLine("Twitter User: {0} (ID:{1})", e.User.ScreenName, e.User.Id);
+            sw.WriteLine("IP: {0}", e.Connection.UserInfo.EndPoint);
+            sw.WriteLine("Twitter User: {0} (ID:{1})", twitterUser.ScreenName, twitterUser.Id);
             EventLog.WriteEntry(sw.ToString(), EventLogEntryType.Information);
         }
+
 
         protected override void OnStop()
         {

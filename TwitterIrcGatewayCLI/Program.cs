@@ -73,7 +73,7 @@ namespace TwitterIrcGatewayCLI
 
             Server _server = new Server();
             _server.Encoding = encoding;
-            _server.SessionStartedReceived += new EventHandler<SessionStartedEventArgs>(_server_SessionStartedReceived);
+            _server.ConnectionAttached += new EventHandler<ConnectionAttachEventArgs>(_server_ConnectionAttached);
             _server.Proxy = proxy;
 
             Console.WriteLine("Start TwitterIrcGateway Server v{0}", typeof(Server).Assembly.GetName().Version);
@@ -103,16 +103,15 @@ namespace TwitterIrcGatewayCLI
                 Thread.Sleep(1000);
         }
 
+        static void _server_ConnectionAttached(object sender, ConnectionAttachEventArgs e)
+        {
+        }
+
         private static void ShowUsage() 
         {
             Console.WriteLine("TwitterIrcGateway Server v{0}", typeof(Server).Assembly.GetName().Version);
             Console.WriteLine(@"Usage:");
             CommandLineParser.ShowHelp();
-        }
-
-        static void _server_SessionStartedReceived(object sender, SessionStartedEventArgs e)
-        {
-            //Console.WriteLine("[Connect] User: {0}", e.UserName);
         }
     }
 
