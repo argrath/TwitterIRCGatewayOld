@@ -1,4 +1,4 @@
-import sys
+﻿import sys
 import clr
 import re
 import thread
@@ -13,7 +13,7 @@ from System.Threading import Thread, ThreadStart
 from System.Collections.Generic import *
 from System.Diagnostics import Trace
 from Misuzilla.Applications.TwitterIrcGateway import Status, Statuses, User, Users, Utility
-from Misuzilla.Applications.TwitterIrcGateway.AddIns import IConfiguration
+from Misuzilla.Applications.TwitterIrcGateway.AddIns import IConfiguration, ConfigurationPropertyInfo
 from Misuzilla.Applications.TwitterIrcGateway.AddIns.Console import ConsoleAddIn, Console, Context
 from Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration import DLRIntegrationAddIn, DLRBasicConfiguration, DLRContextHelper
 
@@ -27,6 +27,8 @@ class ScrapingContext(Context):
 		dict = Context.GetCommands(self)
 		dict["Interval"] = "取得間隔を設定します。"
 		dict["Relogin"] = "再ログインします。"
+		dict["Enable"] = "スクレイピングを有効にします。"
+		dict["Disable"] = "スクレイピングを無効にします。"
 		return dict
 
 	def OnUninitialize(self):
@@ -51,6 +53,17 @@ class ScrapingContext(Context):
 		CurrentSession.TwitterService.CookieLogin()
 		self.Console.NotifyMessage("ログインしました。")
 
+	def Enable(self, args):
+		self.config.SetValue("Enable", True)
+		self.scraping.enable = True
+		self.scraping.start()
+		self.Console.NotifyMessage("スクレイピングを有効にしました")
+
+	def Disable(self, args):
+		self.config.SetValue("Enable", False)
+		self.scraping.enable = False
+		self.Console.NotifyMessage("スクレイピングを無効にしました")
+
 class Scraping(Object):
 	@classmethod
 	def instance(klass):
@@ -66,8 +79,10 @@ class Scraping(Object):
 		self.running = False
 		self.thread = None
 		
-		self.config = DLRBasicConfiguration(CurrentSession, "ScrapingContext", Dictionary[String,String]({ "Interval": "取得間隔", "DisableTimelineApi": "APIによるタイムライン取得を停止するかどうか" }))
-		self.interval = int(self.config.GetValue("Interval") or "30", 10)
+		self.config = DLRBasicConfiguration(CurrentSession, "ScrapingContext", Array[ConfigurationPropertyInfo]([ConfigurationPropertyInfo("Enable", "スクレイピングを利用するかどうか", Boolean, False, None), ConfigurationPropertyInfo("Interval", "取得間隔", Int32, 30, None), ConfigurationPropertyInfo("DisableTimelineApi", "APIによるタイムライン取得を停止するかどうか", Boolean, False, None)]))
+
+		self.interval = self.config.GetValue("Interval")
+		self.enable = self.config.GetValue("Enable")
 
 		self.re_source = re.compile(r"<span>from (.*?)</span>")
 		self.re_statuses = re.compile(r"<li class=\"hentry status.*?</li>")
@@ -85,7 +100,7 @@ class Scraping(Object):
 
 	def runProc(self):
 		self.running = True
-		while self.interval > 0:
+		while self.interval > 0 and self.enable:
 			try:
 				self.fetchHome()
 			except:
@@ -128,7 +143,7 @@ class Scraping(Object):
 		self.thread.Join()
 		
 	def requireDisableApi(self):
-		return (self.config.GetValue("DisableTimelineApi") or "") != ""
+		return self.config.GetValue("DisableTimelineApi")
 
 scraping = Scraping.instance()
 scraping.start()
