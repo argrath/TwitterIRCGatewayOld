@@ -15,7 +15,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private static List<Server> _runningServers = new List<Server>();
         
         private TcpListener _tcpListener;
-        private List<Session> _sessions;
+        private Dictionary<Int32, Session> _sessions;
         private Encoding _encoding = Encoding.GetEncoding("ISO-2022-JP");
 
         /// <summary>
@@ -50,9 +50,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 現在存在しているセッション情報のコレクションを取得します。
         /// </summary>
-        public IList<Session> Sessions
+        public IDictionary<Int32, Session> Sessions
         {
-            get { return _sessions.AsReadOnly(); }
+            get { return _sessions; }
         }
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 _runningServers.Add(this);
             }
 
-            _sessions = new List<Session>();
+            _sessions = new Dictionary<Int32, Session>();
 
             Trace.WriteLine(String.Format("Starting IRC Server: IPAddress = {0}, port = {1}", ipAddr, port));
             _tcpListener = new TcpListener(ipAddr, port);
@@ -106,7 +106,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
                 lock (_sessions)
                 {
-                    foreach (Session session in _sessions.ToArray())
+                    foreach (Session session in _sessions.Values)
                     {
                         session.Close();
                     }
@@ -117,6 +117,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public override string ToString()
         {
             return String.Format("Server: LocalEndPoint={0}", _tcpListener.LocalEndpoint);
+        }
+        
+        public Session GetOrCreateSession(User user)
+        {
+            Int32 id = user.Id;
+            lock (_sessions)
+            {
+                if (!_sessions.ContainsKey(id))
+                {
+                    _sessions[id] = new Session(user, this);
+                }
+                return _sessions[id];
+            }
         }
 
         #region Internal Implementation
@@ -140,31 +153,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (tcpClient != null && tcpClient.Connected)
             {
                 Trace.WriteLine(String.Format("Client Connected: RemoteEndPoint={0}", tcpClient.Client.RemoteEndPoint));
-                Session session = new Session(this, tcpClient);
-                lock (_sessions)
-                {
-                    _sessions.Add(session);
-                }
-                session.SessionStarted += new EventHandler<SessionStartedEventArgs>(session_SessionStartedReceived);
-                session.SessionEnded += new EventHandler<EventArgs>(session_SessionEnded);
-                session.Start();
-            }
-        }
-
-        void session_SessionEnded(object sender, EventArgs e)
-        {
-            lock (_sessions)
-            {
-                _sessions.Remove(sender as Session);
-            }
-        }
-
-        void session_SessionStartedReceived(object sender, SessionStartedEventArgs e)
-        {
-            // 中継
-            if (SessionStartedReceived != null)
-            {
-                SessionStartedReceived(sender, e);
+                Connection connection = new Connection(this, tcpClient);
+                connection.Start();
             }
         }
         #endregion

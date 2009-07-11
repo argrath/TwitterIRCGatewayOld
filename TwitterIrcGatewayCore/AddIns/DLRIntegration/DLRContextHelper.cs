@@ -249,7 +249,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             base.Initialize();
         }
 
-        private Func<Object, Object> _func;
+        private Microsoft.Func<Object, Object> _func;
 
         public override IDictionary<string, string> GetCommands()
         {
@@ -294,7 +294,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                     if (String.Compare(memberName, commandName, true) == 0)
                         commandNameNormalized = memberName;
                 }
-                var func = _scriptRuntime.Operations.GetMember<Func<Object, Object>>(_site, commandNameNormalized, true);
+                var func = _scriptRuntime.Operations.GetMember<Microsoft.Func<Object, Object>>(_site, commandNameNormalized, true);
                 
                 if (func != null)
                 {

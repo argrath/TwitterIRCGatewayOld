@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
@@ -18,14 +19,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     /// <summary>
     /// ユーザからの接続を管理するクラス
     /// </summary>
-    public partial class Session : MarshalByRefObject, IDisposable
+    public partial class Session : SessionBase, IDisposable
     {
         private readonly static String ConfigBasePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Configs");
 
+
         private Server _server;
-        private TcpClient _tcpClient;
-        private StreamWriter _writer;
-        private String _clientHost;
         private TwitterService _twitter;
         private LinkedList<Int64> _lastStatusIdsFromGateway;
         private Dictionary<String, Int64> _lastStatusIdsByScreenName;
@@ -39,9 +38,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         private TraceListener _traceListener;
 
-        private String _username;
-        private String _password;
-        private String _nick;
         private User _twitterUser;
 
         #region Events
@@ -140,20 +136,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public event EventHandler<TimelineStatusEventArgs> UpdateStatusRequestCommited;
         #endregion
 
-        public Session(Server server, TcpClient tcpClient)
+        public Session(User user, Server server) : base(user.Id, server)
         {
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_USER);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_NICK);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_PASS);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_QUIT);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_PING);
-
+            _twitterUser = user;
+            
             _groups = new Groups();
             _filter = new Filters();
             _config = new Config();
 
             _server = server;
-            _tcpClient = tcpClient;
             _lastStatusIdsFromGateway = new LinkedList<Int64>();
             _lastStatusIdsByScreenName = new Dictionary<string, Int64>(StringComparer.InvariantCultureIgnoreCase);
             
@@ -167,11 +158,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// 接続しているクライアントを取得します
+        /// 開始されているかどうかを返します。
         /// </summary>
-        public TcpClient TcpClient
+        public Boolean IsStarted
         {
-            get { return _tcpClient; }
+            get;
+            private set;
         }
         
         /// <summary>
@@ -179,15 +171,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public String Nick
         {
-            get { return _nick; }
-        }
-        
-        /// <summary>
-        /// クライアントホスト名を取得します
-        /// </summary>
-        public String ClientHost
-        {
-            get { return _clientHost; }
+            get { return CurrentNick; }
         }
         
         /// <summary>
@@ -252,39 +236,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public void Start()
         {
             CheckDisposed();
-            try
-            {
-                using (NetworkStream stream = _tcpClient.GetStream())
-                using (StreamReader sr = new StreamReader(stream, _server.Encoding))
-                using (StreamWriter sw = new StreamWriter(stream, _server.Encoding))
-                {
-                    _writer = sw;
-
-                    String line;
-                    PermissionSet permissionSet = null;
-                    while (_tcpClient.Connected && (line = sr.ReadLine()) != null)
-                    {
-                        try
-                        {
-                            IRCMessage msg = IRCMessage.CreateMessage(line);
-                            OnMessageReceived(msg);
-                        }
-                        catch (IRCException ircE)
-                        {
-                            Trace.WriteLine(ircE.ToString());
-                        }
-
-                    }
-                }
-            }
-            catch (IOException)
-            {}
-            catch (NullReferenceException)
-            {}
-            finally
-            {
-                Close();
-            }
+            InitializeSession();
+            IsStarted = true;
         }
         
         #region イベント実行メソッド
@@ -292,42 +245,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             FireEvent(AddInsLoadCompleted, EventArgs.Empty);
         }
-
-        protected virtual void OnMessageReceived(IRCMessage msg)
+        
+        protected virtual void OnMessageReceived(IRCMessage msg, MessageReceivedEventArgs e)
         {
             Trace.WriteLine(msg.ToString());
 
-            if (FireEvent(PreMessageReceived, new MessageReceivedEventArgs(msg, _writer, _tcpClient)))
+            if (FireEvent(PreMessageReceived, e))
             {
-                if (FireEvent(MessageReceived, new MessageReceivedEventArgs(msg, _writer, _tcpClient)))
+                if (FireEvent(MessageReceived, e))
                 {
-                    FireEvent(PostMessageReceived, new MessageReceivedEventArgs(msg, _writer, _tcpClient));
+                    FireEvent(PostMessageReceived, e);
                 }
             }
         }
         protected virtual void OnSessionStarted(String username)
         {
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_PRIVMSG);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_WHOIS);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_INVITE);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_JOIN);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_PART);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_KICK);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_LIST);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TOPIC);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_MODE);
-#if ENABLE_IM_SUPPORT
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMENABLE);
-            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMDISABLE);
-            if (!String.IsNullOrEmpty(_config.IMServiceServerName))
-            {
-                ConnectToIMService(true);
-            }
-#endif
-            _addinManager.Load();
-            FireEvent(AddInsLoadCompleted, EventArgs.Empty);
-            
-            FireEvent(SessionStarted, new SessionStartedEventArgs(username, _twitterUser, (IPEndPoint)_tcpClient.Client.RemoteEndPoint));
+            FireEvent(SessionStarted, new SessionStartedEventArgs(username, _twitterUser, (IPEndPoint)Connections[0].TcpClient.Client.RemoteEndPoint));
         }
         protected virtual void OnSessionEnded()
         {
@@ -416,7 +349,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     // 下位互換性FIX: グループに自分自身のNICKは存在しないようにします
                     foreach (Group g in _groups.Values)
                     {
-                        g.Members.Remove(_nick);
+                        g.Members.Remove(CurrentNick);
                     }
                 }
                 catch (IOException ie)
@@ -497,52 +430,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
 
-        private void DoAuthenticateAndInitializeSession()
+        private void InitializeSession()
         {
-            if (String.IsNullOrEmpty(_nick) || String.IsNullOrEmpty(_password) || String.IsNullOrEmpty(_username))
-                return;
-
-            // ニックネームとパスワードのチェック
-            if (String.IsNullOrEmpty(_nick))
-            {
-                SendErrorReply(ErrorReply.ERR_NONICKNAMEGIVEN, "No nickname given");
-                return;
-            }
-            if (String.IsNullOrEmpty(_password))
-            {
-                SendErrorReply(ErrorReply.ERR_PASSWDMISMATCH, "Password Incorrect");
-                return;
-            }
-
-            Type t = typeof(Server);
-            _clientHost = String.Format("{0}!{1}@{2}", _nick, _username, ((IPEndPoint)(_tcpClient.Client.RemoteEndPoint)).Address);
-
-            SendNumericReply(NumericReply.RPL_WELCOME
-                             , String.Format("Welcome to the Internet Relay Network {0}", _clientHost));
-            SendNumericReply(NumericReply.RPL_YOURHOST
-                             , String.Format("Your host is {0}, running version {1}", t.FullName, t.Assembly.GetName().Version));
-            SendNumericReply(NumericReply.RPL_CREATED
-                             , String.Format("This server was created {0}", DateTime.Now));
-            SendNumericReply(NumericReply.RPL_MYINFO
-                             , String.Format("{0} {1}-{2} {3} {4}", Environment.MachineName, t.FullName, t.Assembly.GetName().Version, "", ""));
-
-            SendTwitterGatewayServerMessage("Twitter IRC Gateway Server Connected.");
-
-            // ログインチェック
-            // この段階でTwitterServiceは作っておく
-            SendTwitterGatewayServerMessage("* アカウント認証を確認しています...");
-            _twitter = new TwitterService(_username, _password);
-            if (!RunCheck(() => { _twitterUser = _twitter.VerifyCredential(); }, (ex) => { }))
-            {
-                // Twitter の接続に失敗
-                SendTwitterGatewayServerMessage("* アカウント認証に失敗しました。ユーザ名またはパスワードを確認してください。");
-                Thread.Sleep(10*1000); // 10秒待つ
-                SendErrorReply(ErrorReply.ERR_PASSWDMISMATCH, "Password Incorrect");
-                Close();
-                return;
-            }
-            SendTwitterGatewayServerMessage(String.Format("* アカウント: {0} (ID:{1})", _twitterUser.ScreenName, _twitterUser.Id));
-            
             // 設定を読み込む
             SendTwitterGatewayServerMessage("* 設定を読み込んでいます...");
             LoadSettings();
@@ -550,6 +439,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             //
             // Twitte Service Setup
             //
+            _twitter = new TwitterService(Connections[0].UserInfo.UserName, Connections[0].UserInfo.Password);
             _twitter.EnableCompression = _config.EnableCompression;
             _twitter.BufferSize = _config.BufferSize;
             _twitter.Interval = _config.Interval;
@@ -565,14 +455,33 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (_server.Proxy != null)
                 _twitter.Proxy = _server.Proxy;
 
+            // IRC メッセージ
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_PRIVMSG);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_WHOIS);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_INVITE);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_JOIN);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_PART);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_KICK);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_LIST);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TOPIC);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_MODE);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_PING);
+#if ENABLE_IM_SUPPORT
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMENABLE);
+            MessageReceived += new EventHandler<MessageReceivedEventArgs>(MessageReceived_TIGIMDISABLE);
+            if (!String.IsNullOrEmpty(_config.IMServiceServerName))
+            {
+                ConnectToIMService(true);
+            }
+#endif
+            // アドインの読み込み
+            _addinManager.Load();
+            FireEvent(AddInsLoadCompleted, EventArgs.Empty);
+
             SendTwitterGatewayServerMessage("* セッションを開始します");
-            OnSessionStarted(_username);
-            Trace.WriteLine(String.Format("SessionStarted: UserName={0}; Nickname={1}", _username, _nick));
+            OnSessionStarted(_twitterUser.ScreenName);
+            Trace.WriteLine(String.Format("SessionStarted: UserName={0}; Nickname={1}", Connections[0].UserInfo.UserName, CurrentNick));
             Trace.WriteLine(String.Format("User: Id={0}, ScreenName={1}, Name={2}", _twitterUser.Id, _twitterUser.ScreenName, _twitterUser.Name));
-
-            // メインチャンネルにJOIN
-            SendServer(new JoinMessage(_config.ChannelName, ""));
-
             _twitter.Start();
         }
 
@@ -602,31 +511,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 Group group = GetGroupByChannelName(channelName);
                 if (!group.IsJoined)
                 {
-                    joinMsg = new JoinMessage(channelName, "");
-                    SendServer(joinMsg);
-
-                    SendNumericReply(NumericReply.RPL_NAMREPLY, "=", channelName, String.Format("@{0} ", _nick) + String.Join(" ", group.Members.ToArray()));
-                    SendNumericReply(NumericReply.RPL_ENDOFNAMES, channelName, "End of NAMES list");
-                    group.IsJoined = true;
-
-                    // mode
-                    foreach (ChannelMode mode in group.ChannelModes)
-                    {
-                        Send(new ModeMessage(channelName, mode.ToString()));
-                    }
-                    
-                    // Set topic of client, if topic was set
-                    if (!String.IsNullOrEmpty(group.Topic))
-                    {
-                        Send(new TopicMessage(channelName, group.Topic));
-                    }
-                    else
-                    {
-                        SendNumericReply(NumericReply.RPL_NOTOPIC, channelName, "No topic is set");
-                    }
+                    JoinChannel(group);
                 }
             }
        }
+        
+
 
         private void MessageReceived_PART(object sender, MessageReceivedEventArgs e)
         {
@@ -788,43 +678,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             SaveGroups();
         }
 
-        private void MessageReceived_USER(object sender, MessageReceivedEventArgs e)
-        {
-            if (!(e.Message is UserMessage)) return;
-
-            _username = e.Message.CommandParams[3];
-            DoAuthenticateAndInitializeSession();
-        }
-
-        void MessageReceived_NICK(object sender, MessageReceivedEventArgs e)
-        {
-            if (!(e.Message is NickMessage)) return;
-
-            _nick = ((NickMessage)(e.Message)).NewNick;
-            DoAuthenticateAndInitializeSession();
-        }
-
-        void MessageReceived_PASS(object sender, MessageReceivedEventArgs e)
-        {
-            if (String.Compare(e.Message.Command, "PASS", true) != 0) return;
-
-            if (e.Message.CommandParam.Length != 0)
-            {
-                _password = e.Message.CommandParam.Substring(1);
-            }
-        }
-
-        void MessageReceived_QUIT(object sender, MessageReceivedEventArgs e)
-        {
-            if (!(e.Message is QuitMessage)) return;
-
-            try
-            {
-                e.Client.Close();
-            }
-            catch { }
-        }
-
         void MessageReceived_PRIVMSG(object sender, MessageReceivedEventArgs e)
         {
             PrivMsgMessage message = e.Message as PrivMsgMessage;
@@ -851,7 +704,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
 
                     // ほかのグループに送信する
-                    SendChannelMessage(message.Receiver, _nick, message.Content, false, true, true, false);
+                    SendChannelMessage(message.Receiver, CurrentNick, message.Content, false, true, true, false);
                 }
                 else if (String.Compare(message.Receiver, "trace", true) != 0)
                 {
@@ -990,7 +843,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 
                 // server -> client (set client topic)
                 Send(new TopicMessage(topicMsg.Channel, topicMsg.Topic){
-                    SenderNick = _nick
+                    SenderNick = CurrentNick
                 });
             }
         }
@@ -1071,7 +924,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 PrivMsgMessage privMsg = new PrivMsgMessage();
                 privMsg.SenderNick = message.SenderScreenName;
                 privMsg.SenderHost = "twitter@" + Server.ServerName;
-                privMsg.Receiver = _nick;
+                privMsg.Receiver = CurrentNick;
                 //privMsg.Content = String.Format("{0}: {1}", screenName, text);
                 privMsg.Content = line;
                 Send(privMsg);
@@ -1118,110 +971,25 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         #endregion
 
-        /// <summary>
-        /// IRCメッセージを送信します
-        /// </summary>
-        /// <param name="msg"></param>
-        public void Send(IRCMessage msg)
-        {
-            //CheckDisposed();
-            lock (_writer)
-            {
-                try
-                {
-                    if (_tcpClient != null && _tcpClient.Connected && _writer.BaseStream.CanWrite)
-                    {
-                        _writer.WriteLine(msg.RawMessage);
-                        _writer.Flush();
-                    }
-                }
-                catch (IOException)
-                {
-                    Close();
-                }
-            }
-        }
-
-        /// <summary>
-        /// JOIN などクライアントに返すメッセージを送信します
-        /// </summary>
-        /// <param name="msg"></param>
-        public void SendServer(IRCMessage msg)
-        {
-            msg.Sender = _clientHost;
-            Send(msg);
-        }
-
-        /// <summary>
-        /// IRCサーバからのメッセージを送信します
-        /// </summary>
-        /// <param name="msg"></param>
-        public void SendServerMessage(IRCMessage msg)
-        {
-            msg.Prefix = Server.ServerName;
-            Send(msg);
-        }
-
+        #region Compatiblity
         /// <summary>
         /// TwitterIrcGatewayからのメッセージを送信します
         /// </summary>
         /// <param name="message"></param>
         public void SendTwitterGatewayServerMessage(String message)
         {
-            NoticeMessage noticeMsg = new NoticeMessage();
-            noticeMsg.Sender = "";
-            noticeMsg.Receiver = _nick;
-            noticeMsg.Content = message.Replace("\n", " ");
-            Send(noticeMsg);
+            SendGatewayServerMessage(message);
         }
+        #endregion
 
-        /// <summary>
-        /// サーバのエラーメッセージを送信します
-        /// </summary>
-        /// <param name="message"></param>
-        public void SendServerErrorMessage(String message)
-        {
-            if (!_config.IgnoreWatchError)
-            {
-                SendTwitterGatewayServerMessage("エラー: " + message);
-            }
-        }
-
-        /// <summary>
-        /// サーバからクライアントにエラーリプライを返します。
-        /// </summary>
-        /// <param name="errorNum">エラーリプライ番号</param>
-        /// <param name="commandParams">リプライコマンドパラメータ</param>
-        public void SendErrorReply(ErrorReply errorNum, params String[] commandParams)
-        {
-            SendNumericReply((NumericReply)errorNum, commandParams);
-        }
-
-        /// <summary>
-        /// サーバからクライアントにニュメリックリプライを返します。
-        /// </summary>
-        /// <param name="numReply">リプライ番号</param>
-        /// <param name="commandParams">リプライコマンドパラメータ</param>
-        public void SendNumericReply(NumericReply numReply, params String[] commandParams)
-        {
-            if (commandParams.Length > 14 || commandParams.Length < 0)
-                throw new ArgumentOutOfRangeException("commandParams");
-
-            NumericReplyMessage numMsg = new NumericReplyMessage(numReply);
-            numMsg.CommandParams[0] = _nick;
-            for (Int32 i = 0; i < commandParams.Length; i++)
-                numMsg.CommandParams[i+1] = commandParams[i];
-
-            SendServerMessage(numMsg);
-        }
-
+        #region チャンネルメッセージ
         /// <summary>
         /// ユーザ自身の更新メッセージなどをチャンネルに送信、必要なチャンネルにエコーバックします。
         /// </summary>
         /// <param name="content">送信するメッセージ</param>
         public void SendChannelMessage(String content)
         {
-            SendChannelMessage(String.Empty, _clientHost, content, true, true, true, false);
+            SendChannelMessage(String.Empty, Connections[0].UserInfo.ClientHost, content, true, true, true, false);
         }
 
         /// <summary>
@@ -1231,7 +999,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="content">送信するメッセージ</param>
         public void SendChannelMessage(String receivedChannel, String content)
         {
-            SendChannelMessage(receivedChannel, _clientHost, content, true, true, true, false);
+            SendChannelMessage(receivedChannel, Connections[0].UserInfo.ClientHost, content, true, true, true, false);
         }
  
         /// <summary>
@@ -1243,7 +1011,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public void SendChannelMessage(String receivedChannel, String sender, String content)
         {
             SendChannelMessage(receivedChannel, sender, content, true, true, true, false);
-        }       
+        } 
         /// <summary>
         /// メッセージをクライアントに送信、必要の応じてトピックに設定し、必要なチャンネルにエコーバックします。
         /// </summary>
@@ -1287,7 +1055,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         Receiver = receivedChannel,
                         Content = content
                     });
-                }                
+                }
             }
 
             // 他のチャンネルにも投げる
@@ -1367,7 +1135,38 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
 
         }
+        #endregion
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="group"></param>
+        public void JoinChannel(Group group)
+        {
+            JoinMessage joinMsg = new JoinMessage(group.Name, "");
+            SendServer(joinMsg);
 
+            SendNumericReply(NumericReply.RPL_NAMREPLY, "=", group.Name, String.Format("@{0} ", CurrentNick) + String.Join(" ", group.Members.ToArray()));
+            SendNumericReply(NumericReply.RPL_ENDOFNAMES, group.Name, "End of NAMES list");
+            group.IsJoined = true;
+
+            // mode
+            foreach (ChannelMode mode in group.ChannelModes)
+            {
+                Send(new ModeMessage(group.Name, mode.ToString()));
+            }
+
+            // Set topic of client, if topic was set
+            if (!String.IsNullOrEmpty(group.Topic))
+            {
+                Send(new TopicMessage(group.Name, group.Topic));
+            }
+            else
+            {
+                SendNumericReply(NumericReply.RPL_NOTOPIC, group.Name, "No topic is set");
+            }
+        }
+        
         /// <summary>
         /// 
         /// </summary>
@@ -1649,15 +1448,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 
         /// </summary>
-        public void Close()
+        public override void Close()
         {
-            if (_tcpClient != null && _tcpClient.Connected)
-            {
-                _tcpClient.Close();
-            }
             OnSessionEnded();
-
             Dispose();
+            
+            base.Close();
         }
 
         /// <summary>
@@ -1671,7 +1467,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public override string ToString()
         {
-            return String.Format("Session: User={0}, Client={1}", _username, _tcpClient.Client.RemoteEndPoint);
+            return String.Format("Session: User={0}, Connections=[{1}]", _twitterUser.ScreenName, String.Join(", ", (from conn in Connections select conn.UserInfo.EndPoint.ToString()).ToArray()));
         }
 
         #region ヘルパーメソッド
@@ -1734,17 +1530,41 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     _twitter.Dispose();
                     _twitter = null;
                 }
-                if (_tcpClient != null && _tcpClient.Connected)
-                {
-                    _tcpClient.Close();
-                    _tcpClient = null;
-                }
                 GC.SuppressFinalize(this);
                 _isDisposed = true;
             }
         }
 
         #endregion
+
+        protected override void OnAttached(ConnectionBase connection)
+        {
+            lock (this)
+            {
+                if (!IsStarted)
+                    Start();
+                
+                // メインチャンネルにJOIN
+                SendServer(new JoinMessage(_config.ChannelName, ""));
+                foreach (Group group in Groups.Values)
+                {
+                    if (group.IsJoined)
+                    {
+                        JoinChannel(group);
+                    }
+                }
+            }
+        }
+
+        protected override void OnDetached(ConnectionBase connection)
+        {
+        }
+
+        protected override void OnMessageReceivedFromClient(MessageReceivedEventArgs e)
+        {
+            // 転送する
+            OnMessageReceived(e.Message, e);
+        }
     }
 
     public delegate void Procedure();

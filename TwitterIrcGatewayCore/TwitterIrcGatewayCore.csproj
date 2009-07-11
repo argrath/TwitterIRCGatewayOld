@@ -14,6 +14,7 @@
     <OldToolsVersion>2.0</OldToolsVersion>
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -105,6 +106,9 @@
       <HintPath>AddIns\DLRIntegration\Microsoft.Scripting.ExtensionAttribute.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -130,6 +134,10 @@
     <Compile Include="AddIns\ResolveShortUrlServices.cs" />
     <Compile Include="AddIns\TypableMapSupport.cs" />
     <Compile Include="AddIns\UndoStatusUpdate.cs" />
+    <Compile Include="AuthenticateResult.cs" />
+    <Compile Include="Connection.cs" />
+    <Compile Include="ConnectionBase.cs" />
+    <Compile Include="SessionBase.cs" />
     <Compile Include="SessionIM.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="EventArgs.cs" />
@@ -153,6 +161,7 @@
     </Compile>
     <Compile Include="AddIns\TypableMap\TypableMap.cs" />
     <Compile Include="AddIns\TypableMap\TypableMapCommandProcessor.cs" />
+    <Compile Include="UserInfo.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
