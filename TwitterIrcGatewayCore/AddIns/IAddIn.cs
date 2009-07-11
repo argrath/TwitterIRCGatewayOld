@@ -70,6 +70,34 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         /// 値を取得がプロパティまたはフィールド経由の場合はPropertyInfoまたはFieldInfoを指定します
         /// </summary>
         public MemberInfo MemberInfo { get; set; }
+        /// <summary>
+        /// デフォルトの値
+        /// </summary>
+        public Object DefaultValue { get; set; }
+
+        /// <summary>
+        /// ConfigurationPropertyInfo クラスのインスタンスを作成します。
+        /// </summary>
+        public ConfigurationPropertyInfo()
+        {
+        }
+
+        /// <summary>
+        /// ConfigurationPropertyInfo クラスのインスタンスを作成して指定されたパラメータで初期化します。
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="description"></param>
+        /// <param name="type"></param>
+        /// <param name="defaultValue"></param>
+        /// <param name="memberInfo"></param>
+        public ConfigurationPropertyInfo(String name, String description, Type type, Object defaultValue, MemberInfo memberInfo)
+        {
+            Name = name;
+            Description = description;
+            Type = type;
+            DefaultValue = defaultValue;
+            MemberInfo = memberInfo;
+        }
     }
 
     /// <summary>

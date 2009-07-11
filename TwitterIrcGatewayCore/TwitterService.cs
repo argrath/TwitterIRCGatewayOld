@@ -1135,7 +1135,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             catch (Exception ex3)
             {
                 try { OnCheckError(new ErrorEventArgs(ex3)); } catch { }
-                Trace.WriteLine("RunCheck(Unhandled Exception): "+ex3.Message);
+                Trace.WriteLine("RunCheck(Unhandled Exception): "+ex3.ToString());
                 return false;
             }
 
