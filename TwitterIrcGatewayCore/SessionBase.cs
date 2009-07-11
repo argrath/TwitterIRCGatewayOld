@@ -7,7 +7,7 @@ using Misuzilla.Net.Irc;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
-    public abstract class SessionBase : MarshalByRefObject
+    public abstract class SessionBase : MarshalByRefObject, IIrcMessageSendable
     {
         private Server _server;
 
@@ -17,6 +17,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public Int32 Id { get; private set; }
         public String CurrentNick { get; set; }
         public IList<ConnectionBase> Connections { get { return _connections.AsReadOnly(); } }
+
+        public event EventHandler<ConnectionAttachEventArgs> ConnectionAttached;
+        public event EventHandler<ConnectionAttachEventArgs> ConnectionDetached;
 
         public SessionBase(Int32 id, Server server)
         {
@@ -47,6 +50,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
 
                     OnAttached(connection);
+                    OnConnectionAttached(new ConnectionAttachEventArgs {Connection = connection});
                 }
         }
 
@@ -61,6 +65,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     SendGatewayServerMessage("Connection Detached: " + connection.ToString());
 
                     OnDetached(connection);
+                    OnConnectionDetached(new ConnectionAttachEventArgs {Connection = connection});
 
                     // 接続が0になったらセッション終了
                     if (_connections.Count == 0 && !IsKeepAlive)
@@ -101,7 +106,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Detach((ConnectionBase)sender);
         }
         #endregion
-
+        
+        protected virtual void OnConnectionAttached(ConnectionAttachEventArgs e)
+        {
+            if (ConnectionAttached != null)
+                ConnectionAttached(this, e);
+        }
+        protected virtual void OnConnectionDetached(ConnectionAttachEventArgs e)
+        {
+            if (ConnectionDetached != null)
+                ConnectionDetached(this, e);
+        }
+            
         public virtual void Close()
         {
             lock (_server.Sessions)

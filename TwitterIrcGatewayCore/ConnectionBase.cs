@@ -14,7 +14,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     /// <summary>
     /// ユーザからの接続を管理するクラス
     /// </summary>
-    public abstract class ConnectionBase : MarshalByRefObject, IDisposable
+    public abstract class ConnectionBase : MarshalByRefObject, IDisposable, IIrcMessageSendable
     {
         private StreamWriter _writer;
 

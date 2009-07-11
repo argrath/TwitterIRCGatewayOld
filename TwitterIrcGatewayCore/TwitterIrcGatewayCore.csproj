@@ -130,6 +130,7 @@
     <Compile Include="AddIns\DLRIntegration\DLRIntegrationAddIn.cs" />
     <Compile Include="AddIns\ExtensionCommands.cs" />
     <Compile Include="AddIns\IAddIn.cs" />
+    <Compile Include="AddIns\RecentLog.cs" />
     <Compile Include="AddIns\RemoveRedundantSuffix.cs" />
     <Compile Include="AddIns\ResolveShortUrlServices.cs" />
     <Compile Include="AddIns\TypableMapSupport.cs" />
@@ -137,6 +138,7 @@
     <Compile Include="AuthenticateResult.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="ConnectionBase.cs" />
+    <Compile Include="IIrcMessageSendable.cs" />
     <Compile Include="SessionBase.cs" />
     <Compile Include="SessionIM.cs" />
     <Compile Include="Config.cs" />

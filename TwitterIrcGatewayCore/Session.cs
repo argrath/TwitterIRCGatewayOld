@@ -23,7 +23,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     {
         private readonly static String ConfigBasePath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "Configs");
 
-
         private Server _server;
         private TwitterService _twitter;
         private LinkedList<Int64> _lastStatusIdsFromGateway;
@@ -33,7 +32,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Config _config;
         private AddInManager _addinManager;
 
-        private List<String> _nickNames = new List<string>();
+        private HashSet<User> _followingUsers = new HashSet<User>();
         private Boolean _isFirstTime = true;
 
         private TraceListener _traceListener;
@@ -511,7 +510,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 Group group = GetGroupByChannelName(channelName);
                 if (!group.IsJoined)
                 {
-                    JoinChannel(group);
+                    JoinChannel(this, group);
                 }
             }
        }
@@ -1140,30 +1139,31 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="connection"></param>
         /// <param name="group"></param>
-        public void JoinChannel(Group group)
+        public void JoinChannel(IIrcMessageSendable messageSendable, Group group)
         {
             JoinMessage joinMsg = new JoinMessage(group.Name, "");
-            SendServer(joinMsg);
+            messageSendable.SendServer(joinMsg);
 
-            SendNumericReply(NumericReply.RPL_NAMREPLY, "=", group.Name, String.Format("@{0} ", CurrentNick) + String.Join(" ", group.Members.ToArray()));
-            SendNumericReply(NumericReply.RPL_ENDOFNAMES, group.Name, "End of NAMES list");
+            messageSendable.SendNumericReply(NumericReply.RPL_NAMREPLY, "=", group.Name, String.Format("@{0} ", CurrentNick) + String.Join(" ", group.Members.ToArray()));
+            messageSendable.SendNumericReply(NumericReply.RPL_ENDOFNAMES, group.Name, "End of NAMES list");
             group.IsJoined = true;
 
             // mode
             foreach (ChannelMode mode in group.ChannelModes)
             {
-                Send(new ModeMessage(group.Name, mode.ToString()));
+                messageSendable.Send(new ModeMessage(group.Name, mode.ToString()));
             }
 
             // Set topic of client, if topic was set
             if (!String.IsNullOrEmpty(group.Topic))
             {
-                Send(new TopicMessage(group.Name, group.Topic));
+                messageSendable.Send(new TopicMessage(group.Name, group.Topic));
             }
             else
             {
-                SendNumericReply(NumericReply.RPL_NOTOPIC, group.Name, "No topic is set");
+                messageSendable.SendNumericReply(NumericReply.RPL_NOTOPIC, group.Name, "No topic is set");
             }
         }
         
@@ -1175,15 +1175,27 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             RunCheck(delegate
             {
                 User[] friends = _twitter.GetFriends(10);
-                _nickNames = new List<string>(Array.ConvertAll<User, String>(friends, u => u.ScreenName));
+                _followingUsers = new HashSet<User>();
+                _followingUsers.UnionWith(friends);
 
-                for (var i = 0; i < ((_nickNames.Count / 100) + 1); i++)
-                {
-                    Int32 count = Math.Min(_nickNames.Count - (i*100), 100);
-                    SendNumericReply(NumericReply.RPL_NAMREPLY, "=", _config.ChannelName, String.Join(" ", _nickNames.GetRange(i * 100, count).ToArray()));
-                }
-                SendNumericReply(NumericReply.RPL_ENDOFNAMES, _config.ChannelName, "End of NAMES list");
+                ShowChannelUsers(this);
             });
+        }
+        
+        /// <summary>
+        /// チャンネルにユーザリストを送信します。
+        /// </summary>
+        /// <param name="messageSendable"></param>
+        private void ShowChannelUsers(IIrcMessageSendable messageSendable)
+        {
+            List<String> users = _followingUsers.Select(u => u.ScreenName).ToList();
+            for (var i = 0; i < ((users.Count / 100) + 1); i++)
+            {
+                Int32 count = Math.Min(users.Count - (i * 100), 100);
+                messageSendable.SendNumericReply(NumericReply.RPL_NAMREPLY, "=", _config.ChannelName, String.Format("{0} ", CurrentNick) + String.Join(" ", users.GetRange(i * 100, count).ToArray()));
+            }
+            
+            messageSendable.SendNumericReply(NumericReply.RPL_ENDOFNAMES, _config.ChannelName, "End of NAMES list");
         }
 
         /// <summary>
@@ -1199,7 +1211,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         private void CheckFriends()
         {
-            if (_nickNames.Count == 0)
+            if (_followingUsers.Count == 0)
             {
                 GetFriendNames();
                 return;
@@ -1207,34 +1219,33 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             RunCheck(delegate
             {
-                User[] friends = _twitter.GetFriends();
-                List<String> screenNames = new List<string>(Array.ConvertAll<User, String>(friends, u => u.ScreenName));
+                User[] friends = _twitter.GetFriends(10);
 
                 // てきとうに。
                 // 増えた分
-                foreach (String screenName in screenNames)
+                foreach (User user in friends)
                 {
-                    if (!_nickNames.Contains(screenName))
+                    if (!_followingUsers.Contains(user))
                     {
                         JoinMessage joinMsg = new JoinMessage(_config.ChannelName, "");
-                        joinMsg.SenderNick = screenName;
+                        joinMsg.SenderNick = user.ScreenName;
                         joinMsg.SenderHost = String.Format("{0}@{1}", "twitter", Server.ServerName);
                         Send(joinMsg);
                     }
                 }
                 // 減った分
-                foreach (String screenName in _nickNames)
+                foreach (User user in _followingUsers)
                 {
-                    if (!screenNames.Contains(screenName))
+                    if (!friends.Contains(user))
                     {
                         PartMessage partMsg = new PartMessage(_config.ChannelName, "");
-                        partMsg.SenderNick = screenName;
+                        partMsg.SenderNick = user.ScreenName;
                         partMsg.SenderHost = String.Format("{0}@{1}", "twitter", Server.ServerName);
                         Send(partMsg);
                     }
                 }
 
-                _nickNames = screenNames;
+                _followingUsers.IntersectWith(friends);
 
             });
         }
@@ -1268,7 +1279,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             // friends チェックが必要かどうかを確かめる
             // まだないときは取ってくるフラグを立てる
-            friendsCheckRequired |= !(_nickNames.Contains(status.User.ScreenName));
+            friendsCheckRequired |= !(_followingUsers.Contains(status.User));
             
             // フィルタ
             if (!FireEvent(PreFilterProcessTimelineStatus, eventArgs)) return;
@@ -1546,11 +1557,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 
                 // メインチャンネルにJOIN
                 SendServer(new JoinMessage(_config.ChannelName, ""));
+                // ユーザ一覧
+                if (_followingUsers.Count > 0)
+                {
+                    ShowChannelUsers(connection);
+                }
+                // グループにJOIN
                 foreach (Group group in Groups.Values)
                 {
                     if (group.IsJoined)
                     {
-                        JoinChannel(group);
+                        JoinChannel(connection, group);
                     }
                 }
             }

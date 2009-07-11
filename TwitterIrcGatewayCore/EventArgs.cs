@@ -57,6 +57,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             EndPoint = endPoint;
         }
     }
+    
+    /// <summary>
+    /// 接続をセッションにアタッチしたイベントのデータを提供します
+    /// </summary>
+    public class ConnectionAttachEventArgs : EventArgs
+    {
+        /// <summary>
+        /// 新たにアタッチされた接続
+        /// </summary>
+        public ConnectionBase Connection { get; set; }
+    }
 
     /// <summary>
     /// キャンセル可能なイベントのデータを提供します。
