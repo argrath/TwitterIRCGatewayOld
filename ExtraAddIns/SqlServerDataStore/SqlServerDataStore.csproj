@@ -8,8 +8,8 @@
     <ProjectGuid>{03FC30B6-9603-4A49-81E0-5474D7AE160A}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Misuzilla.Applicaitons.TwitterIrcGateway.AddIns.SqlServerDataStore</RootNamespace>
-    <AssemblyName>Misuzilla.Applicaitons.TwitterIrcGateway.AddIns.SqlServerDataStore</AssemblyName>
+    <RootNamespace>Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore</RootNamespace>
+    <AssemblyName>Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <PublishUrl>publish\</PublishUrl>

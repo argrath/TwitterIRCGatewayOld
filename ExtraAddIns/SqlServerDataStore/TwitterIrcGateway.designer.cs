@@ -9,7 +9,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Misuzilla.Applicaitons.TwitterIrcGateway.AddIns.SqlServerDataStore
+namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
 {
 	using System.Data.Linq;
 	using System.Data.Linq.Mapping;
@@ -45,7 +45,7 @@ namespace Misuzilla.Applicaitons.TwitterIrcGateway.AddIns.SqlServerDataStore
     #endregion
 		
 		public TwitterIrcGatewayDataContext() : 
-				base(global::Misuzilla.Applicaitons.TwitterIrcGateway.AddIns.SqlServerDataStore.Properties.Settings.Default.DatabaseConnectionString, mappingSource)
+				base(global::Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore.Properties.Settings.Default.DatabaseConnectionString, mappingSource)
 		{
 			OnCreated();
 		}

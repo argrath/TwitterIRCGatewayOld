@@ -9,7 +9,7 @@ using Misuzilla.Applications.TwitterIrcGateway;
 using Misuzilla.Applications.TwitterIrcGateway.AddIns;
 using System.Data.Linq;
 
-namespace Misuzilla.Applicaitons.TwitterIrcGateway.AddIns.SqlServerDataStore
+namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
 {
     public class Connector : AddInBase
     {

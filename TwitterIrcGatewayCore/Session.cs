@@ -35,8 +35,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private HashSet<User> _followingUsers = new HashSet<User>();
         private Boolean _isFirstTime = true;
 
-        private TraceListener _traceListener;
-
         private User _twitterUser;
 
         #region Events
@@ -237,6 +235,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public Logger Logger
         {
             get; private set;
+        }
+        
+        /// <summary>
+        /// フォローしているユーザの一覧(DisableUserListが有効の場合には空になります)
+        /// </summary>
+        public HashSet<User> FollowingUsers
+        {
+            get { return _followingUsers; }
         }
         
         /// <summary>

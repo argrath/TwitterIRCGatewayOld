@@ -62,6 +62,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _server = ServerProxy.GetTransparentProxy() as Server;
             _session = SessionProxy.GetTransparentProxy() as Session;
         }
+        
+        static AddInManager()
+        {
+            // これがないと AddIns 内での参照が死ぬ
+            AppDomain.CurrentDomain.AssemblyResolve += (object sender, ResolveEventArgs args) =>
+                                                           {
+                                                               foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+                                                               {
+                                                                   if (asm.FullName == args.Name)
+                                                                       return asm;
+                                                               }
+                                                               return null;
+                                                           };
+        }
 
         //public static AddInManager CreateInstanceWithAppDomain(Server server, Session session)
         //{
