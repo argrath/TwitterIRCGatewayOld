@@ -13,7 +13,7 @@ namespace Misuzilla.Applicaitons.TwitterIrcGateway.AddIns.SqlServerDataStore
 {
     public class Connector : AddInBase
     {
-        private TwitterIrcGatewayDataContext _dataContext = new TwitterIrcGatewayDataContext(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), @"Data\Database.mdf"));
+        private TwitterIrcGatewayDataContext _dataContext = new TwitterIrcGatewayDataContext();
         private Dictionary<String, Group> _cacheGroup;
         public override void Initialize()
         {
