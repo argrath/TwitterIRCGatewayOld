@@ -28,7 +28,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     
     public class TraceLogger : Logger
     {
-        public static readonly TraceLogger Server = new TraceLogger("Service");
+        public static readonly TraceLogger Server = new TraceLogger("Server");
         public static readonly TraceLogger Filter = new TraceLogger("Filter");
         
         protected TraceSource TraceSource { get; set; }
