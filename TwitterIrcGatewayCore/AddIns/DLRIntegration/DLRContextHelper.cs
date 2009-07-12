@@ -136,8 +136,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                     String[] parts = line.Split(new char[] {'\t'}, 3);
                     if (parts.Length != 3)
                     {
-                        Trace.WriteLine("Invalid configuration line:");
-                        Trace.WriteLine(line);
+                        Trace.TraceWarning("Invalid configuration line:");
+                        Trace.TraceWarning(line);
                         continue;
                     }
                     

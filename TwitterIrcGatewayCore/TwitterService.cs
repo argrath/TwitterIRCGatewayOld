@@ -1135,7 +1135,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             catch (Exception ex3)
             {
                 try { OnCheckError(new ErrorEventArgs(ex3)); } catch { }
-                Trace.WriteLine("RunCheck(Unhandled Exception): "+ex3.ToString());
+                TraceLogger.Server.Information("RunCheck(Unhandled Exception): "+ex3.ToString());
                 return false;
             }
 
@@ -1245,7 +1245,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             else
             {
                 url = ServiceServerPrefix + url;
-                System.Diagnostics.Trace.WriteLine("GET: " + url);
+                TraceLogger.Server.Information("GET: " + url);
                 HttpWebRequest webRequest = CreateHttpWebRequest(url, "GET");
                 HttpWebResponse webResponse = webRequest.GetResponse() as HttpWebResponse;
                 using (StreamReader sr = new StreamReader(GetResponseStream(webResponse)))
@@ -1256,7 +1256,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public String POST(String url, Byte[] postData)
         {
             url = ServiceServerPrefix + url;
-            System.Diagnostics.Trace.WriteLine("POST: " + url);
+            TraceLogger.Server.Information("POST: " + url);
             HttpWebRequest webRequest = CreateHttpWebRequest(url, "POST");
             using (Stream stream = webRequest.GetRequestStream())
             {
@@ -1313,7 +1313,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         Retry:
             try
             {
-                System.Diagnostics.Trace.WriteLine(String.Format("GET(Cookie): {0}", url));
+                TraceLogger.Server.Information("GET(Cookie): {0}", url);
                 return DownloadString(url);
             }
             catch (WebException we)
@@ -1331,7 +1331,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public CookieCollection CookieLogin()
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("Cookie Login: {0}", _userName));
+            TraceLogger.Server.Information("Cookie Login: {0}", _userName);
 
             HttpWebRequest request = CreateWebRequest("http://twitter.com/account/verify_credentials.xml") as HttpWebRequest;
             request.AllowAutoRedirect = false;
@@ -1388,7 +1388,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 #if FALSE
         private CookieCollection Login(String userNameOrEmail, String password)
         {
-            System.Diagnostics.Trace.WriteLine(String.Format("Cookie Login: {0}", userNameOrEmail));
+            System.Diagnostics.TraceLogger.Shared.Information(String.Format("Cookie Login: {0}", userNameOrEmail));
             using (CookieEnabledWebClient webClient = new CookieEnabledWebClient())
             {
                 Byte[] data = webClient.UploadData("https://twitter.com/sessions", Encoding.UTF8.GetBytes(

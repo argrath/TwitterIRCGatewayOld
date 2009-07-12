@@ -82,7 +82,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             _sessions = new Dictionary<Int32, Session>();
 
-            Trace.WriteLine(String.Format("Starting IRC Server: IPAddress = {0}, port = {1}", ipAddr, port));
+            TraceLogger.Server.Information(String.Format("Starting IRC Server: IPAddress = {0}, port = {1}", ipAddr, port));
             _tcpListener = new TcpListener(ipAddr, port);
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(AcceptHandled, this);
@@ -162,7 +162,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             if (tcpClient != null && tcpClient.Connected)
             {
-                Trace.WriteLine(String.Format("Client Connected: RemoteEndPoint={0}", tcpClient.Client.RemoteEndPoint));
+                TraceLogger.Server.Information(String.Format("Client Connected: RemoteEndPoint={0}", tcpClient.Client.RemoteEndPoint));
                 Connection connection = new Connection(this, tcpClient);
                 connection.Start();
             }

@@ -234,7 +234,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             // group 読み取り
             if (File.Exists(path))
             {
-                Trace.WriteLine(String.Format("Load Config: {0}", path));
+                TraceLogger.Server.Information(String.Format("Load Config: {0}", path));
                 try
                 {
                     using (FileStream fs = new FileStream(path, FileMode.Open))
@@ -245,13 +245,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                             if (config != null)
                                 return config;
                         }
-                        catch (XmlException xe) { Trace.WriteLine(xe.Message); }
-                        catch (InvalidOperationException ioe) { Trace.WriteLine(ioe.Message); }
+                        catch (XmlException xe) { TraceLogger.Server.Information(xe.Message); }
+                        catch (InvalidOperationException ioe) { TraceLogger.Server.Information(ioe.Message); }
                     }
                 }
                 catch (IOException ie)
                 {
-                    Trace.WriteLine(ie.Message);
+                    TraceLogger.Server.Information(ie.Message);
                     throw;
                 }
             }
@@ -264,7 +264,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="path"></param>
         public void Save(String path)
         {
-            Trace.WriteLine(String.Format("Save Config: {0}", path));
+            TraceLogger.Server.Information(String.Format("Save Config: {0}", path));
             try
             {
                 String dir = Path.GetDirectoryName(path);
@@ -275,13 +275,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     {
                         this.Serialize(fs);
                     }
-                    catch (XmlException xe) { Trace.WriteLine(xe.Message); }
-                    catch (InvalidOperationException ioe) { Trace.WriteLine(ioe.Message); }
+                    catch (XmlException xe) { TraceLogger.Server.Information(xe.Message); }
+                    catch (InvalidOperationException ioe) { TraceLogger.Server.Information(ioe.Message); }
                 }
             }
             catch (IOException ie)
             {
-                Trace.WriteLine(ie.Message);
+                TraceLogger.Server.Information(ie.Message);
                 throw;
             }
         }

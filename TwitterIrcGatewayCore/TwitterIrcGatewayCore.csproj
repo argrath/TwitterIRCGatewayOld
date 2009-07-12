@@ -139,6 +139,7 @@
     <Compile Include="Connection.cs" />
     <Compile Include="ConnectionBase.cs" />
     <Compile Include="IIrcMessageSendable.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="SessionBase.cs" />
     <Compile Include="SessionIM.cs" />
     <Compile Include="Config.cs" />

@@ -157,7 +157,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             catch (Exception e)
             {
                 NotifyMessage("エラー: " + e.Message);
-                Trace.WriteLine(e.ToString());
+                CurrentSession.Logger.Error(e.ToString());
             }
         }
         
@@ -523,7 +523,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
         public void Dispose()
         {
-            System.Diagnostics.Trace.WriteLine(ConsoleChannelName + ": Dispose");
+            CurrentSession.Logger.Information(ConsoleChannelName + ": Dispose");
             if (ContextStack != null)
             {
                 foreach (var ctx in ContextStack)

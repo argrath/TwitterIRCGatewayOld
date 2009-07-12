@@ -126,7 +126,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         }
                         catch (IRCException ircE)
                         {
-                            Trace.WriteLine(ircE.ToString());
+                            Trace.TraceWarning(ircE.ToString());
                         }
 
                     }
@@ -145,8 +145,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         #region イベント実行メソッド
         protected virtual void OnMessageReceived(IRCMessage msg)
         {
-            Trace.WriteLine(msg.ToString());
-
+            Debug.WriteLine(msg.ToString());
             if (FireEvent(PreMessageReceived, new MessageReceivedEventArgs(msg, _writer, TcpClient)))
             {
                 if (FireEvent(MessageReceived, new MessageReceivedEventArgs(msg, _writer, TcpClient)))
@@ -397,7 +396,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine(ex.ToString());
+                        Trace.TraceError(ex.ToString());
                     }
                 }
             }

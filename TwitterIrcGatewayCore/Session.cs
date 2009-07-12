@@ -149,6 +149,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             
             _addinManager = new AddInManager(_server, this);
             //_addinManager = AddInManager.CreateInstanceWithAppDomain(_server, this);
+
+            Logger = new SessionTraceLogger(this);
         }
 
         ~Session()
@@ -228,6 +230,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             get { return _twitterUser; }
         }
+
+        /// <summary>
+        /// ログを出力するためのクラスのインスタンスを取得します
+        /// </summary>
+        public Logger Logger
+        {
+            get; private set;
+        }
         
         /// <summary>
         /// セッションを開始します。
@@ -254,7 +264,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         
         protected virtual void OnMessageReceived(IRCMessage msg, MessageReceivedEventArgs e)
         {
-            Trace.WriteLine(msg.ToString());
+            Debug.WriteLine(msg.ToString());
 
             if (FireEvent(PreMessageReceived, e))
             {
@@ -482,8 +492,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 #endif
             SendTwitterGatewayServerMessage("* セッションを開始しました。");
             OnSessionStarted(_twitterUser.ScreenName);
-            Trace.WriteLine(String.Format("SessionStarted: UserName={0}; Nickname={1}", Connections[0].UserInfo.UserName, CurrentNick));
-            Trace.WriteLine(String.Format("User: Id={0}, ScreenName={1}, Name={2}", _twitterUser.Id, _twitterUser.ScreenName, _twitterUser.Name));
+            Logger.Information("SessionStarted: UserName={0}; Nickname={1}", Connections[0].UserInfo.UserName, CurrentNick);
+            Logger.Information("User: Id={0}, ScreenName={1}, Name={2}", _twitterUser.Id, _twitterUser.ScreenName, _twitterUser.Name);
         }
 
         #region メッセージ処理イベント
@@ -497,7 +507,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
 
             JoinMessage joinMsg = e.Message as JoinMessage;
-            Trace.WriteLine(String.Format("Join: {0} -> {1}", joinMsg.Sender, joinMsg.Channel));
+            Logger.Information(String.Format("Join: {0} -> {1}", joinMsg.Sender, joinMsg.Channel));
             String[] channelNames = joinMsg.Channel.Split(new Char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (String channelName in channelNames)
             {
@@ -507,7 +517,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 
                 if (!channelName.StartsWith("#") || channelName.Length < 3)
                 {
-                    Trace.WriteLine(String.Format("No nick/such channel: {0}", channelName));
+                    Debug.WriteLine(String.Format("No nick/such channel: {0}", channelName));
                     SendErrorReply(ErrorReply.ERR_NOSUCHCHANNEL, "No such nick/channel");
                     continue;
                 }
@@ -533,7 +543,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
 
             PartMessage partMsg = e.Message as PartMessage;
-            Trace.WriteLine(String.Format("Part: {0} -> {1}", partMsg.Sender, partMsg.Channel));
+            Logger.Information("Part: {0} -> {1}", partMsg.Sender, partMsg.Channel);
             String[] channelNames = partMsg.Channel.Split(new Char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
             foreach (String channelName in channelNames)
             {
@@ -665,7 +675,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             String userName = e.Message.CommandParams[0];
             String channelName = e.Message.CommandParams[1];
-            Trace.WriteLine(String.Format("Invite: {0} -> {1}", userName, channelName));
+            Logger.Information("Invite: {0} -> {1}", userName, channelName);
             if (!channelName.StartsWith("#") || channelName.Length < 3 || String.Compare(channelName, _config.ChannelName, true) == 0)
             {
                 SendErrorReply(ErrorReply.ERR_NOSUCHCHANNEL, "No such nick/channel");
@@ -778,7 +788,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         
             if (status != null)
             {
-                Trace.WriteLineIf(status != null, String.Format("Status Update: {0} (ID:{1}, CreatedAt:{2}; InReplyToStatusId:{3})", status.Text, status.Id.ToString(), status.CreatedAt.ToString(), inReplyToStatusId));
+                Logger.Information("Status Update: {0} (ID:{1}, CreatedAt:{2}; InReplyToStatusId:{3})", status.Text, status.Id.ToString(), status.CreatedAt.ToString(), inReplyToStatusId);
 
                 _lastStatusIdsFromGateway.AddLast(status.Id);
                 if (_lastStatusIdsFromGateway.Count > 100)
@@ -1514,7 +1524,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
                     catch (Exception ex)
                     {
-                        Trace.WriteLine(ex.ToString());
+                        Logger.Error(ex.ToString());
                     }
                 }
             }

@@ -49,7 +49,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 // Twitter の接続に失敗
                 SendGatewayServerMessage("* アカウント認証に失敗しました。ユーザ名またはパスワードを確認してください。内部的なエラーが発生しました。");
-                Trace.WriteLine(ex.ToString());
+                Trace.TraceError(ex.ToString());
                 return new AuthenticateResult(ErrorReply.ERR_PASSWDMISMATCH, "Password Incorrect");
             }
             SendGatewayServerMessage(String.Format("* アカウント: {0} (ID:{1})", TwitterUser.ScreenName, TwitterUser.Id));
