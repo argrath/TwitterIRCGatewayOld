@@ -31,10 +31,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
                      where g1.UserId == CurrentSession.TwitterUser.Id && g1.Name == CurrentSession.Config.ChannelName
                      select g1).Count() == 0)
                 {
-                    Group g = new Group
-                                  {Name = CurrentSession.Config.ChannelName, UserId = CurrentSession.TwitterUser.Id};
-                    _dataContext.Group.InsertOnSubmit(g);
-                    _dataContext.SubmitChanges();
+                    using (var ctx = new TwitterIrcGatewayDataContext())
+                    {
+                        Group g = new Group
+                                      {Name = CurrentSession.Config.ChannelName, UserId = CurrentSession.TwitterUser.Id};
+                        ctx.Group.InsertOnSubmit(g);
+                        ctx.SubmitChanges();
+                    }
                 }
 
                 UpdateGroupCache();
@@ -63,9 +66,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
                                                  select g1).Count()
                                     where count == 0
                                     select new Group() {Name = g, UserId = CurrentSession.TwitterUser.Id};
-
-                    _dataContext.Group.InsertAllOnSubmit(newGroups);
-                    _dataContext.SubmitChanges();
+                    using (var ctx = new TwitterIrcGatewayDataContext())
+                    {
+                        ctx.Group.InsertAllOnSubmit(newGroups);
+                        ctx.SubmitChanges();
+                    }
                     UpdateGroupCache();
                 }
 
@@ -73,29 +78,36 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
                     (from status in e.Statuses.Status where status.User.Id != 0 select status.User).Distinct();
                 foreach (var user in newTwitterUsers)
                 {
-                    try
+                    using (var ctx = new TwitterIrcGatewayDataContext())
                     {
-                        User newUser = new User
-                                           {
-                                               Id = user.Id,
-                                               Name = user.Name,
-                                               IsProtected = user.Protected,
-                                               ProfileImageUrl = user.ProfileImageUrl,
-                                               ScreenName = user.ScreenName
-                                           };
-                        if (!_dataContext.User.Contains(newUser))
+                        try
                         {
-                            _dataContext.User.InsertOnSubmit(newUser);
-                            _dataContext.SubmitChanges();
+                            User newUser = new User
+                                               {
+                                                   Id = user.Id,
+                                                   Name = user.Name,
+                                                   IsProtected = user.Protected,
+                                                   ProfileImageUrl = user.ProfileImageUrl,
+                                                   ScreenName = user.ScreenName
+                                               };
+                            if (!ctx.User.Contains(newUser))
+                            {
+                                ctx.User.InsertOnSubmit(newUser);
+                                ctx.SubmitChanges();
+                            }
                         }
-                    }
-                    catch (SqlException sqlE)
-                    {
-                        // キー制約
-                        if (sqlE.Number == 2627)
+                        catch (DuplicateKeyException dupE)
+                        {
                             continue;
+                        }
+                        catch (SqlException sqlE)
+                        {
+                            // キー制約
+                            if (sqlE.Number == 2627)
+                                continue;
 
-                        throw;
+                            throw;
+                        }
                     }
                 }
 
@@ -111,21 +123,28 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
                                           };
                 foreach (Status status in newStatuses)
                 {
-                    try
+                    if (!_dataContext.Status.Contains(status))
                     {
-                        if (!_dataContext.Status.Contains(status))
+                        using (var ctx = new TwitterIrcGatewayDataContext())
                         {
-                            _dataContext.Status.InsertOnSubmit(status);
-                            _dataContext.SubmitChanges();
-                        }
-                    }
-                    catch (SqlException sqlE)
-                    {
-                        // キー制約
-                        if (sqlE.Number == 2627)
-                            continue;
+                            try
+                            {
+                                ctx.Status.InsertOnSubmit(status);
+                                ctx.SubmitChanges();
+                            }
+                            catch (DuplicateKeyException dupE)
+                            {
+                                continue;
+                            }
+                            catch (SqlException sqlE)
+                            {
+                                // キー制約
+                                if (sqlE.Number == 2627)
+                                    continue;
 
-                        throw;
+                                throw;
+                            }
+                        }
                     }
                 }
             }
@@ -135,24 +154,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
         {
             lock (_dataContext)
             {
-                Timeline timeline = new Timeline
-                                        {
-                                            GroupId = _cacheGroup[e.Group.Name].Id,
-                                            StatusId = e.Status.Id,
-                                            UserId = CurrentSession.TwitterUser.Id
-                                        };
-                if (_dataContext.Timeline.Contains(timeline))
-                    return;
-                _dataContext.Timeline.InsertOnSubmit(timeline);
+                using (var ctx = new TwitterIrcGatewayDataContext())
+                {
+                    Timeline timeline = new Timeline
+                                            {
+                                                GroupId = _cacheGroup[e.Group.Name].Id,
+                                                StatusId = e.Status.Id,
+                                                UserId = CurrentSession.TwitterUser.Id
+                                            };
+                    if (ctx.Timeline.Contains(timeline))
+                        return;
+                    ctx.Timeline.InsertOnSubmit(timeline);
+                    ctx.SubmitChanges();
+                }
             }
         }
 
         void CurrentSession_PostProcessTimelineStatuses(object sender, TimelineStatusesEventArgs e)
         {
-            lock (_dataContext)
-            {
-                _dataContext.SubmitChanges();
-            }
         }
 
         public override void Uninitialize()
