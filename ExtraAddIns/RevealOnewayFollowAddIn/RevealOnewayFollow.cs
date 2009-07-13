@@ -64,20 +64,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                 {
                     // Follower から探してみる
                     User user = CurrentSession.FollowingUsers.FirstOrDefault(u => u.ScreenName == e.Status.User.ScreenName);
-                    if (user.Id != 0)
+                    if (user != null && user.Id != 0)
                     {
                         uid = user.Id;
                     }
-                    else
+                    
+                    // 見つからなかったら更にSQL Server
+                    if (uid == 0)
                     {
                         // SQL Serverから探してくる
-                        using (SqlServerDataStore.TwitterIrcGatewayDataContext ctx = new TwitterIrcGatewayDataContext ())
+                        using (TwitterIrcGatewayDataContext ctx = new TwitterIrcGatewayDataContext())
                         {
                             var dbUser =
                                 ctx.User.Where(u => u.ScreenName.ToLower() == e.Status.User.ScreenName.ToLower())
-                                        .First();
+                                        .FirstOrDefault();
 
-                            if (dbUser != null)
+                            if (dbUser != null || dbUser.Id != 0)
                                 uid = dbUser.Id;
                         }
                     }

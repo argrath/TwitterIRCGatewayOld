@@ -256,6 +256,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             SendTwitterGatewayServerMessage("* アドインを読み込んでいます...");
             _addinManager.Load();
             FireEvent(AddInsLoadCompleted, EventArgs.Empty);
+            SendTwitterGatewayServerMessage("* アドインを読み込みました。");
 
             _twitter.Start();
 

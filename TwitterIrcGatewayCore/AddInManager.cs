@@ -151,7 +151,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _xmlSerializer = new XmlSerializer(typeof(Object), xmlAttrOverrides, _configurationTypes.ToArray(), null, null);
 
             foreach (IAddIn addIn in _addIns)
-                addIn.Initialize(_server, _session);
+            {
+                try
+                {
+                    addIn.Initialize(_server, _session);
+                }
+                catch (Exception e)
+                {
+                    _session.Logger.Error(e.ToString());
+                }
+            }
         }
 
         /// <summary>
