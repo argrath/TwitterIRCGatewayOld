@@ -63,8 +63,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                 if (uid == 0)
                 {
                     // Follower から探してみる
-                    User user = CurrentSession.FollowingUsers.First(u => u.ScreenName == e.Status.User.ScreenName);
-                    if (user != null)
+                    User user = CurrentSession.FollowingUsers.FirstOrDefault(u => u.ScreenName == e.Status.User.ScreenName);
+                    if (user.Id != 0)
                     {
                         uid = user.Id;
                     }
