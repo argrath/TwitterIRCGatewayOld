@@ -79,7 +79,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                                 ctx.User.Where(u => u.ScreenName.ToLower() == e.Status.User.ScreenName.ToLower())
                                         .FirstOrDefault();
 
-                            if (dbUser != null || dbUser.Id != 0)
+                            if (dbUser != null && dbUser.Id != 0)
                                 uid = dbUser.Id;
                         }
                     }
