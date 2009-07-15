@@ -18,9 +18,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
         public override void Initialize()
         {
             base.Initialize();
-            CurrentSession.PreProcessTimelineStatuses += new EventHandler<TimelineStatusesEventArgs>(CurrentSession_PreProcessTimelineStatuses);
-            CurrentSession.PostSendGroupMessageTimelineStatus += new EventHandler<TimelineStatusGroupEventArgs>(CurrentSession_PostSendGroupMessageTimelineStatus);
-            CurrentSession.PostProcessTimelineStatuses += new EventHandler<TimelineStatusesEventArgs>(CurrentSession_PostProcessTimelineStatuses);
 
             lock (_dataContext)
             {
@@ -42,6 +39,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
 
                 UpdateGroupCache();
             }
+
+            CurrentSession.PreProcessTimelineStatuses += new EventHandler<TimelineStatusesEventArgs>(CurrentSession_PreProcessTimelineStatuses);
+            CurrentSession.PostSendGroupMessageTimelineStatus += new EventHandler<TimelineStatusGroupEventArgs>(CurrentSession_PostSendGroupMessageTimelineStatus);
+            CurrentSession.PostProcessTimelineStatuses += new EventHandler<TimelineStatusesEventArgs>(CurrentSession_PostProcessTimelineStatuses);
         }
         
         private void UpdateGroupCache()

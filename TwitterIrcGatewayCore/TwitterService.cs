@@ -354,6 +354,27 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
             });
         }
+        /// <summary>
+        /// 指定したIDでユーザ情報を取得します。
+        /// </summary>
+        /// <exception cref="WebException"></exception>
+        /// <exception cref="TwitterServiceException"></exception>
+        public User GetUserById(Int32 id)
+        {
+            return ExecuteRequest<User>(() =>
+            {
+                String responseBody = GET(String.Format("/users/show.xml?id={0}", id), false);
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    User user = User.Serializer.Deserialize(new StringReader(responseBody)) as User;
+                    return user;
+                }
+            });
+        }
 
         /// <summary>
         /// timeline を取得します。
