@@ -25,7 +25,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             Id = id;
             _server = server;
-            TraceLogger.Server.Information("Session Started");
+            TraceLogger.Server.Information("Session Started: "+Id);
         }
 
         public void Attach(ConnectionBase connection)
@@ -122,7 +122,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             lock (_connections)
             {
-                TraceLogger.Server.Information("Session Closing");
+                TraceLogger.Server.Information("Session Closing: "+Id);
                 lock (_server.Sessions)
                 {
                     List<ConnectionBase> connections = new List<ConnectionBase>(_connections);

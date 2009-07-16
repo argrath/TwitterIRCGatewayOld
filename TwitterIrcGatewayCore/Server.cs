@@ -110,7 +110,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// クライアントからの接続待ち受けを停止します
         /// </summary>
-        public void Stop()
+        public void StopListen()
         {
             lock (this)
             {
@@ -119,6 +119,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     _tcpListener.Stop();
                     _tcpListener = null;
                 }
+            }
+        }
+        
+        /// <summary>
+        /// クライアントからの接続待ち受けを停止し、すべてのセッションを停止します。
+        /// </summary>
+        public void Stop()
+        {
+            lock (this)
+            {
+                StopListen();
+                
                 lock (_runningServers)
                 {
                     _runningServers.Remove(this);
