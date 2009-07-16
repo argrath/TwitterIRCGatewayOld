@@ -65,7 +65,7 @@ namespace TwitterIrcGatewayService
                 _sslServer = new Server(true);
                 _sslServer.ConnectionAttached += _server_ConnectionAttached;
                 _sslServer.Encoding = _server.Encoding;
-                _sslServer.Certificate = new X509Certificate2(settings.CertFilename);
+                _sslServer.Certificate = new X509Certificate2(settings.CertFilename, "");
                 _sslServer.Start(IPAddress.Parse(settings.BindAddress), settings.SslPort);
             }
 
@@ -87,11 +87,14 @@ namespace TwitterIrcGatewayService
         protected override void OnStop()
         {
             EventLog.WriteEntry("TwitterIrcGateway を停止しています。", EventLogEntryType.Information);
-            _server.Stop();
+
             if (_sslServer != null)
-            {
+                _sslServer.StopListen();
+            _server.Stop();
+
+            if (_sslServer != null)
                 _sslServer.Stop();
-            }
+
             EventLog.WriteEntry("TwitterIrcGateway を停止しました。", EventLogEntryType.Information);
         }
     }
