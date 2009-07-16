@@ -30,8 +30,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public void Attach(ConnectionBase connection)
         {
-            lock (_server.Sessions)
-                lock (_connections)
+            lock (_connections)
+                lock (_server.Sessions)
                 {
                     _connections.Add(connection);
                     connection.ConnectionEnded += ConnectionEnded;
@@ -56,8 +56,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public void Detach(ConnectionBase connection)
         {
-            lock (_server.Sessions)
-                lock (_connections)
+            lock (_connections)
+                lock (_server.Sessions)
                 {
                     connection.ConnectionEnded -= ConnectionEnded;
                     connection.MessageReceived -= MessageReceived;
