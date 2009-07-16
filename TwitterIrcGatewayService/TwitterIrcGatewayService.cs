@@ -9,12 +9,15 @@ using System.ServiceProcess;
 using System.Text;
 using Misuzilla.Applications.TwitterIrcGateway;
 using System.IO;
+using System.Security.Cryptography.X509Certificates;
 
 namespace TwitterIrcGatewayService
 {
     public partial class TwitterIrcGatewayService : ServiceBase
     {
         private Server _server;
+        private Server _sslServer;
+
         public TwitterIrcGatewayService()
         {
             InitializeComponent();
@@ -57,6 +60,14 @@ namespace TwitterIrcGatewayService
 
             Settings settings = new Settings();
             _server.Start(IPAddress.Parse(settings.BindAddress), settings.Port);
+            if (settings.SslPort > 0)
+            {
+                _sslServer = new Server(true);
+                _sslServer.ConnectionAttached += _server_ConnectionAttached;
+                _sslServer.Encoding = _server.Encoding;
+                _sslServer.Certificate = new X509Certificate2(settings.CertFilename);
+                _sslServer.Start(IPAddress.Parse(settings.BindAddress), settings.SslPort);
+            }
 
             EventLog.WriteEntry(sw.ToString(), EventLogEntryType.Information);
         }
@@ -77,6 +88,10 @@ namespace TwitterIrcGatewayService
         {
             EventLog.WriteEntry("TwitterIrcGateway を停止しています。", EventLogEntryType.Information);
             _server.Stop();
+            if (_sslServer != null)
+            {
+                _sslServer.Stop();
+            }
             EventLog.WriteEntry("TwitterIrcGateway を停止しました。", EventLogEntryType.Information);
         }
     }

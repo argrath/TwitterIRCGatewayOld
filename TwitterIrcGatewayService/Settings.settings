@@ -8,5 +8,11 @@
     <Setting Name="BindAddress" Type="System.String" Scope="User">
       <Value Profile="(Default)">127.0.0.1</Value>
     </Setting>
+    <Setting Name="SslPort" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">16669</Value>
+    </Setting>
+    <Setting Name="CertFilename" Type="System.String" Scope="User">
+      <Value Profile="(Default)">TwitterIrcGateway.pfx</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

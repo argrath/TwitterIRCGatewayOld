@@ -120,10 +120,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             
         public virtual void Close()
         {
-            lock (_server.Sessions)
+            lock (_connections)
             {
                 TraceLogger.Server.Information("Session Closing");
-                lock (_connections)
+                lock (_server.Sessions)
                 {
                     List<ConnectionBase> connections = new List<ConnectionBase>(_connections);
                     foreach (ConnectionBase connection in connections)

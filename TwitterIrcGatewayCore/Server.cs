@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
@@ -13,9 +14,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     public class Server : MarshalByRefObject
     {
         private static List<Server> _runningServers = new List<Server>();
+        private static Dictionary<Int32, Session> _sessions;
         
         private TcpListener _tcpListener;
-        private Dictionary<Int32, Session> _sessions;
         private Encoding _encoding = Encoding.GetEncoding("ISO-2022-JP");
 
         /// <summary>
@@ -25,6 +26,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public const String ServerName = "localhost";
         public const String ServerNick = "$TwitterIrcGatewayServer$";
+
+        /// <summary>
+        /// SSL通信を必要とするかどうかを取得します
+        /// </summary>
+        public Boolean IsSslConnection { get; private set; }
+        /// <summary>
+        /// SSLの認証に利用する証明書を取得・設定します
+        /// </summary>
+        public X509Certificate Certificate { get; set; }
 
         /// <summary>
         /// 新たなセッションが開始されたイベント
@@ -62,6 +72,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             get { return _runningServers.AsReadOnly(); }
         }
+
+        public Server() : this(false)
+        {
+        }
+
+        public Server(Boolean useSslConnection)
+        {
+            IsSslConnection = useSslConnection;
+        }
         
         /// <summary>
         /// 指定したIPアドレスとポートでクライアントからの接続待ち受けを開始します
@@ -82,7 +101,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             _sessions = new Dictionary<Int32, Session>();
 
-            TraceLogger.Server.Information(String.Format("Starting IRC Server: IPAddress = {0}, port = {1}", ipAddr, port));
+            TraceLogger.Server.Information(String.Format("Starting IRC Server: IPAddress = {0}, Port = {1}, IsSslConnection={2}", ipAddr, port, IsSslConnection));
             _tcpListener = new TcpListener(ipAddr, port);
             _tcpListener.Start();
             _tcpListener.BeginAcceptTcpClient(AcceptHandled, this);

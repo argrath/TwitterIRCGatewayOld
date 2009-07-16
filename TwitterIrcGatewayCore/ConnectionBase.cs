@@ -8,6 +8,9 @@ using System.Text;
 using System.Threading;
 using Misuzilla.Net.Irc;
 using System.Security;
+using System.Net.Security;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
@@ -109,32 +112,44 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             CheckDisposed();
             try
             {
-                using (NetworkStream stream = TcpClient.GetStream())
-                using (StreamReader sr = new StreamReader(stream, Encoding))
-                using (StreamWriter sw = new StreamWriter(stream, Encoding))
+                using (Stream stream = TcpClient.GetStream())
                 {
-                    _writer = sw;
-
-                    String line;
-                    PermissionSet permissionSet = null;
-                    while (TcpClient.Connected && (line = sr.ReadLine()) != null)
+                    Stream targetStream = stream;
+                    if (CurrentServer.IsSslConnection)
                     {
-                        try
-                        {
-                            IRCMessage msg = IRCMessage.CreateMessage(line);
-                            OnMessageReceived(msg);
-                        }
-                        catch (IRCException ircE)
-                        {
-                            Trace.TraceWarning(ircE.ToString());
-                        }
+                        SslStream sslStream = new SslStream(stream);
+                        sslStream.AuthenticateAsServer(CurrentServer.Certificate, false, SslProtocols.Default, false);
+                        targetStream = sslStream;
+                    }
 
+                    using (StreamReader sr = new StreamReader(targetStream, Encoding))
+                    using (StreamWriter sw = new StreamWriter(targetStream, Encoding))
+                    {
+                        _writer = sw;
+
+                        String line;
+                        PermissionSet permissionSet = null;
+                        while (TcpClient.Connected && (line = sr.ReadLine()) != null)
+                        {
+                            try
+                            {
+                                IRCMessage msg = IRCMessage.CreateMessage(line);
+                                OnMessageReceived(msg);
+                            }
+                            catch (IRCException ircE)
+                            {
+                                Trace.TraceWarning(ircE.ToString());
+                            }
+
+                        }
                     }
                 }
             }
             catch (IOException)
             {}
             catch (NullReferenceException)
+            {}
+            catch (AuthenticationException) // SSL 
             {}
             finally
             {
