@@ -39,10 +39,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
 
                 UpdateGroupCache();
             }
-
+            CurrentSession.AddInsLoadCompleted += new EventHandler<EventArgs>(CurrentSession_AddInsLoadCompleted);
             CurrentSession.PreProcessTimelineStatuses += new EventHandler<TimelineStatusesEventArgs>(CurrentSession_PreProcessTimelineStatuses);
             CurrentSession.PostSendGroupMessageTimelineStatus += new EventHandler<TimelineStatusGroupEventArgs>(CurrentSession_PostSendGroupMessageTimelineStatus);
             CurrentSession.PostProcessTimelineStatuses += new EventHandler<TimelineStatusesEventArgs>(CurrentSession_PostProcessTimelineStatuses);
+        }
+
+        void CurrentSession_AddInsLoadCompleted(object sender, EventArgs e)
+        {
+            CurrentSession.AddInManager.GetAddIn<TypableMapSupport>().TypableMapFactory = new TypableMapStatusSqlServerRepositoryFactory();
         }
         
         private void UpdateGroupCache()
@@ -157,16 +162,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
             {
                 using (var ctx = new TwitterIrcGatewayDataContext())
                 {
-                    Timeline timeline = new Timeline
-                                            {
-                                                GroupId = _cacheGroup[e.Group.Name].Id,
-                                                StatusId = e.Status.Id,
-                                                UserId = CurrentSession.TwitterUser.Id
-                                            };
-                    if (ctx.Timeline.Contains(timeline))
-                        return;
-                    ctx.Timeline.InsertOnSubmit(timeline);
-                    ctx.SubmitChanges();
+                    try
+                    {
+                        Timeline timeline = new Timeline
+                                                {
+                                                    GroupId = _cacheGroup[e.Group.Name].Id,
+                                                    StatusId = e.Status.Id,
+                                                    UserId = CurrentSession.TwitterUser.Id
+                                                };
+                        if (ctx.Timeline.Contains(timeline))
+                            return;
+                        ctx.Timeline.InsertOnSubmit(timeline);
+                        ctx.SubmitChanges();
+                    }
+                    catch (Exception)
+                    {
+                        CurrentSession.Logger.Error("Group not found in _cacheGroup: {0}", e.Group.Name);
+                        throw;
+                    }
                 }
             }
         }

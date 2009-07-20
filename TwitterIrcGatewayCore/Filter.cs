@@ -20,6 +20,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
         public Filters()
         {
             _items = new List<FilterItem>();
+            _Counter.Increment(ref _Counter.Filters);
+        }
+        ~Filters()
+        {
+            _Counter.Decrement(ref _Counter.Filters);
         }
         
         private static Object _syncObject = new object();
@@ -181,6 +186,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
 
     public abstract class FilterItem : Misuzilla.Applications.TwitterIrcGateway.AddIns.IConfiguration
     {
+        public FilterItem()
+        {
+            _Counter.Increment(ref _Counter.FilterItem);
+        }
+        ~FilterItem()
+        {
+            _Counter.Decrement(ref _Counter.FilterItem);
+        }
+        
         private Boolean _enabled = true;
         [XmlAttribute]
         public Boolean Enabled

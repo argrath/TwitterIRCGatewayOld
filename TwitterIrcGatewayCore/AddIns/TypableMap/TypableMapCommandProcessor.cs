@@ -10,9 +10,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
 
     public class TypableMapCommandProcessor
     {
-        public Session Session { get; private set; }
-        public TypableMap<Status> TypableMap { get; private set; }
         private Int32 _typableMapKeySize;
+        private ITypableMapStatusRepositoryFactory _typableMapFactory;
+        
+        public Session Session { get; private set; }
+        public ITypableMapStatusRepository TypableMap { get; private set; }
+
         public Int32 TypableMapKeySize
         {
             get
@@ -27,7 +30,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                 if (_typableMapKeySize != value)
                 {
                     _typableMapKeySize = value;
-                    TypableMap = new TypableMap<Status>(_typableMapKeySize);
+                    TypableMap = _typableMapFactory.Create(_typableMapKeySize);
                 }
             }
         }
@@ -35,12 +38,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
         private Dictionary<String, ITypableMapCommand> _commands;
         private Regex _matchRE;
 
-        public TypableMapCommandProcessor(TwitterService twitter, Session session, Int32 typableMapKeySize)
+        public TypableMapCommandProcessor(ITypableMapStatusRepositoryFactory typableMapFactory, Session session, Int32 typableMapKeySize)
         {
             Session = session;
-            TypableMap = new TypableMap<Status>(typableMapKeySize);
 
+            _typableMapKeySize = typableMapKeySize;
             _commands = new Dictionary<string, ITypableMapCommand>(StringComparer.InvariantCultureIgnoreCase);
+
+            _typableMapFactory = typableMapFactory;
+            TypableMap = typableMapFactory.Create(typableMapKeySize);
 
             foreach (var t in typeof(TypableMapCommandProcessor).GetNestedTypes())
             {

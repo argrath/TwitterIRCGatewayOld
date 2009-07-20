@@ -52,9 +52,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 
         void CurrentSession_ConnectionAttached(object sender, ConnectionAttachEventArgs e)
         {
-            foreach (var item in _recentStatuses[CurrentSession.Config.ChannelName])
+            if (_recentStatuses.ContainsKey(CurrentSession.Config.ChannelName))
             {
-                e.Connection.Send(new NoticeMessage(CurrentSession.Config.ChannelName, String.Format("{0}: {1}", item.DateTime.ToString("HH:mm"), item.Text)) { SenderNick = item.Sender });
+                foreach (var item in _recentStatuses[CurrentSession.Config.ChannelName])
+                {
+                    e.Connection.Send(new NoticeMessage(CurrentSession.Config.ChannelName,
+                                                        String.Format("{0}: {1}", item.DateTime.ToString("HH:mm"),
+                                                                      item.Text)) {SenderNick = item.Sender});
+                }
             }
             foreach (Group group in CurrentSession.Groups.Values.Where(g => g.IsJoined && !g.IsSpecial && _recentStatuses.ContainsKey(g.Name)))
             {

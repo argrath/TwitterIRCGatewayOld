@@ -35,8 +35,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Boolean _isFirstTimeReplies = true;
         private Boolean _isFirstTimeDirectMessage = true;
 
-        private LinkedList<Status> _statusBuffer;
-        private LinkedList<Status> _repliesBuffer;
+        private LinkedList<Int64> _statusBuffer;
+        private LinkedList<Int64> _repliesBuffer;
 
         #region Events
         /// <summary>
@@ -81,6 +81,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="password">パスワード</param>
         public TwitterService(String userName, String password)
         {
+            _Counter.Increment(ref _Counter.TwitterService);
             CredentialCache credCache = new CredentialCache();
             credCache.Add(new Uri(ServiceServerPrefix), "Basic", new NetworkCredential(userName, password));
             _credential = credCache;
@@ -91,8 +92,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _timerDirectMessage = new Timer(new TimerCallback(OnTimerCallbackDirectMessage), null, Timeout.Infinite, Timeout.Infinite);
             _timerReplies = new Timer(new TimerCallback(OnTimerCallbackReplies), null, Timeout.Infinite, Timeout.Infinite);
             
-            _statusBuffer = new LinkedList<Status>();
-            _repliesBuffer = new LinkedList<Status>();
+            _statusBuffer = new LinkedList<Int64>();
+            _repliesBuffer = new LinkedList<Int64>();
 
             //_webClient = new PreAuthenticatedWebClient();
             //_webClient = new WebClient();
@@ -105,6 +106,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             EnableCompression = false;
         
             POSTFetchMode = false;
+        }
+        
+        ~TwitterService()
+        {
+            //_Counter.Decrement(ref _Counter.TwitterService);
+            Dispose();
         }
 
         /// <summary>
@@ -807,17 +814,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="statusBuffer"></param>
         /// <param name="status"></param>
         /// <returns></returns>
-        private Boolean ProcessDropProtection(LinkedList<Status> statusBuffer, Status status)
+        private Boolean ProcessDropProtection(LinkedList<Int64> statusBuffer, Int64 statusId)
         {
             // 差分チェック
             if (_enableDropProtection)
             {
                 lock (statusBuffer)
                 {
-                    if (statusBuffer.Contains(status))
+                    if (statusBuffer.Contains(statusId))
                         return false;
 
-                    statusBuffer.AddLast(status);
+                    statusBuffer.AddLast(statusId);
                     if (statusBuffer.Count > BufferSize)
                     {
                         // 一番古いのを消す
@@ -844,7 +851,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="action"></param>
         public void ProcessStatus(Status status, Action<Status> action)
         {
-            if (ProcessDropProtection(_statusBuffer, status))
+            if (ProcessDropProtection(_statusBuffer, status.Id))
             {
                 action(status);
 
@@ -918,7 +925,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 if (status.CreatedAt < _lastAccessReplies)
                     continue;
 
-                if (ProcessDropProtection(_repliesBuffer, status) && ProcessDropProtection(_statusBuffer, status))
+                if (ProcessDropProtection(_repliesBuffer, status.Id) && ProcessDropProtection(_statusBuffer, status.Id))
                 {
                     statusList.Add(status);
 
@@ -1212,6 +1219,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 _timerReplies.Dispose();
                 _timerReplies = null;
             }
+
+            GC.SuppressFinalize(this);
+            _Counter.Decrement(ref _Counter.TwitterService);
         }
 
         #endregion
@@ -1643,7 +1653,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 return _serializer;
             }
-        }    
+        }
+        public DirectMessages()
+        {
+            _Counter.Increment(ref _Counter.DirectMessages);
+        }
+        ~DirectMessages()
+        {
+            _Counter.Decrement(ref _Counter.DirectMessages);
+        }
     }
 
     /// <summary>
@@ -1686,6 +1704,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return Utility.ParseDateTime(_createdAt);
             }
         }
+        public DirectMessage()
+        {
+            _Counter.Increment(ref _Counter.DirectMessage);
+        }
+        ~DirectMessage()
+        {
+            _Counter.Decrement(ref _Counter.DirectMessage);
+        }
 
         public override string ToString()
         {
@@ -1722,6 +1748,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return _serializer;
             }
         }
+        public Statuses()
+        {
+            _Counter.Increment(ref _Counter.Statuses);
+        }
+        ~Statuses()
+        {
+            _Counter.Decrement(ref _Counter.Statuses);
+        }
     }
 
     /// <summary>
@@ -1751,6 +1785,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 return _serializer;
             }
+        }
+        public Users()
+        {
+            _Counter.Increment(ref _Counter.Users);
+        }
+        ~Users()
+        {
+            _Counter.Decrement(ref _Counter.Users);
         }
     }
 
@@ -1794,6 +1836,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 return _serializer;
             }
+        }
+        
+        
+        public User()
+        {
+            _Counter.Increment(ref _Counter.User);
+        }
+        ~User()
+        {
+            _Counter.Decrement(ref _Counter.User);
         }
 
         public override string ToString()
@@ -1878,6 +1930,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
             }
         }
+
+        public Status()
+        {
+            _Counter.Increment(ref _Counter.Status);
+        }
+        ~Status()
+        {
+            _Counter.Decrement(ref _Counter.Status);
+        }
+        
         public static XmlSerializer Serializer
         {
             get

@@ -94,6 +94,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>TwitterIrcGateway.dbml</DependentUpon>
     </Compile>
+    <Compile Include="TypableMapStatusSqlServerRepository.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\TwitterIrcGatewayCore\TwitterIrcGatewayCore.csproj">

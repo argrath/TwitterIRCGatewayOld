@@ -90,7 +90,8 @@ namespace TwitterIrcGatewayService
 
             if (_sslServer != null)
                 _sslServer.StopListen();
-            _server.Stop();
+
+            _server.Stop();
 
             if (_sslServer != null)
                 _sslServer.Stop();
