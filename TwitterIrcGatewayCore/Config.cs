@@ -146,6 +146,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             FetchCount = 50;
             BufferSize = 250;
             EnableCompression = false;
+            Interval = 60;
+            IntervalDirectMessage = 360;
+            IntervalReplies = 120;
 
             if (Default != null)
             {

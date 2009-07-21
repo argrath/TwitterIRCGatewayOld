@@ -220,7 +220,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public String UserConfigDirectory
         {
+#if PLATFORM_HOSTING
             get { return Path.Combine(ConfigBasePath, _twitterUser.Id.ToString()); }
+#else
+            get { return Path.Combine(ConfigBasePath, _twitterUser.ScreenName); }
+#endif
         }
 
         /// <summary>
@@ -1207,6 +1211,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 User[] friends = _twitter.GetFriends(10);
                 _followingUsers = new HashSet<User>();
+                // 保持していてもしょうがないので消す
+                foreach (var friend in friends)
+                    friend.Status = null;
                 _followingUsers.UnionWith(friends);
 
                 ShowChannelUsers(this);
