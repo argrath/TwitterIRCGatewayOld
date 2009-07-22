@@ -131,9 +131,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         Detach(connection);
                         connection.Close();
                     }
+                    _server.Sessions.Remove(Id);
                 }
-
-                _server.Sessions.Remove(Id);
             }
         }
 
