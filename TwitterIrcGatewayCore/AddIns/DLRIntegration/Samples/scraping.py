@@ -79,7 +79,10 @@ class Scraping(Object):
 
 	def start(self):
 		if not self.running:
-			CurrentSession.TwitterService.CookieLogin()
+			try:
+				CurrentSession.TwitterService.CookieLogin()
+			except:
+				pass
 			self.thread = Thread(ThreadStart(self.runProc))
 			self.thread.Start()
 
