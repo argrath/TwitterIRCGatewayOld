@@ -128,7 +128,7 @@ class Scraping(Object):
 		self.thread.Join()
 		
 	def requireDisableApi(self):
-		return (self.config.GetValue("DisableTimelineApi") or "") != ""
+		return (self.config.GetValue("DisableTimelineApi") or "").ToLower() == "true"
 
 scraping = Scraping.instance()
 scraping.start()
