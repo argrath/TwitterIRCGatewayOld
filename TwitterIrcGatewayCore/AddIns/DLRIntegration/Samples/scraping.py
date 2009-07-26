@@ -140,7 +140,8 @@ class Scraping(Object):
 		CurrentSession.AddInManager.GetAddIn[ConsoleAddIn]().UnregisterContext(DLRContextHelper.Wrap(CurrentSession, "ScrapingContext", ScrapingContext))
 		CurrentSession.PostProcessTimelineStatuses -= self.onPostProcessTimelineStatuses
 		self.interval = 0
-		self.thread.Join()
+		self.thread.Abort()
+		self.thread.Join(5000)
 		
 	def requireDisableApi(self):
 		return self.config.GetValue("DisableTimelineApi")

@@ -13,6 +13,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         private List<ConnectionBase> _connections = new List<ConnectionBase>();
 
+        public Boolean IsClosing { get; private set; }
+
         public Boolean IsKeepAlive { get; set; }
         public Int32 Id { get; private set; }
         public String CurrentNick { get; set; }
@@ -120,11 +122,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             
         public virtual void Close()
         {
+            // Detachするので二重でここに来ないように。
+            if (IsClosing)
+                return;
+            IsClosing = true;
+
             lock (_connections)
             {
-                TraceLogger.Server.Information("Session Closing: "+Id);
                 lock (_server.Sessions)
                 {
+                    TraceLogger.Server.Information("Session Closing: " + Id);
                     List<ConnectionBase> connections = new List<ConnectionBase>(_connections);
                     foreach (ConnectionBase connection in connections)
                     {
@@ -143,6 +150,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="msg"></param>
         public void Send(IRCMessage msg)
         {
+            if (IsClosing)
+                return;
             lock (_connections)
                 foreach (ConnectionBase connection in _connections)
                     connection.Send(msg);
@@ -154,6 +163,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="msg"></param>
         public void SendServer(IRCMessage msg)
         {
+            if (IsClosing)
+                return;
             lock (_connections)
                 foreach (ConnectionBase connection in _connections)
                     connection.SendServer(msg);
@@ -165,6 +176,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="msg"></param>
         public void SendServerMessage(IRCMessage msg)
         {
+            if (IsClosing)
+                return;
             lock (_connections)
                 foreach (ConnectionBase connection in _connections)
                     connection.SendServerMessage(msg);
@@ -176,6 +189,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="message"></param>
         public void SendGatewayServerMessage(String message)
         {
+            if (IsClosing)
+                return;
             lock (_connections)
                 foreach (ConnectionBase connection in _connections)
                     connection.SendGatewayServerMessage(message);
@@ -210,8 +225,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="commandParams">リプライコマンドパラメータ</param>
         public void SendNumericReply(NumericReply numReply, params String[] commandParams)
         {
-            foreach (ConnectionBase connection in _connections)
-                connection.SendNumericReply(numReply, commandParams);
+            if (IsClosing)
+                return;
+            lock (_connections)
+                foreach (ConnectionBase connection in _connections)
+                    connection.SendNumericReply(numReply, commandParams);
         }
         #endregion
     }
