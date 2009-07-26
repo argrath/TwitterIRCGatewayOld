@@ -23,6 +23,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 if (memberInfo.Name == "BufferSize")
                     CurrentSession.TwitterService.BufferSize = CurrentSession.Config.BufferSize;
 
+                if (memberInfo.Name == "EnableCompression")
+                    CurrentSession.TwitterService.EnableCompression = CurrentSession.Config.EnableCompression;
+
                 // 取得間隔またはチェックの必要性が変更になったらタイマーを再起動する
                 if (memberInfo.Name.StartsWith("Interval") || memberInfo.Name == "EnableRepliesCheck" || memberInfo.Name == "IntervalReplies" || memberInfo.Name == "IntervalDirectMessage")
                 {

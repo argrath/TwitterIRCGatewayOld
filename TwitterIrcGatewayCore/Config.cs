@@ -114,6 +114,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// データの取得にPOSTメソッドを利用するかどうかを指定します。
         /// </summary>
+        [Browsable(false)]
         [Description("データの取得にPOSTメソッドを利用するかどうかを指定します。")]
         public Boolean POSTFetchMode { get; set; }
         /// <summary>
@@ -121,6 +122,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         [Description("タイムラインの一回の取得につき何件取得するかを指定します。")]
         public Int32 FetchCount { get; set; }
+        /// <summary>
+        /// Twitterにアクセスする際にgzip圧縮を有効にするかどうかを指定します。
+        /// </summary>
+        [Description("Twitterにアクセスする際にgzip圧縮を有効にするかどうかを指定します。")]
+        [Browsable(false)] // TODO: ホスティングじゃない場合にはBrowsableをはずす
+        public Boolean EnableCompression { get; set; }
 
         /// <summary>
         /// デフォルトの設定
@@ -129,6 +136,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         
         public Config()
         {
+            ChannelName = "#Twitter";
             EnableTypableMap = false;
             TypableMapKeyColorNumber = 14;
             TypableMapKeySize = 2;
@@ -137,9 +145,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             EnableOldStyleReply = false;
             FetchCount = 50;
             BufferSize = 250;
+            EnableCompression = false;
+            Interval = 60;
+            IntervalDirectMessage = 360;
+            IntervalReplies = 120;
 
             if (Default != null)
             {
+                ChannelName = Default.ChannelName;
                 Interval = Default.Interval;
                 IntervalDirectMessage = Default.IntervalDirectMessage;
                 EnableRepliesCheck = Default.EnableRepliesCheck;
@@ -224,7 +237,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             // group 読み取り
             if (File.Exists(path))
             {
-                Trace.WriteLine(String.Format("Load Config: {0}", path));
+                TraceLogger.Server.Information(String.Format("Load Config: {0}", path));
                 try
                 {
                     using (FileStream fs = new FileStream(path, FileMode.Open))
@@ -235,13 +248,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                             if (config != null)
                                 return config;
                         }
-                        catch (XmlException xe) { Trace.WriteLine(xe.Message); }
-                        catch (InvalidOperationException ioe) { Trace.WriteLine(ioe.Message); }
+                        catch (XmlException xe) { TraceLogger.Server.Information(xe.Message); }
+                        catch (InvalidOperationException ioe) { TraceLogger.Server.Information(ioe.Message); }
                     }
                 }
                 catch (IOException ie)
                 {
-                    Trace.WriteLine(ie.Message);
+                    TraceLogger.Server.Information(ie.Message);
                     throw;
                 }
             }
@@ -254,7 +267,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <param name="path"></param>
         public void Save(String path)
         {
-            Trace.WriteLine(String.Format("Save Config: {0}", path));
+            TraceLogger.Server.Information(String.Format("Save Config: {0}", path));
             try
             {
                 String dir = Path.GetDirectoryName(path);
@@ -265,13 +278,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     {
                         this.Serialize(fs);
                     }
-                    catch (XmlException xe) { Trace.WriteLine(xe.Message); }
-                    catch (InvalidOperationException ioe) { Trace.WriteLine(ioe.Message); }
+                    catch (XmlException xe) { TraceLogger.Server.Information(xe.Message); }
+                    catch (InvalidOperationException ioe) { TraceLogger.Server.Information(ioe.Message); }
                 }
             }
             catch (IOException ie)
             {
-                Trace.WriteLine(ie.Message);
+                TraceLogger.Server.Information(ie.Message);
                 throw;
             }
         }

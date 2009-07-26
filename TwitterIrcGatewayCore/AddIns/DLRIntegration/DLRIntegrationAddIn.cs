@@ -32,14 +32,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                 CurrentSession.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<DLRContext>();
                 ReloadScripts((fileName, ex) =>
                 {
-                    Trace.WriteLine("Script Executed: " + fileName);
+                    CurrentSession.Logger.Information("Script Executed: " + fileName);
                     if (ex != null)
                     {
-                        Trace.WriteLine(ex.ToString());
+                        CurrentSession.Logger.Error(ex.ToString());
                         if (ex is SyntaxErrorException)
                         {
                             SyntaxErrorException syntaxEx = ex as SyntaxErrorException;
-                            Trace.WriteLine(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Column, syntaxEx.SourcePath));
+                            CurrentSession.Logger.Error(String.Format("  行: {0}, 列 {1}, ファイル: {2}", syntaxEx.Line, syntaxEx.Column, syntaxEx.SourcePath));
                         }
                     }
                 });
@@ -70,7 +70,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
                         }
                         catch (Exception e)
                         {
-                            Trace.WriteLine("Exception at BeforeUnload(Ignore): "+e.Message);
+                            CurrentSession.Logger.Error("Exception at BeforeUnload(Ignore): "+e.Message);
                         }
                     }
                 }

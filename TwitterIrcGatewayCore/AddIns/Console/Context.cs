@@ -210,49 +210,21 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                 Console.NotifyMessage("値が指定されていません。");
                 return;
             }
-            
-            foreach (var config in Configurations)
+
+            SetConfigurationValue(configName, value);
+        }
+
+
+        [Description("設定をクリアします")]
+        public virtual void Unset([Description("設定項目名")]String configName)
+        {
+            if (String.IsNullOrEmpty(configName))
             {
-                foreach (var configPropInfo in GetConfigurationPropertiesFromConfiguration(config))
-                {
-                    if (String.Compare(configPropInfo.Name, configName, true) != 0)
-                        continue;
-
-                    // TypeConverterで文字列から変換する
-                    Type type = configPropInfo.Type;
-                    TypeConverter tConv = TypeDescriptor.GetConverter(type);
-                    if (!tConv.CanConvertFrom(typeof(String)))
-                    {
-                        Console.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" には適切な TypeConverter がないため、このコマンドで設定することはできません。", configName, type.FullName));
-                        return;
-                    }
-
-                    try
-                    {
-                        Object convertedValue = tConv.ConvertFromString(value);
-                        if (configPropInfo.MemberInfo is PropertyInfo)
-                            ((PropertyInfo)configPropInfo.MemberInfo).SetValue(config, convertedValue, null);
-                        else if (configPropInfo.MemberInfo is FieldInfo)
-                            ((FieldInfo)configPropInfo.MemberInfo).SetValue(config, convertedValue);
-                        else if (config is ICustomConfiguration)
-                            ((ICustomConfiguration) config).SetValue(configPropInfo.Name, convertedValue);
-                    
-                        Console.NotifyMessage(String.Format("{0} ({1}) = {2}", configPropInfo.Name, configPropInfo.Type.Name, Inspect(convertedValue)));
-                        OnConfigurationChanged(config, configPropInfo.MemberInfo, convertedValue);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" に値を変換し設定する際にエラーが発生しました({2})。", configName, type.FullName, ex.GetType().Name));
-                        foreach (var line in ex.Message.Split('\n'))
-                            Console.NotifyMessage(line);
-                    }
-
-                    // 見つかったので値をセットして終わり
-                    return;
-                }
+                Console.NotifyMessage("設定名が指定されていません。");
+                return;
             }
-            
-            Console.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
+
+            SetConfigurationValue(configName, null);
         }
 
         [Description("コマンドのエイリアスを設定します")]
@@ -373,10 +345,61 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         #endregion
 
         #region Internal Implementation
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="configName"></param>
+        /// <param name="value"></param>
+        private void SetConfigurationValue(String configName, String value)
+        {
+            foreach (var config in Configurations)
+            {
+                foreach (var configPropInfo in GetConfigurationPropertiesFromConfiguration(config))
+                {
+                    if (String.Compare(configPropInfo.Name, configName, true) != 0)
+                        continue;
+
+                    // TypeConverterで文字列から変換する
+                    Type type = configPropInfo.Type;
+                    TypeConverter tConv = TypeDescriptor.GetConverter(type);
+                    if (!tConv.CanConvertFrom(typeof(String)))
+                    {
+                        Console.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" には適切な TypeConverter がないため、このコマンドで設定することはできません。", configName, type.FullName));
+                        return;
+                    }
+
+                    try
+                    {
+                        // value が null だったらデフォルトの値をセット
+                        Object convertedValue = (value == null) ? configPropInfo.DefaultValue : tConv.ConvertFromString(value);
+                        if (configPropInfo.MemberInfo is PropertyInfo)
+                            ((PropertyInfo)configPropInfo.MemberInfo).SetValue(config, convertedValue, null);
+                        else if (configPropInfo.MemberInfo is FieldInfo)
+                            ((FieldInfo)configPropInfo.MemberInfo).SetValue(config, convertedValue);
+                        else if (config is ICustomConfiguration)
+                            ((ICustomConfiguration)config).SetValue(configPropInfo.Name, convertedValue);
+
+                        Console.NotifyMessage(String.Format("{0} ({1}) = {2}", configPropInfo.Name, configPropInfo.Type.Name, Inspect(convertedValue)));
+                        OnConfigurationChanged(config, configPropInfo.MemberInfo, convertedValue);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.NotifyMessage(String.Format("設定項目 \"{0}\" の型 \"{1}\" に値を変換し設定する際にエラーが発生しました({2})。", configName, type.FullName, ex.GetType().Name));
+                        foreach (var line in ex.Message.Split('\n'))
+                            Console.NotifyMessage(line);
+                    }
+
+                    // 見つかったので値をセットして終わり
+                    return;
+                }
+            }
+
+            Console.NotifyMessage(String.Format("設定項目 \"{0}\" は存在しません。", configName));
+        }
         private ICollection<ConfigurationPropertyInfo> GetConfigurationPropertiesFromConfiguration(IConfiguration config)
         {
             List<ConfigurationPropertyInfo> propInfoList = new List<ConfigurationPropertyInfo>();
-            
+
             // 既存のIConfigurationから作り出す
             MemberInfo[] memberInfoArr = config.GetType().GetMembers(BindingFlags.Public | BindingFlags.IgnoreCase | BindingFlags.Instance);
             foreach (var memberInfo in memberInfoArr)
@@ -391,9 +414,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
                 String name = (pi == null) ? fi.Name : pi.Name;
                 Type type = (pi == null) ? fi.FieldType : pi.PropertyType;
-                propInfoList.Add(new ConfigurationPropertyInfo { Description = AttributeUtil.GetDescription(memberInfo), Name = name, Type = type, MemberInfo = memberInfo });
+                Object defaultValue = AttributeUtil.GetDefaultValue(memberInfo);
+                propInfoList.Add(new ConfigurationPropertyInfo
+                {
+                    Description = AttributeUtil.GetDescription(memberInfo),
+                    Name = name,
+                    Type = type,
+                    MemberInfo = memberInfo,
+                    DefaultValue = (defaultValue ?? (type.IsValueType ? Activator.CreateInstance(type) : null))
+                });
             }
-            
+
             // ICustomConfiguration
             if (config is ICustomConfiguration)
             {
@@ -408,7 +439,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         [Browsable(false)]
         public virtual void Dispose()
         {
-            System.Diagnostics.Trace.WriteLine(ContextName + ": Dispose");
+            CurrentSession.Logger.Information(ContextName + ": Dispose");
             if (!_isUninitialized)
             {
                 Uninitialize();
