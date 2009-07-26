@@ -202,5 +202,9 @@ namespace TwitterIrcGatewayCLI
         [DefaultValue(false)]
         [Description("Use gzip compression at Web request")]
         public Boolean EnableCompression { get; set; }
+
+        [DefaultValue(false)]
+        [Description("Disable using NOTICE at first time")]
+        public Boolean DisableNoticeAtFirstTime { get; set; }
     }
 }

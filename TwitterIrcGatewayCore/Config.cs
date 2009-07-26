@@ -128,6 +128,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         [Description("Twitterにアクセスする際にgzip圧縮を有効にするかどうかを指定します。")]
         [Browsable(false)] // TODO: ホスティングじゃない場合にはBrowsableをはずす
         public Boolean EnableCompression { get; set; }
+        /// <summary>
+        /// 初回取得時のタイムラインをNOTICEで送信するかどうかを指定します。
+        /// </summary>
+        [Description("初回取得時のタイムラインをNOTICEで送信するかどうかを指定します。")]
+        public Boolean DisableNoticeAtFirstTime { get; set; }
 
         /// <summary>
         /// デフォルトの設定
@@ -149,6 +154,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Interval = 60;
             IntervalDirectMessage = 360;
             IntervalReplies = 120;
+            DisableNoticeAtFirstTime = false;
 
             if (Default != null)
             {
@@ -168,6 +174,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 ClientMessageWait = Default.ClientMessageWait;
                 BroadcastUpdateMessageIsNotice = Default.BroadcastUpdateMessageIsNotice;
                 POSTFetchMode = Default.POSTFetchMode;
+                EnableCompression = Default.EnableCompression;
+                DisableNoticeAtFirstTime = Default.DisableNoticeAtFirstTime;
             }
         }
 
