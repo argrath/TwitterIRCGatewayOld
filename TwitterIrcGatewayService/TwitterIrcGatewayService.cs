@@ -69,7 +69,7 @@ namespace TwitterIrcGatewayService
                 _sslServer.Start(IPAddress.Parse(settings.BindAddress), settings.SslPort);
             }
 
-            EventLog.WriteEntry(sw.ToString(), EventLogEntryType.Information);
+            EventLog.WriteEntry(sw.ToString(), EventLogEntryType.Information, 0);
         }
 
         void _server_ConnectionAttached(object sender, ConnectionAttachEventArgs e)
@@ -80,13 +80,13 @@ namespace TwitterIrcGatewayService
             sw.WriteLine();
             sw.WriteLine("IP: {0}", e.Connection.UserInfo.EndPoint);
             sw.WriteLine("Twitter User: {0} (ID:{1})", twitterUser.ScreenName, twitterUser.Id);
-            EventLog.WriteEntry(sw.ToString(), EventLogEntryType.Information);
+            EventLog.WriteEntry(sw.ToString(), EventLogEntryType.Information, 1000);
         }
 
 
         protected override void OnStop()
         {
-            EventLog.WriteEntry("TwitterIrcGateway を停止しています。", EventLogEntryType.Information);
+            EventLog.WriteEntry("TwitterIrcGateway を停止しています。", EventLogEntryType.Information, 9000);
 
             if (_sslServer != null)
                 _sslServer.StopListen();
@@ -96,7 +96,7 @@ namespace TwitterIrcGatewayService
             if (_sslServer != null)
                 _sslServer.Stop();
 
-            EventLog.WriteEntry("TwitterIrcGateway を停止しました。", EventLogEntryType.Information);
+            EventLog.WriteEntry("TwitterIrcGateway を停止しました。", EventLogEntryType.Information, 9001);
         }
     }
 }
