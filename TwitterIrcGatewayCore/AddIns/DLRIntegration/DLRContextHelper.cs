@@ -37,14 +37,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
         /// <returns></returns>
         public static Type Wrap(Session session, String contextName, Object dlrContextType)
         {
-            Type type = _modBuilder.GetType(contextName);
-            if (type == null)
+            lock (_asmName)
             {
-                TypeBuilder typeBuilder = _modBuilder.DefineType(contextName);
-                type = typeBuilder.CreateType();
+                Type type = _modBuilder.GetType(contextName);
+                if (type == null)
+                {
+                    TypeBuilder typeBuilder = _modBuilder.DefineType(contextName);
+                    type = typeBuilder.CreateType();
+                }
+                Type genCtxType = typeof (DLRContextBase<>).MakeGenericType(type);
+                return
+                    genCtxType.InvokeMember("GetProxyType",
+                                            BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod,
+                                            null, null, new Object[] {session, contextName, dlrContextType}) as Type;
             }
-            Type genCtxType = typeof(DLRContextBase<>).MakeGenericType(type);
-            return genCtxType.InvokeMember("GetProxyType", BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.InvokeMethod, null, null, new Object[] { session, contextName, dlrContextType}) as Type;
         }
     }
     /// <summary>
