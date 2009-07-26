@@ -71,6 +71,7 @@ namespace TwitterIrcGatewayCLI
             Config.Default.BroadcastUpdateMessageIsNotice = options.BroadcastUpdateMessageIsNotice;
             Config.Default.POSTFetchMode = options.PostFetchMode;
             Config.Default.EnableCompression = options.EnableCompression;
+            Config.Default.DisableNoticeAtFirstTime = options.DisableNoticeAtFirstTime;
 
             Server _server = new Server();
             _server.Encoding = encoding;
@@ -98,6 +99,7 @@ namespace TwitterIrcGatewayCLI
             Console.WriteLine("[Configuration] Proxy: {0}", options.Proxy);
             Console.WriteLine("[Configuration] PostFetchMode: {0}", options.PostFetchMode);
             Console.WriteLine("[Configuration] EnableCompression: {0}", options.EnableCompression);
+            Console.WriteLine("[Configuration] DisableNoticeAtFirstTime: {0}", options.DisableNoticeAtFirstTime);
 
             _server.Start(bindAddress, options.Port);
 
