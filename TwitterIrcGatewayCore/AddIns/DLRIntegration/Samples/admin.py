@@ -7,6 +7,7 @@ import Misuzilla.Applications.TwitterIrcGateway
 import Misuzilla.Applications.TwitterIrcGateway.AddIns
 import Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
 
+from Misuzilla.Net.Irc import *
 from Misuzilla.Applications.TwitterIrcGateway.AddIns import IConfiguration
 from Misuzilla.Applications.TwitterIrcGateway.AddIns.Console import ConsoleAddIn, Console, Context
 from Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration import DLRIntegrationAddIn, DLRBasicConfiguration, DLRContextHelper
@@ -35,8 +36,13 @@ class AdminContext(Context):
 			self.Console.NotifyMessage(("%s, Id=%d" % (session, session.Id)))
 
 	def notice(self, args):
+		privMsg = PrivMsgMessage()
+		privMsg.SenderNick = "TwitterIrcGateway-Admin"
+		privMsg.SenderHost = "admin@" + Server.ServerName;
+		privMsg.Content = args
 		for session in CurrentServer.Sessions.Values:
-			session.SendGatewayServerMessage(args)
+			privMsg.Receiver = session.CurrentNick
+			session.Send(privMsg)
 
 	def disconnect(self, args):
 		id = int(args)
