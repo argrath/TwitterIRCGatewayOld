@@ -62,6 +62,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Config.Default.BroadcastUpdateMessageIsNotice = _settings.BroadcastUpdateMessageIsNotice;
             Config.Default.POSTFetchMode = _settings.POSTFetchMode;
             Config.Default.EnableCompression = _settings.EnableCompression;
+            Config.Default.DisableNoticeAtFirstTime = _settings.DisableNoticeAtFirstTime;
 
             _server = new Server();
             _server.ConnectionAttached += new EventHandler<ConnectionAttachEventArgs>(_server_ConnectionAttached);

@@ -262,5 +262,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway {
                 this["EnableCompression"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool DisableNoticeAtFirstTime {
+            get {
+                return ((bool)(this["DisableNoticeAtFirstTime"]));
+            }
+            set {
+                this["DisableNoticeAtFirstTime"] = value;
+            }
+        }
     }
 }

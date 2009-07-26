@@ -469,7 +469,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             // Twitte Service Setup
             //
             _twitter = new TwitterService(Connections[0].UserInfo.UserName, Connections[0].UserInfo.Password);
-            _twitter.EnableCompression = _config.EnableCompression;
+            _twitter.EnableCompression = Config.Default.EnableCompression; // TODO: なんとかする
             _twitter.BufferSize = _config.BufferSize;
             _twitter.Interval = _config.Interval;
             _twitter.IntervalDirectMessage = _config.IntervalDirectMessage;
@@ -1355,7 +1355,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 String[] lines = eventArgsGroup.Text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
                 {
-                    if (_isFirstTime)
+                    if (_isFirstTime && !_config.DisableNoticeAtFirstTime)
                     {
                         // 初回のときはNOTICE+時間
                         Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", routedGroup.Group.Name,
