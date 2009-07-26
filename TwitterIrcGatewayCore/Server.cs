@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Security.Cryptography.X509Certificates;
+using Misuzilla.Applications.TwitterIrcGateway.Authentication;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
@@ -26,6 +27,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public const String ServerName = "localhost";
         public const String ServerNick = "$TwitterIrcGatewayServer$";
+
+        /// <summary>
+        /// ユーザ認証を行うクラスを取得・設定します
+        /// </summary>
+        public IAuthentication Authentication { get; set; }
 
         /// <summary>
         /// SSL通信を必要とするかどうかを取得します
@@ -79,6 +85,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         public Server(Boolean useSslConnection)
         {
+            Authentication = new ApiAuthentication();
             IsSslConnection = useSslConnection;
         }
         

@@ -61,6 +61,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Config.Default.ClientMessageWait = _settings.ClientMessageWait;
             Config.Default.BroadcastUpdateMessageIsNotice = _settings.BroadcastUpdateMessageIsNotice;
             Config.Default.POSTFetchMode = _settings.POSTFetchMode;
+            Config.Default.EnableCompression = _settings.EnableCompression;
+
             _server = new Server();
             _server.ConnectionAttached += new EventHandler<ConnectionAttachEventArgs>(_server_ConnectionAttached);
             try

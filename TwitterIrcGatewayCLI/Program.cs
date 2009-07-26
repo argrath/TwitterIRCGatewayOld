@@ -70,6 +70,7 @@ namespace TwitterIrcGatewayCLI
             Config.Default.ClientMessageWait = options.ClientMessageWait;
             Config.Default.BroadcastUpdateMessageIsNotice = options.BroadcastUpdateMessageIsNotice;
             Config.Default.POSTFetchMode = options.PostFetchMode;
+            Config.Default.EnableCompression = options.EnableCompression;
 
             Server _server = new Server();
             _server.Encoding = encoding;
@@ -96,6 +97,7 @@ namespace TwitterIrcGatewayCLI
             Console.WriteLine("[Configuration] BroadcastUpdateMessageIsNotice: {0}", Config.Default.BroadcastUpdateMessageIsNotice);
             Console.WriteLine("[Configuration] Proxy: {0}", options.Proxy);
             Console.WriteLine("[Configuration] PostFetchMode: {0}", options.PostFetchMode);
+            Console.WriteLine("[Configuration] EnableCompression: {0}", options.EnableCompression);
 
             _server.Start(bindAddress, options.Port);
 
@@ -196,5 +198,9 @@ namespace TwitterIrcGatewayCLI
         [DefaultValue(false)]
         [Description("fetch data by POST method")]
         public Boolean PostFetchMode { get; set; }
+
+        [DefaultValue(false)]
+        [Description("Use gzip compression at Web request")]
+        public Boolean EnableCompression { get; set; }
     }
 }

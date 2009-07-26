@@ -47,12 +47,18 @@
         <classShapeMoniker Id="c7f9b9cb-c4ae-431e-bb59-8899fc0dcd37" />
       </nodes>
     </associationConnector>
-    <associationConnector edgePoints="[(5.1875 : 4.375); (5.1875 : 2.981875)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+    <associationConnector edgePoints="[(5.1875 : 4.375); (5.1875 : 2.981875)]" fixedFrom="NotFixed" fixedTo="NotFixed">
       <AssociationMoniker Name="/TwitterIrcGatewayDataContext/Group/Group_Timeline" />
       <nodes>
         <classShapeMoniker Id="363364fb-251e-4c45-b04b-255cce8ed0a9" />
         <classShapeMoniker Id="c7f9b9cb-c4ae-431e-bb59-8899fc0dcd37" />
       </nodes>
     </associationConnector>
+    <classShape Id="c36fe4f9-ac72-4256-bc3c-eaa6f1c109fe" absoluteBounds="7.125, 0.625, 2, 1.6954166666666666">
+      <DataClassMoniker Name="/TwitterIrcGatewayDataContext/AuthUser" />
+      <nestedChildShapes>
+        <elementListCompartment Id="09679135-41c5-4ff8-99a2-77b0dc0a7637" absoluteBounds="7.14, 1.085, 1.9700000000000002, 1.1354166666666665" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
+      </nestedChildShapes>
+    </classShape>
   </nestedChildShapes>
 </ordesignerObjectsDiagram>
