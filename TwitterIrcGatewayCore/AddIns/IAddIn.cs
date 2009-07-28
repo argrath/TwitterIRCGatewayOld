@@ -98,6 +98,40 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
             DefaultValue = defaultValue;
             MemberInfo = memberInfo;
         }
+
+        /// <summary>
+        /// 値を取得します。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public Object GetValue(IConfiguration config)
+        {
+            Object value = null;
+            if (MemberInfo is PropertyInfo)
+                value = ((PropertyInfo)MemberInfo).GetValue(config, null);
+            else if (MemberInfo is FieldInfo)
+                value = ((FieldInfo)MemberInfo).GetValue(config);
+            else if (config is ICustomConfiguration)
+                value = ((ICustomConfiguration)config).GetValue(Name);
+
+            return value;
+        }
+
+        /// <summary>
+        /// 値を設定します。
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public void SetValue(IConfiguration config, Object value)
+        {
+            if (MemberInfo is PropertyInfo)
+                ((PropertyInfo)MemberInfo).SetValue(config, value, null);
+            else if (MemberInfo is FieldInfo)
+                ((FieldInfo)MemberInfo).SetValue(config, value);
+            else if (config is ICustomConfiguration)
+                ((ICustomConfiguration)config).SetValue(Name, value);
+        }
     }
 
     /// <summary>
