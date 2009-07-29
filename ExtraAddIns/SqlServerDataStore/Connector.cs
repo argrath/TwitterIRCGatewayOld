@@ -62,6 +62,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
         {
             lock (_dataContext)
             {
+                // FIXME: この辺はあとで何とかする
                 var notFoundCount = (from g in CurrentSession.Groups.Keys
                                      where !_cacheGroup.ContainsKey(g)
                                      select g).Count();
@@ -79,6 +80,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore
                         ctx.SubmitChanges();
                     }
                     UpdateGroupCache();
+                }
+                // メインチャンネル
+                if ((from g1 in _dataContext.Group
+                     where g1.UserId == CurrentSession.TwitterUser.Id && g1.Name == CurrentSession.Config.ChannelName
+                     select g1).Count() == 0)
+                {
+                    using (var ctx = new TwitterIrcGatewayDataContext())
+                    {
+                        Group g = new Group { Name = CurrentSession.Config.ChannelName, UserId = CurrentSession.TwitterUser.Id };
+                        ctx.Group.InsertOnSubmit(g);
+                        ctx.SubmitChanges();
+                    }
                 }
 
                 var newTwitterUsers =
