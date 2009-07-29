@@ -104,6 +104,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             IntervalReplies = 120;
             BufferSize = 250;
             EnableCompression = false;
+            FriendsPerPageThreshold = 100;
         
             POSTFetchMode = false;
         }
@@ -224,6 +225,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// フォローしているユーザ一覧を取得する際、次のページが存在するか判断する閾値を指定します。
+        /// </summary>
+        public Int32 FriendsPerPageThreshold
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// 認証情報を問い合わせます。
         /// </summary>
         /// <return cref="User">ユーザー情報</returns>
@@ -330,7 +340,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         else
                         {
                             usersList.AddRange(users.User);
-                            if (users.User.Length < 100)
+                            if (users.User.Length < FriendsPerPageThreshold)
                                 break;
                         }
                     }

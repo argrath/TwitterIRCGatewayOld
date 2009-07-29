@@ -477,6 +477,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _twitter.EnableRepliesCheck = _config.EnableRepliesCheck;
             _twitter.POSTFetchMode = _config.POSTFetchMode;
             _twitter.FetchCount = _config.FetchCount;
+            _twitter.FriendsPerPageThreshold = _config.FriendsPerPageThreshold;
             _twitter.RepliesReceived += new EventHandler<StatusesUpdatedEventArgs>(twitter_RepliesReceived);
             _twitter.TimelineStatusesReceived += new EventHandler<StatusesUpdatedEventArgs>(twitter_TimelineStatusesReceived);
             _twitter.CheckError += new EventHandler<ErrorEventArgs>(twitter_CheckError);

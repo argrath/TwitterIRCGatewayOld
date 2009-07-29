@@ -133,6 +133,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         [Description("初回取得時のタイムラインをNOTICEで送信するかどうかを指定します。")]
         public Boolean DisableNoticeAtFirstTime { get; set; }
+        /// <summary>
+        /// フォローしているユーザ一覧を取得する際、次のページが存在するか判断する閾値を指定します。
+        /// </summary>
+        [Description("フォローしているユーザ一覧を取得する際、次のページが存在するか判断する閾値を指定します。")]
+        public Int32 FriendsPerPageThreshold { get; set; }
 
         /// <summary>
         /// デフォルトの設定
@@ -155,6 +160,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             IntervalDirectMessage = 360;
             IntervalReplies = 120;
             DisableNoticeAtFirstTime = false;
+            FriendsPerPageThreshold = 100;
 
             if (Default != null)
             {
@@ -176,6 +182,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 POSTFetchMode = Default.POSTFetchMode;
                 EnableCompression = Default.EnableCompression;
                 DisableNoticeAtFirstTime = Default.DisableNoticeAtFirstTime;
+                FriendsPerPageThreshold = Default.FriendsPerPageThreshold;
             }
         }
 
