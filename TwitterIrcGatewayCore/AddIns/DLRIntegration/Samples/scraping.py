@@ -124,7 +124,7 @@ class Scraping(Object):
 			# Status
 			s.Source    = self.re_source.search(status).group(1)
 			s.Text      = Utility.UnescapeCharReference(self.re_tag.sub(r"", self.re_anchor.sub(r"\1", self.re_content.search(status).group(1))))
-			s.Id        = int(self.re_status_id.search(status).group(1), 10)
+			s.Id        = long(self.re_status_id.search(status).group(1), 10)
 			s.CreatedAt = DateTime.Now
 			
 			#Trace.WriteLine(s.ToString())
