@@ -286,6 +286,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.DLRIntegration
             var commands =_site.GetCommands();
             // いくつか削除する
             commands.Remove("OnConfigurationChanged");
+            commands.Remove("OnConfigurationBeforeChange");
             commands.Remove("Equals");
             commands.Remove("MemberwiseClone");
             commands.Remove("ToString");

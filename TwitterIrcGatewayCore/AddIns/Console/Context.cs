@@ -380,7 +380,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                         Object convertedValue = (value == null) ? configPropInfo.DefaultValue : tConv.ConvertFromString(value);
                         if (OnConfigurationBeforeChange(config, configPropInfo.MemberInfo, configPropInfo.GetValue(config), convertedValue))
                         {
-                            configPropInfo.SetValue(config, value);
+                            configPropInfo.SetValue(config, convertedValue);
                             Console.NotifyMessage(String.Format("{0} ({1}) = {2}", configPropInfo.Name, configPropInfo.Type.Name, Inspect(convertedValue)));
                         }
                         else
