@@ -21,6 +21,12 @@ namespace TwitterIrcGatewayService
         public TwitterIrcGatewayService()
         {
             InitializeComponent();
+            AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+        }
+
+        void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            EventLog.WriteEntry("ハンドルしていない例外が発生しました:\n\n" + e.ToString(), EventLogEntryType.Error, 9100);
         }
 
         protected override void OnStart(string[] args)
@@ -88,13 +94,21 @@ namespace TwitterIrcGatewayService
         {
             EventLog.WriteEntry("TwitterIrcGateway を停止しています。", EventLogEntryType.Information, 9000);
 
-            if (_sslServer != null)
-                _sslServer.StopListen();
+            try
+            {
+                if (_sslServer != null)
+                    _sslServer.StopListen();
 
-            _server.Stop();
+                _server.Stop();
 
-            if (_sslServer != null)
-                _sslServer.Stop();
+                if (_sslServer != null)
+                    _sslServer.Stop();
+            }
+            catch (Exception e)
+            {
+                EventLog.WriteEntry("停止中にエラーが発生しました:\n\n" + e.ToString(), EventLogEntryType.Error, 9100);
+//                throw;
+            }
 
             EventLog.WriteEntry("TwitterIrcGateway を停止しました。", EventLogEntryType.Information, 9001);
         }
