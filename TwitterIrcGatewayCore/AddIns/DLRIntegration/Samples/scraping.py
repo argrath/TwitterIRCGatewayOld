@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import clr
 import re
 import thread
@@ -91,6 +91,7 @@ class Scraping(Object):
 		self.re_anchor = re.compile(r"<a href=\"(http://[^\"]*)\"[^>]*>.*?</a>")
 		self.re_tag = re.compile(r"<[^>]*>")
 		self.re_status_id = re.compile(r"id=\"status_(\d+)\"")
+		self.doProcessStatusAction = Action[Status](self.doProcessStatus)
 
 	def start(self):
 		if not self.running:
@@ -128,7 +129,10 @@ class Scraping(Object):
 			s.CreatedAt = DateTime.Now
 			
 			#Trace.WriteLine(s.ToString())
-			CurrentSession.TwitterService.ProcessStatus(s, Action[Status](lambda s1: CurrentSession.ProcessTimelineStatus(s1, False, False)))
+			CurrentSession.TwitterService.ProcessStatus(s, self.doProcessStatusAction)
+
+	def doProcessStatus(self, s):
+		CurrentSession.ProcessTimelineStatus(s, False, False)
 
 	def onPostProcessTimelineStatuses(self, sender, e):
 		if e.IsFirstTime and self.requireDisableApi():
