@@ -220,7 +220,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public String UserConfigDirectory
         {
-#if PLATFORM_HOSTING
+#if HOSTING
             get { return Path.Combine(ConfigBasePath, _twitterUser.Id.ToString()); }
 #else
             get { return Path.Combine(ConfigBasePath, _twitterUser.ScreenName); }

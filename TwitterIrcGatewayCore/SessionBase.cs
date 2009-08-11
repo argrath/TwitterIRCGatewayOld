@@ -10,17 +10,37 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     public abstract class SessionBase : MarshalByRefObject, IIrcMessageSendable
     {
         private Server _server;
-
         private List<ConnectionBase> _connections = new List<ConnectionBase>();
 
+        /// <summary>
+        /// セッションが終了している途中かどうかを取得します。
+        /// </summary>
         public Boolean IsClosing { get; private set; }
 
+        /// <summary>
+        /// セッションは接続がなくなっても引き続き保持するかどうかを取得・設定します。
+        /// </summary>
         public Boolean IsKeepAlive { get; set; }
+        /// <summary>
+        /// セッションの固有のIDを取得します。接続してきたユーザを結びつけるために利用されます。
+        /// </summary>
         public Int32 Id { get; private set; }
+        /// <summary>
+        /// 現在のニックネームを取得・設定します。
+        /// </summary>
         public String CurrentNick { get; set; }
+        /// <summary>
+        /// 現在セッションにある接続のコレクションを取得します。
+        /// </summary>
         public IList<ConnectionBase> Connections { get { return _connections.AsReadOnly(); } }
 
+        /// <summary>
+        /// セッションに接続が開始された際に発生するイベントです。
+        /// </summary>
         public event EventHandler<ConnectionAttachEventArgs> ConnectionAttached;
+        /// <summary>
+        /// セッションから接続が切断された際に発生するイベントです。
+        /// </summary>
         public event EventHandler<ConnectionAttachEventArgs> ConnectionDetached;
 
         public SessionBase(Int32 id, Server server)
@@ -30,6 +50,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             TraceLogger.Server.Information("Session Started: "+Id);
         }
 
+        /// <summary>
+        /// 接続をセッションに結びつけます。
+        /// </summary>
+        /// <param name="connection"></param>
         public void Attach(ConnectionBase connection)
         {
             lock (_connections)
@@ -56,6 +80,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
         }
 
+        /// <summary>
+        /// 接続をセッションから切り離します。キープアライブが有効な場合を除き接続数が0となるとセッションは終了します。
+        /// </summary>
+        /// <param name="connection"></param>
         public void Detach(ConnectionBase connection)
         {
             lock (_connections)
@@ -78,8 +106,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         #region オーバーライドして使うメソッド
+        /// <summary>
+        /// 接続が結びつけられたときの処理です。
+        /// </summary>
+        /// <param name="connection"></param>
         protected abstract void OnAttached(ConnectionBase connection);
+        /// <summary>
+        /// 接続が切り離されたときの処理です。
+        /// </summary>
+        /// <param name="connection"></param>
         protected abstract void OnDetached(ConnectionBase connection);
+        /// <summary>
+        /// クライアントからIRCメッセージを受け取ったときの処理です。
+        /// </summary>
+        /// <param name="e"></param>
         protected abstract void OnMessageReceivedFromClient(MessageReceivedEventArgs e);
         #endregion
 
@@ -119,7 +159,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (ConnectionDetached != null)
                 ConnectionDetached(this, e);
         }
-            
+        
+        /// <summary>
+        /// すべての接続を切断してセッションを終了します。
+        /// </summary>
         public virtual void Close()
         {
             // Detachするので二重でここに来ないように。

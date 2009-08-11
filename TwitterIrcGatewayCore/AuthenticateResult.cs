@@ -26,11 +26,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public String ErrorMessage { get; set; }
 
+        /// <summary>
+        /// 認証が成功した状態で初期化します。
+        /// </summary>
         public AuthenticateResult()
         {
             IsAuthenticated = true;
         }
 
+        /// <summary>
+        /// 認証に失敗しその理由を指定して初期化します。
+        /// </summary>
+        /// <param name="errorReply"></param>
+        /// <param name="message"></param>
         public AuthenticateResult(ErrorReply errorReply, String message)
         {
             IsAuthenticated = false;
@@ -39,9 +47,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
     }
 
+    /// <summary>
+    /// Twitterを利用した認証結果を保持します。
+    /// </summary>
     public class TwitterAuthenticateResult : AuthenticateResult
     {
+        /// <summary>
+        /// Twitterのユーザを取得・設定します。
+        /// </summary>
         public User User { get; set; }
+
         public TwitterAuthenticateResult(User user) : base()
         {
             User = user;

@@ -10,8 +10,14 @@ using Misuzilla.Net.Irc;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
+    /// <summary>
+    /// TwitterIrcGatewayへのクライアントの接続を表すクラスです。
+    /// </summary>
     public class Connection : ConnectionBase
     {
+        /// <summary>
+        /// Twitter上のユーザを取得します。
+        /// </summary>
         public User TwitterUser { get; private set; }
 
         public Connection(Server server, TcpClient tcpClient) : base(server, tcpClient)

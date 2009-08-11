@@ -8,7 +8,9 @@ using System.Text;
 using System.Xml;
 using System.Linq;
 using Misuzilla.Applications.TwitterIrcGateway.AddIns.Console;
+#if HOSTING
 using Misuzilla.Applications.TwitterIrcGateway.AddIns.SqlServerDataStore;
+#endif
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
 {
@@ -68,7 +70,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                     {
                         uid = user.Id;
                     }
-                    
+#if HOSTING
                     // 見つからなかったら更にSQL Server
                     if (uid == 0)
                     {
@@ -83,8 +85,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
                                 uid = dbUser.Id;
                         }
                     }
+#endif
                 }
-                
                 if (uid != Session.TwitterUser.Id && _followerIds.BinarySearch(uid) < 0)
                 {
                     e.Text += " (片思い)";

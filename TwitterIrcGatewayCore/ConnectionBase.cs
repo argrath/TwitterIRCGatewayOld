@@ -88,6 +88,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             get; private set;
         }
+        
         /// <summary>
         /// クライアントが認証済みかどうかを取得します
         /// </summary>
