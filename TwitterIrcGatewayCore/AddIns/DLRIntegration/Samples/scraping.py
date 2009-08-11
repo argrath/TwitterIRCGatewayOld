@@ -85,7 +85,7 @@ class Scraping(Object):
 		self.enable = self.config.GetValue("Enable")
 
 		self.re_source = re.compile(r"<span>from (.*?)</span>")
-		self.re_statuses = re.compile(r"<li class=\"hentry status.*?</li>")
+		self.re_statuses = re.compile(r"<li class=\"hentry .*?</li>")
 		self.re_content = re.compile(r"class=\"entry-content\">(.*?)</span>")
 		self.re_user = re.compile(r"class=\"screen-name\" title=\"([^\"]+)\">(.*?)</a>")
 		self.re_anchor = re.compile(r"<a href=\"(http://[^\"]*)\"[^>]*>.*?</a>")
@@ -128,7 +128,7 @@ class Scraping(Object):
 			s.Id        = long(self.re_status_id.search(status).group(1), 10)
 			s.CreatedAt = DateTime.Now
 			
-			#Trace.WriteLine(s.ToString())
+			Trace.WriteLine(s.ToString())
 			CurrentSession.TwitterService.ProcessStatus(s, self.doProcessStatusAction)
 
 	def doProcessStatus(self, s):
