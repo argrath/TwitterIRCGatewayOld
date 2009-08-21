@@ -150,6 +150,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             //_addinManager = AddInManager.CreateInstanceWithAppDomain(_server, this);
 
             Logger = new SessionTraceLogger(this);
+            PostWaitList = new List<Deferred.DeferredState<Boolean>>();
         }
 
         ~Session()
@@ -249,6 +250,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public HashSet<User> FollowingUsers
         {
             get { return _followingUsers; }
+        }
+
+        /// <summary>
+        /// 送信予定のステータスメッセージキューを取得します。
+        /// </summary>
+        public List<Deferred.DeferredState<Boolean>> PostWaitList
+        {
+            get; private set;
         }
         
         /// <summary>
@@ -721,17 +730,51 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             StatusUpdateEventArgs eventArgs = new StatusUpdateEventArgs(message, message.Content);
             if (!FireEvent(UpdateStatusRequestReceived, eventArgs)) return;
 
+            UpdateStatusWithReceiverDeferred(message.Receiver, eventArgs.Text);
+        }
+        
+        public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message)
+        {
+            return UpdateStatusWithReceiverDeferred(receiver, message, 0);
+        }
+
+        public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message, Int64 inReplyToId)
+        {
+            Deferred.DeferredState<Boolean> state = Deferred.DeferredInvoke<String, String, Int64, Boolean>(UpdateStatusWithReceiver, 5000, (asyncResult) => {
+                Deferred.DeferredState<Boolean> state_ = asyncResult.AsyncState as Deferred.DeferredState<Boolean>;
+                
+                // 送信リストから外す
+                lock (PostWaitList)
+                    PostWaitList.Remove(state_);
+            
+            }, receiver, message, inReplyToId);
+
+            PostWaitList.Add(state);
+            
+            return state;
+        }
+
+        public Boolean UpdateStatusWithReceiver(String receiver, String message)
+        {
+            return UpdateStatusWithReceiver(receiver, message, 0);
+        }
+        public Boolean UpdateStatusWithReceiver(String receiver, String message, Int64 inReplyToId)
+        {
             Boolean isRetry = false;
-            Retry:
+            Boolean succeed = true;
+        Retry:
             try
             {
                 // チャンネル宛は自分のメッセージを書き換え
-                if ((String.Compare(message.Receiver, _config.ChannelName, true) == 0) || message.Receiver.StartsWith("#"))
+                if ((String.Compare(receiver, _config.ChannelName, true) == 0) || receiver.StartsWith("#"))
                 {
+                    String postMessage = message;
                     try
                     {
-                        Status status = UpdateStatus(eventArgs.Text);
-                        if (!FireEvent(UpdateStatusRequestCommited, new TimelineStatusEventArgs(status))) return;
+                        // InReplyId が 0 じゃないときは指定されている扱い
+                        Status status = (inReplyToId > 0) ? UpdateStatus(message, inReplyToId) : UpdateStatus(message);
+                        message = status.Text;
+                        if (!FireEvent(UpdateStatusRequestCommited, new TimelineStatusEventArgs(status))) return false;
                     }
                     catch (TwitterServiceException tse)
                     {
@@ -739,22 +782,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
 
                     // ほかのグループに送信する
-                    SendChannelMessage(message.Receiver, CurrentNick, message.Content, false, true, true, false);
+                    SendChannelMessage(receiver, CurrentNick, postMessage, false, true, true, false);
                 }
-                else if (String.Compare(message.Receiver, "trace", true) != 0)
+                else if (String.Compare(receiver, "trace", true) != 0)
                 {
                     // 人に対する場合はDirect Message
-                    _twitter.SendDirectMessage(message.Receiver, message.Content);
+                    _twitter.SendDirectMessage(receiver, message);
                 }
                 if (isRetry)
                 {
-                    SendChannelMessage(message.Receiver, Server.ServerNick, "メッセージ送信のリトライに成功しました。", true, false, false, true);
+                    SendChannelMessage(receiver, Server.ServerNick, "メッセージ送信のリトライに成功しました。", true, false, false, true);
                 }
             }
             catch (WebException ex)
             {
                 String content = String.Format("メッセージ送信に失敗しました({0})" + (!isRetry ? "/リトライします。" : ""), ex.Message.Replace("\n", " "));
-                SendChannelMessage(message.Receiver, Server.ServerNick, content, true, false, false, true);
+                SendChannelMessage(receiver, Server.ServerNick, content, true, false, false, true);
 
                 // 一回だけリトライするよ
                 if (!isRetry)
@@ -762,7 +805,34 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     isRetry = true;
                     goto Retry;
                 }
+                else
+                {
+                    succeed = false;
+                }
             }
+
+            return succeed;
+        }
+
+        /// <summary>
+        /// Twitterのステータスを更新します。
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public Deferred.DeferredState<Status> UpdateStatusAsync(String message)
+        {
+            return Deferred.DeferredInvoke<String, Status>(UpdateStatus, 5000, message);
+        }
+                
+        /// <summary>
+        /// Twitterのステータスを更新します。
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inReplyToStatusId"></param>
+        /// <returns></returns>
+        public Deferred.DeferredState<Status> UpdateStatusAsync(String message, Int64 inReplyToStatusId)
+        {
+            return Deferred.DeferredInvoke<String, Int64, Status>(UpdateStatus, 5000, message, inReplyToStatusId);
         }
 
         /// <summary>

@@ -190,6 +190,7 @@
     <Compile Include="Authentication\IAuthentication.cs" />
     <Compile Include="Connection.cs" />
     <Compile Include="ConnectionBase.cs" />
+    <Compile Include="Deferred.cs" />
     <Compile Include="IIrcMessageSendable.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="SessionBase.cs" />

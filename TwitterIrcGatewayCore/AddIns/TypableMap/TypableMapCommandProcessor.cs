@@ -258,6 +258,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
             public Boolean Process(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, string args)
             {
                 var session = processor.Session;
+                if (args.Trim() == String.Empty)
+                {
+                    session.SendChannelMessage(msg.Receiver, Server.ServerNick, "返信に空メッセージの送信はできません。", true, false, false, true);
+                    return true;
+                }
+
                 session.RunCheck(() =>
                                      {
                                          String replyMsg = String.Format("@{0} {1}", status.User.ScreenName, args);
