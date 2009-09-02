@@ -264,16 +264,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                     return true;
                 }
 
-                session.RunCheck(() =>
-                                     {
-                                         String replyMsg = String.Format("@{0} {1}", status.User.ScreenName, args);
-                                         Status updatedStatus = session.UpdateStatus(replyMsg, status.Id);
-                                         session.SendChannelMessage(updatedStatus.Text);
-                                     },
-                                 (ex) =>
-                                     {
-                                         session.SendChannelMessage(msg.Receiver, Server.ServerNick, "メッセージ送信に失敗しました", true, false, false, true);
-                                     });
+                 String replyMsg = String.Format("@{0} {1}", status.User.ScreenName, args);
+                session.UpdateStatusWithReceiverDeferred(msg.Receiver, replyMsg, status.Id, (updatedStatus) =>
+                                                                                                {
+                                                                                                    session.SendChannelMessage(updatedStatus.Text);
+                                                                                                });
                 return true;
             }
 

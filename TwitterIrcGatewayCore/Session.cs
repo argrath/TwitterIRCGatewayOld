@@ -737,17 +737,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return UpdateStatusWithReceiverDeferred(receiver, message, 0);
         }
-
+        
         public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message, Int64 inReplyToId)
         {
-            Deferred.DeferredState<Boolean> state = Deferred.DeferredInvoke<String, String, Int64, Boolean>(UpdateStatusWithReceiver, 5000, (asyncResult) => {
+            return UpdateStatusWithReceiverDeferred(receiver, message, inReplyToId, null);
+        }
+
+        public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message, Int64 inReplyToId, Action<Status> callback)
+        {
+            Deferred.DeferredState<Boolean> state = Deferred.DeferredInvoke<String, String, Int64, Action<Status>, Boolean>(UpdateStatusWithReceiver, 5000, (asyncResult) => {
                 Deferred.DeferredState<Boolean> state_ = asyncResult.AsyncState as Deferred.DeferredState<Boolean>;
                 
                 // 送信リストから外す
                 lock (PostWaitList)
                     PostWaitList.Remove(state_);
             
-            }, receiver, message, inReplyToId);
+            }, receiver, message, inReplyToId, callback);
 
             PostWaitList.Add(state);
             
@@ -759,6 +764,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return UpdateStatusWithReceiver(receiver, message, 0);
         }
         public Boolean UpdateStatusWithReceiver(String receiver, String message, Int64 inReplyToId)
+        {
+            return UpdateStatusWithReceiver(receiver, message, inReplyToId, null);
+        }
+        public Boolean UpdateStatusWithReceiver(String receiver, String message, Int64 inReplyToId, Action<Status> callback)
         {
             Boolean isRetry = false;
             Boolean succeed = true;
@@ -774,6 +783,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                         // InReplyId が 0 じゃないときは指定されている扱い
                         Status status = (inReplyToId > 0) ? UpdateStatus(message, inReplyToId) : UpdateStatus(message);
                         message = status.Text;
+                        if (callback != null)
+                        {
+                            try
+                            {
+                                callback(status);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Error(e.ToString());
+                            }
+                        }
                         if (!FireEvent(UpdateStatusRequestCommited, new TimelineStatusEventArgs(status))) return false;
                     }
                     catch (TwitterServiceException tse)
@@ -822,17 +842,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public Deferred.DeferredState<Status> UpdateStatusAsync(String message)
         {
             return Deferred.DeferredInvoke<String, Status>(UpdateStatus, 5000, message);
-        }
-                
-        /// <summary>
-        /// Twitterのステータスを更新します。
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="inReplyToStatusId"></param>
-        /// <returns></returns>
-        public Deferred.DeferredState<Status> UpdateStatusAsync(String message, Int64 inReplyToStatusId)
-        {
-            return Deferred.DeferredInvoke<String, Int64, Status>(UpdateStatus, 5000, message, inReplyToStatusId);
         }
 
         /// <summary>
