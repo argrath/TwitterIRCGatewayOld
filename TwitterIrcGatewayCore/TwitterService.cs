@@ -1904,7 +1904,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     _text = Utility.UnescapeCharReference(_textOriginal);
                 }
 
-                return _text;
+                return _text ?? "";
             }
             set
             {
