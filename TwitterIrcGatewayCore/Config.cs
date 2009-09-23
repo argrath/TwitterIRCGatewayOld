@@ -138,6 +138,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         [Description("フォローしているユーザ一覧を取得する際、次のページが存在するか判断する閾値を指定します。")]
         public Int32 FriendsPerPageThreshold { get; set; }
+        /// <summary>
+        /// 更新時に何秒待機したのちリクエストを送信するかどうかを指定します。
+        /// </summary>
+        [Description("更新時に何秒待機したのちリクエストを送信するかどうかを指定します。")]
+        public Int32 UpdateDelayTime { get; set; }
 
         /// <summary>
         /// デフォルトの設定
@@ -161,6 +166,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             IntervalReplies = 120;
             DisableNoticeAtFirstTime = false;
             FriendsPerPageThreshold = 100;
+            UpdateDelayTime = 5;
 
             if (Default != null)
             {
@@ -183,6 +189,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 EnableCompression = Default.EnableCompression;
                 DisableNoticeAtFirstTime = Default.DisableNoticeAtFirstTime;
                 FriendsPerPageThreshold = Default.FriendsPerPageThreshold;
+                UpdateDelayTime = Default.UpdateDelayTime;
             }
         }
 

@@ -732,20 +732,42 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             UpdateStatusWithReceiverDeferred(message.Receiver, eventArgs.Text);
         }
-        
-        public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message)
+
+        #region Update Status Methods
+        /// <summary>
+        /// 設定された時間待機した後Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+         public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message)
         {
             return UpdateStatusWithReceiverDeferred(receiver, message, 0);
         }
-        
+
+        /// <summary>
+        /// 設定された時間待機した後Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <param name="inReplyToId"></param>
+        /// <returns></returns>
         public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message, Int64 inReplyToId)
         {
             return UpdateStatusWithReceiverDeferred(receiver, message, inReplyToId, null);
         }
 
+        /// <summary>
+        /// 設定された時間待機した後Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。完了時に指定されたコールバックメソッドを呼び出します。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <param name="inReplyToId"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
         public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message, Int64 inReplyToId, Action<Status> callback)
         {
-            Deferred.DeferredState<Boolean> state = Deferred.DeferredInvoke<String, String, Int64, Action<Status>, Boolean>(UpdateStatusWithReceiver, 5000, (asyncResult) => {
+            Deferred.DeferredState<Boolean> state = Deferred.DeferredInvoke<String, String, Int64, Action<Status>, Boolean>(UpdateStatusWithReceiver, Config.UpdateDelayTime * 1000, (asyncResult) => {
                 Deferred.DeferredState<Boolean> state_ = asyncResult.AsyncState as Deferred.DeferredState<Boolean>;
                 
                 // 送信リストから外す
@@ -759,14 +781,38 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             return state;
         }
 
+
+        /// <summary>
+        /// Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
         public Boolean UpdateStatusWithReceiver(String receiver, String message)
         {
             return UpdateStatusWithReceiver(receiver, message, 0);
         }
+
+        /// <summary>
+        /// Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <param name="inReplyToId"></param>
+        /// <returns></returns>
         public Boolean UpdateStatusWithReceiver(String receiver, String message, Int64 inReplyToId)
         {
             return UpdateStatusWithReceiver(receiver, message, inReplyToId, null);
         }
+
+        /// <summary>
+        /// Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。完了時に指定されたコールバックメソッドを呼び出します。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <param name="inReplyToId"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
         public Boolean UpdateStatusWithReceiver(String receiver, String message, Int64 inReplyToId, Action<Status> callback)
         {
             Boolean isRetry = false;
@@ -835,13 +881,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
-        /// Twitterのステータスを更新します。
+        /// 設定された時間待機した後Twitterのステータスを更新します。
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
         public Deferred.DeferredState<Status> UpdateStatusAsync(String message)
         {
-            return Deferred.DeferredInvoke<String, Status>(UpdateStatus, 5000, message);
+            return Deferred.DeferredInvoke<String, Status>(UpdateStatus, Config.UpdateDelayTime * 1000, message);
+        }
+
+        /// <summary>
+        /// 設定された時間待機した後Twitterのステータスを更新します。
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public Deferred.DeferredState<Status> UpdateStatusAsync(String message, Int64 inReplyToStatusId)
+        {
+            return Deferred.DeferredInvoke<String, Int64, Status>(UpdateStatus, Config.UpdateDelayTime * 1000, message, inReplyToStatusId);
         }
 
         /// <summary>
@@ -865,7 +921,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return UpdateStatus(message, 0);
             }
         }
-        
+
         /// <summary>
         /// Twitterのステータスを更新します。
         /// </summary>
@@ -895,6 +951,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             return status;
         }
+        #endregion
 
         void MessageReceived_WHOIS(object sender, MessageReceivedEventArgs e)
         {
