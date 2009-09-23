@@ -86,14 +86,39 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             CurrentSession.SaveGroups();
         }
     
-        [Description("")]
-        public void Rename(String oldChannelName, String newChannelName)
+        [Description("指定したグループ(チャンネル)の名前を変更します")]
+        public void Rename([Description("現在のチャンネル名")]String oldChannelName, [Description("新しいチャンネル名")]String newChannelName)
         {
-            if (CurrentSession.Groups.ContainsKey(oldChannelName))
+            if (!CurrentSession.Groups.ContainsKey(oldChannelName))
+            {
+                Console.NotifyMessage("指定されたチャンネルは見つかりませんでした。");
+                return;
+            }
+            if (String.Compare(oldChannelName, CurrentSession.Config.ChannelName, true) == 0)
+            {
+                Console.NotifyMessage("メインタイムラインのチャンネル名を変更するにはConfigコンテキストの設定変更で行う必要があります。");
+                return;
+            }
+
+            if (String.Compare(oldChannelName, newChannelName, true) == 0)
+            {
+                Console.NotifyMessage("新しいチャンネル名と古いチャンネル名を同じにすることはできません。");
+                return;
+            }
+
+            if (CurrentSession.Groups.ContainsKey(newChannelName) || String.Compare(CurrentSession.Config.ChannelName, newChannelName, true) == 0)
             {
                 Console.NotifyMessage("既に存在するチャンネル名を指定することは出来ません。");
+                return;
             }
-            // 旧メインチャンネルをPART
+
+            if (!(oldChannelName.StartsWith("#") && oldChannelName.Length > 2))
+            {
+                Console.NotifyMessage("チャンネル名は#で始まる必要があります。");
+                return;
+            }
+
+            // 旧チャンネルをPART
             CurrentSession.SendServer(new PartMessage(oldChannelName, ""));
 
             Group g = CurrentSession.Groups[oldChannelName];
@@ -101,8 +126,52 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
             CurrentSession.Groups.Remove(oldChannelName);
             CurrentSession.Groups.Add(newChannelName, g);
             
-            // 新メインチャンネルにJOIN
-            CurrentSession.SendServer(new JoinMessage(newChannelName, ""));
+            // 新チャンネルにJOIN
+            CurrentSession.JoinChannel(CurrentSession, g);
+
+            CurrentSession.SaveGroups();
+        }
+            
+        [Description("指定したグループ(チャンネル)の名前をコピーします")]
+        public void Copy([Description("現在のチャンネル名")]String oldChannelName, [Description("新しいチャンネル名")]String newChannelName)
+        {
+            if (!CurrentSession.Groups.ContainsKey(oldChannelName))
+            {
+                Console.NotifyMessage("指定されたチャンネルは見つかりませんでした。");
+                return;
+            }
+            if (String.Compare(oldChannelName, CurrentSession.Config.ChannelName, true) == 0)
+            {
+                Console.NotifyMessage("メインタイムラインのチャンネル名を変更するにはConfigコンテキストの設定変更で行う必要があります。");
+                return;
+            }
+
+            if (String.Compare(oldChannelName, newChannelName, true) == 0)
+            {
+                Console.NotifyMessage("新しいチャンネル名と古いチャンネル名を同じにすることはできません。");
+                return;
+            }
+
+            if (CurrentSession.Groups.ContainsKey(newChannelName) || String.Compare(CurrentSession.Config.ChannelName, newChannelName, true) == 0)
+            {
+                Console.NotifyMessage("既に存在するチャンネル名を指定することは出来ません。");
+                return;
+            }
+
+            if (!(oldChannelName.StartsWith("#") && oldChannelName.Length > 2))
+            {
+                Console.NotifyMessage("チャンネル名は#で始まる必要があります。");
+                return;
+            }
+
+            Group g = CurrentSession.Groups[oldChannelName].Clone();
+            g.Name = newChannelName;
+            CurrentSession.Groups.Add(newChannelName, g);
+            
+            // 新チャンネルにJOIN
+            CurrentSession.JoinChannel(CurrentSession, g);
+
+            CurrentSession.SaveGroups();
         }
     }
 }
