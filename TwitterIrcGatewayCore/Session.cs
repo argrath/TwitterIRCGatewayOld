@@ -1137,7 +1137,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Boolean dummy = false;
             foreach (Status status in e.Statuses.Status)
             {
-                ProcessTimelineStatus(status, ref dummy);
+                ProcessTimelineStatus(status, ref dummy, false, e.IsFirstTime);
             }
         }
         #endregion
@@ -1436,6 +1436,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         public void ProcessTimelineStatus(Status status, ref Boolean friendsCheckRequired, Boolean ignoreGatewayCheck)
         {
+            ProcessTimelineStatus(status, ref friendsCheckRequired, ignoreGatewayCheck, _isFirstTime);
+        }
+        public void ProcessTimelineStatus(Status status, ref Boolean friendsCheckRequired, Boolean ignoreGatewayCheck, Boolean isFirstTime)
+        {
             TimelineStatusEventArgs eventArgs = new TimelineStatusEventArgs(status, status.Text, "PRIVMSG");
             if (!FireEvent(PreProcessTimelineStatus, eventArgs)) return;
             
@@ -1492,7 +1496,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 String[] lines = eventArgsGroup.Text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
                 {
-                    if (_isFirstTime && !_config.DisableNoticeAtFirstTime)
+                    if (isFirstTime && !_config.DisableNoticeAtFirstTime)
                     {
                         // 初回のときはNOTICE+時間
                         Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", routedGroup.Group.Name,

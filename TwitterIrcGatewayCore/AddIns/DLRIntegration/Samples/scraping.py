@@ -87,7 +87,7 @@ class Scraping(Object):
 		self.re_source = re.compile(r"<span>from (.*?)</span>")
 		self.re_statuses = re.compile(r"<li class=\"hentry .*?</li>")
 		self.re_content = re.compile(r"class=\"entry-content\">(.*?)</span>")
-		self.re_user = re.compile(r"class=\"screen-name\" title=\"([^\"]+)\">(.*?)</a>")
+		self.re_user = re.compile(r"class=\"tweet-url screen-name\" title=\"([^\"]+)\">(.*?)</a>")
 		self.re_anchor = re.compile(r"<a href=\"(http://[^\"]*)\"[^>]*>.*?</a>")
 		self.re_tag = re.compile(r"<[^>]*>")
 		self.re_status_id = re.compile(r"id=\"status_(\d+)\"")
