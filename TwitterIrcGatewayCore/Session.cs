@@ -773,7 +773,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 // 送信リストから外す
                 lock (PostWaitList)
                     PostWaitList.Remove(state_);
-            
+
             }, receiver, message, inReplyToId, callback);
 
             PostWaitList.Add(state);
@@ -950,6 +950,31 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (!FireEvent(PostSendUpdateStatus, eventArgs)) return null;
 
             return status;
+        }
+        /// <summary>
+        /// 遅延アップデートのキャンセルを試みます。
+        /// </summary>
+        /// <returns>キャンセルに成功した場合にはtrue、キャンセルする対象が存在しなかった場合にはfalse</returns>
+        public Boolean TryCancelDeferredUpdate()
+        {
+            // まず送信待ちをみる
+            Deferred.DeferredState<Boolean> state = null;
+            lock (PostWaitList)
+            {
+                if (PostWaitList.Count > 0)
+                {
+                    state = PostWaitList[0];
+                }
+            }
+            
+            // 完了コールバック中でPostWaitListを触っているので外側でキャンセルする
+            if (state != null && state.Cancel())
+            {
+                // キャンセル出来た
+                return true;
+            }
+            
+            return false;
         }
         #endregion
 

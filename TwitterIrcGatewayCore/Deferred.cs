@@ -21,6 +21,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             public Boolean IsRunning { get; internal set; }
             public IAsyncResult AsyncResult { get; internal set; }
             public Func<TResult> Target { get; internal set; }
+            public ManualResetEvent WaitHandle { get; set; }
             
             /// <summary>
             /// 処理をキャンセルします。
@@ -30,8 +31,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             {
                 IsCanceled = true;
                 if (AsyncResult.IsCompleted)
+                {
                     return false;
+                }
 
+                DeferredState<TResult> state = AsyncResult.AsyncState as DeferredState<TResult>;
+                state.WaitHandle.Set();
+                
                 Target.EndInvoke(AsyncResult);
                 return IsRunning;
             }
@@ -57,9 +63,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private static DeferredState<TResult> DeferredInvokeInternal<TResult>(Func<TResult> func, Int32 millisecond, AsyncCallback asyncCallback)
         {
             DeferredState<TResult> state = new DeferredState<TResult>();
+            state.WaitHandle = new ManualResetEvent(false);
+
+            // 暫定で0から10秒
+            if (millisecond > 10 * 1000)
+                millisecond = 10 * 1000;
+            else if (millisecond < 0)
+                millisecond = 0;
+
             Func<TResult> d = () =>
             {
-                Thread.Sleep(millisecond);
+                state.WaitHandle.WaitOne(millisecond);
 
                 lock (state)
                 {
