@@ -85,7 +85,7 @@ class Scraping(Object):
 		self.enable = self.config.GetValue("Enable")
 
 		self.re_source = re.compile(r"<span>from (.*?)</span>")
-		self.re_statuses = re.compile(r"<li class=\"hentry .*?</li>")
+		self.re_statuses = re.compile(r"<li class=\"hentry u-.*? status.*?</li>", re.S)
 		self.re_content = re.compile(r"class=\"entry-content\">(.*?)</span>")
 		self.re_user = re.compile(r"class=\"tweet-url screen-name\" title=\"([^\"]+)\">(.*?)</a>")
 		self.re_anchor = re.compile(r"<a href=\"(http://[^\"]*)\"[^>]*>.*?</a>")
