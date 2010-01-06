@@ -1188,7 +1188,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private void RunCallback(Timer timer, Procedure callbackProcedure)
         {
             // あまりに処理が遅れると二重になる可能性がある
-            if (Monitor.TryEnter(timer))
+            if (timer != null && Monitor.TryEnter(timer))
             {
                 try
                 {
