@@ -49,17 +49,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
     
         private void WorkerProcedure()
         {
-            FieldInfo fieldInfo = typeof (TwitterService).GetField("_credential", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField);
-            CredentialCache credentials = fieldInfo.GetValue(CurrentSession.TwitterService) as CredentialCache;
-            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(_Status));
-            HttpWebRequest webRequest = WebRequest.Create("http://betastream.twitter.com/2b/user.json") as HttpWebRequest;
-            webRequest.Credentials = credentials.GetCredential(new Uri(CurrentSession.TwitterService.ServiceServerPrefix), "Basic");
-            webRequest.PreAuthenticate = true;
-            using (var response = webRequest.GetResponse())
+            try
             {
-                StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                try
+                FieldInfo fieldInfo = typeof(TwitterService).GetField("_credential", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField);
+
+                CredentialCache credentials = fieldInfo.GetValue(CurrentSession.TwitterService) as CredentialCache;
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(_Status));
+                HttpWebRequest webRequest = WebRequest.Create("http://betastream.twitter.com/2b/user.json") as HttpWebRequest;
+                webRequest.Credentials = credentials.GetCredential(new Uri(CurrentSession.TwitterService.ServiceServerPrefix), "Basic");
+                webRequest.PreAuthenticate = true;
+                using (var response = webRequest.GetResponse())
                 {
+                    StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+
                     while (!sr.EndOfStream)
                     {
                         var line = sr.ReadLine();
@@ -72,7 +74,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
                         Status status = new Status()
                                             {
                                                 CreatedAt = statusJson.CreatedAt,
-                                                Text = statusJson.text,
+                                                _textOriginal = statusJson.text,
+                                                Source = statusJson.source,
                                                 Id = statusJson.id
                                             };
                         User user = new User()
@@ -84,13 +87,13 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
                                         };
                         status.User = user;
                         Boolean friendCheckRequired = false;
-                        CurrentSession.TwitterService.ProcessStatus(status, (s) => CurrentSession.ProcessTimelineStatus(s, ref friendCheckRequired));
+                        CurrentSession.TwitterService.ProcessStatus(status, (s) => CurrentSession.ProcessTimelineStatus(s, ref friendCheckRequired, false, false));
                     }
                 }
-                catch (Exception e)
-                {
-                    CurrentSession.SendServerErrorMessage("エラー UserStream: " + e.Message);
-                }
+            }
+            catch (Exception e)
+            {
+                CurrentSession.SendServerErrorMessage("UserStream: " + e.Message);
             }
         }
     }
@@ -132,6 +135,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
         public String text { get; set; }
         [DataMember]
         public String created_at { get; set; }
+        [DataMember]
+        public String source { get; set; }
         [DataMember]
         public _User user { get; set; }
 
