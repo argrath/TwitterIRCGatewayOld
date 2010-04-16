@@ -11,6 +11,7 @@ using System.ServiceModel.Dispatcher;
 using System.Text;
 using System.Threading;
 using Misuzilla.Applications.TwitterIrcGateway.AddIns.Console;
+using System.Runtime.Serialization.Json;
 
 namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
 {
@@ -50,8 +51,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
         {
             FieldInfo fieldInfo = typeof (TwitterService).GetField("_credential", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField);
             CredentialCache credentials = fieldInfo.GetValue(CurrentSession.TwitterService) as CredentialCache;
-            
-            JsonQueryStringConverter converter = new JsonQueryStringConverter();
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(_Status));
             HttpWebRequest webRequest = WebRequest.Create("http://betastream.twitter.com/2b/user.json") as HttpWebRequest;
             webRequest.Credentials = credentials.GetCredential(new Uri(CurrentSession.TwitterService.ServiceServerPrefix), "Basic");
             webRequest.PreAuthenticate = true;
@@ -65,8 +65,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
                         var line = sr.ReadLine();
                         if (String.IsNullOrEmpty(line))
                             continue;
-                        _Status statusJson = converter.ConvertStringToValue(line, typeof(_Status)) as _Status;
-                        if (statusJson == null || statusJson.id == 0 || statusJson.user.Protected)
+                        _Status statusJson = serializer.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(line))) as _Status;
+                        if (statusJson == null || statusJson.id == 0)
                             continue;
 
                         Status status = new Status()
