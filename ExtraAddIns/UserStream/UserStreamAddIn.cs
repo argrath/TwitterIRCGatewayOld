@@ -67,7 +67,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
                         var line = sr.ReadLine();
                         if (String.IsNullOrEmpty(line))
                             continue;
-                        _Status statusJson = serializer.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(line))) as _Status;
+
+                        _Status statusJson;
+                        try
+                        {
+                            statusJson = serializer.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(line))) as _Status;
+                        }
+                        catch
+                        {
+                            //CurrentSession.SendServerErrorMessage("UserStream(Deserialize): " + line);
+                            continue;
+                        }
+
                         if (statusJson == null || statusJson.id == 0)
                             continue;
 
@@ -93,7 +104,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
             }
             catch (Exception e)
             {
-                CurrentSession.SendServerErrorMessage("UserStream: " + e.Message);
+                CurrentSession.SendServerErrorMessage("UserStream: " + e.ToString());
             }
         }
     }
