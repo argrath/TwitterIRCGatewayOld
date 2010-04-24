@@ -85,6 +85,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
                 _webRequest = WebRequest.Create("http://betastream.twitter.com/2b/user.json") as HttpWebRequest;
                 _webRequest.Credentials = credentials.GetCredential(new Uri(CurrentSession.TwitterService.ServiceServerPrefix), "Basic");
                 _webRequest.PreAuthenticate = true;
+                _webRequest.ServicePoint.ConnectionLimit = 1000;
                 _webRequest.ServicePoint.BindIPEndPointDelegate = (servicePoint, remoteEndPoint, retryCount) => { return _localIPEndpoint; };
                 using (var response = _webRequest.GetResponse())
                 using (var stream = response.GetResponseStream())
