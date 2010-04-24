@@ -17,13 +17,24 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
 {
     public class UserStreamAddIn : AddInBase
     {
+        [ThreadStatic]
+        private static IPEndPoint _localIPEndpoint;
+
+        private HashSet<Int64> _friendIds;
+
         private Thread _workerThread;
+        private Boolean _isRunning;
+        private HttpWebRequest _webRequest;
+
+        public UserStreamConfig Config { get; set; }
+
         public override void Initialize()
         {
             Session.AddInsLoadCompleted += (sender, e) =>
                                                {
                                                    Session.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<UserStreamContext>();
-                                                   Setup(Session.AddInManager.GetConfig<UserStreamConfig>().Enabled);
+                                                   Config = Session.AddInManager.GetConfig<UserStreamConfig>();
+                                                   Setup(Config.Enabled);
                                                };
         }
         public override void Uninitialize()
@@ -35,15 +46,25 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
         {
             if (_workerThread != null)
             {
+                _isRunning = false;
+                
+                if (_webRequest != null)
+                {
+                    _webRequest.Abort();
+                    _webRequest = null;
+                }
+
                 _workerThread.Abort();
-                _workerThread.Join();
+                _workerThread.Join(200);
                 _workerThread = null;
             }
 
             if (isStart)
             {
+                _friendIds = new HashSet<Int64>();
                 _workerThread = new Thread(WorkerProcedure);
                 _workerThread.Start();
+                _isRunning = true;
             }
         }
     
@@ -51,27 +72,62 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
         {
             try
             {
+                String ipEndpoint = Config.IPEndPoint;
+                _localIPEndpoint = (ipEndpoint == null) ? null : new IPEndPoint(IPAddress.Parse(ipEndpoint), 0);
+
                 FieldInfo fieldInfo = typeof(TwitterService).GetField("_credential", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField);
 
                 CredentialCache credentials = fieldInfo.GetValue(CurrentSession.TwitterService) as CredentialCache;
                 DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(_Status));
-                HttpWebRequest webRequest = WebRequest.Create("http://betastream.twitter.com/2b/user.json") as HttpWebRequest;
-                webRequest.Credentials = credentials.GetCredential(new Uri(CurrentSession.TwitterService.ServiceServerPrefix), "Basic");
-                webRequest.PreAuthenticate = true;
-                using (var response = webRequest.GetResponse())
-                {
-                    StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                DataContractJsonSerializer serializer2 = new DataContractJsonSerializer(typeof(_FriendsObject));
+                DataContractJsonSerializer serializer3 = new DataContractJsonSerializer(typeof(_EventObject));
 
-                    while (!sr.EndOfStream)
+                _webRequest = WebRequest.Create("http://betastream.twitter.com/2b/user.json") as HttpWebRequest;
+                _webRequest.Credentials = credentials.GetCredential(new Uri(CurrentSession.TwitterService.ServiceServerPrefix), "Basic");
+                _webRequest.PreAuthenticate = true;
+                _webRequest.ServicePoint.BindIPEndPointDelegate = (servicePoint, remoteEndPoint, retryCount) => { return _localIPEndpoint; };
+                using (var response = _webRequest.GetResponse())
+                using (var stream = response.GetResponseStream())
+                {
+                    stream.ReadTimeout = 30*1000;
+
+                    StreamReader sr = new StreamReader(stream, Encoding.UTF8);
+                    Boolean isFirstLine = true;
+                    while (!sr.EndOfStream && _isRunning)
                     {
                         var line = sr.ReadLine();
                         if (String.IsNullOrEmpty(line))
                             continue;
 
-                        _Status statusJson;
+                        _Status statusJson = null;
                         try
                         {
-                            statusJson = serializer.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(line))) as _Status;
+                            // XXX: これはてぬき
+                            if (isFirstLine)
+                            {
+                                isFirstLine = false;
+                                _FriendsObject streamObject =
+                                    serializer2.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(line))) as
+                                    _FriendsObject;
+                                if (streamObject != null && streamObject.friends != null)
+                                {
+                                    _friendIds.UnionWith(streamObject.friends);
+                                }
+                            }
+                            else if (line.IndexOf("\"event\":") > -1)
+                            {
+                                _EventObject eventObj =
+                                    serializer3.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(line))) as _EventObject;
+
+                                if (eventObj.Event == "follow")
+                                    _friendIds.Add(eventObj.target.id);
+                            }
+                            else
+                            {
+                                statusJson =
+                                    serializer.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(line))) as _Status;
+                            }
+
                         }
                         catch
                         {
@@ -87,24 +143,44 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
                                                 CreatedAt = statusJson.CreatedAt,
                                                 _textOriginal = statusJson.text,
                                                 Source = statusJson.source,
-                                                Id = statusJson.id
+                                                Id = statusJson.id,
+                                                InReplyToUserId =
+                                                    statusJson.in_reply_to_user_id.HasValue
+                                                        ? statusJson.in_reply_to_user_id.Value.ToString()
+                                                        : null
                                             };
                         User user = new User()
                                         {
-                                            Id = (Int32)statusJson.user.id,
+                                            Id = (Int32) statusJson.user.id,
                                             Protected = statusJson.user.Protected,
                                             ProfileImageUrl = statusJson.user.profile_image_url,
                                             ScreenName = statusJson.user.screen_name
                                         };
                         status.User = user;
                         Boolean friendCheckRequired = false;
-                        CurrentSession.TwitterService.ProcessStatus(status, (s) => CurrentSession.ProcessTimelineStatus(s, ref friendCheckRequired, false, false));
+                        if (Config.AllAtMode ||
+                            (statusJson.in_reply_to_user_id.HasValue == false) ||
+                            (statusJson.in_reply_to_user_id.HasValue && _friendIds.Contains(statusJson.in_reply_to_user_id.Value)))
+                        {
+                            CurrentSession.TwitterService.ProcessStatus(status,
+                                                                        (s) =>
+                                                                        CurrentSession.ProcessTimelineStatus(s,
+                                                                                                             ref friendCheckRequired,
+                                                                                                             false,
+                                                                                                             false));
+                        }
                     }
                 }
             }
+            catch (ThreadAbortException)
+            {}
             catch (Exception e)
             {
                 CurrentSession.SendServerErrorMessage("UserStream: " + e.ToString());
+            }
+            finally
+            {
+                _isRunning = false;
             }
         }
     }
@@ -112,6 +188,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
     [Description("User Stream設定コンテキストに切り替えます")]
     public class UserStreamContext : Context
     {
+        public override IConfiguration[] Configurations
+        {
+            get
+            {
+                return new[] { CurrentSession.AddInManager.GetAddIn<UserStreamAddIn>().Config };
+            }
+        }
+
         [Description("User Stream を有効にします")]
         public void Enable()
         {
@@ -134,7 +218,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
     
     public class UserStreamConfig : IConfiguration
     {
-        public Boolean Enabled;
+        [Browsable(false)]
+        public Boolean Enabled { get; set; }
+
+        [Browsable(false)]
+        public String IPEndPoint { get; set; }
+
+        [Description("all@と同じ挙動になるかどうかを指定します。")]
+        public Boolean AllAtMode { get; set; }
+
+//        [Description("切断された際に自動的に再接続を試みるかどうかを指定します。")]
+//        public Boolean AutoRestart { get; set; }
     }
 
     [DataContract]
@@ -152,7 +246,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
         public _User user { get; set; }
 
         public DateTime CreatedAt { get { return DateTime.ParseExact(created_at, "ddd MMM dd HH:mm:ss zz00 yyyy", CultureInfo.InvariantCulture.DateTimeFormat); } }
-        //public Int64 in_reply_to { get; set; }
+
+        [DataMember]
+        public Int64? in_reply_to { get; set; }
+
+        [DataMember]
+        public Int64? in_reply_to_user_id { get; set; }
+
+    }
+
+    [DataContract]
+    class _EventTarget
+    {
+        [DataMember]
+        public Int64 id { get; set; }
     }
 
     [DataContract]
@@ -166,5 +273,23 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
         public String profile_image_url { get; set; }
         [DataMember(Name = "protected")]
         public Boolean Protected { get; set; }
+    }
+
+    [DataContract]
+    class _FriendsObject
+    {
+        [DataMember]
+        public List<Int64> friends { get; set; }
+    }
+
+    [DataContract]
+    class _EventObject
+    {
+        [DataMember(Name = "event")]
+        public String Event { get; set; }
+        [DataMember]
+        public _EventTarget target { get; set; }
+        [DataMember]
+        public _EventTarget source { get; set; }
     }
 }
