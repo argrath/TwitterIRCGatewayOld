@@ -120,7 +120,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
                                 _EventObject eventObj =
                                     serializer3.ReadObject(new MemoryStream(Encoding.UTF8.GetBytes(line))) as _EventObject;
 
-                                if (eventObj.Event == "follow")
+                                if (eventObj.Event == "follow" && eventObj.source.id == CurrentSession.TwitterUser.Id)
                                     _friendIds.Add(eventObj.target.id);
                             }
                             else
