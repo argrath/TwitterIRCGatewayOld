@@ -43,6 +43,19 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public event EventHandler<ConnectionAttachEventArgs> ConnectionDetached;
 
+        /// <summary>
+        /// セッションが終了する際に発生するイベントです。
+        /// </summary>
+        public event EventHandler BeforeClosing;
+        /// <summary>
+        /// セッションが終了中に発生するイベントです。
+        /// </summary>
+        public event EventHandler Closing;
+        /// <summary>
+        /// セッションが終了する処理を終えた際に発生するイベントです。
+        /// </summary>
+        public event EventHandler AfterClosing;
+
         public SessionBase(Int32 id, Server server)
         {
             Id = id;
@@ -159,6 +172,30 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             if (ConnectionDetached != null)
                 ConnectionDetached(this, e);
         }
+        /// <summary>
+        /// セッションが終了しようとしているときの処理です。
+        /// </summary>
+        protected virtual void OnBeforeClosing()
+        {
+            if (BeforeClosing != null)
+                BeforeClosing(this, EventArgs.Empty);
+        }
+        /// <summary>
+        /// セッションが終了中の処理です。
+        /// </summary>
+        protected virtual void OnClosing()
+        {
+            if (Closing != null)
+                Closing(this, EventArgs.Empty);
+        }
+        /// <summary>
+        /// セッションが終了処理が完了したあとの処理です。
+        /// </summary>
+        protected virtual void OnAfterClosing()
+        {
+            if (AfterClosing != null)
+                AfterClosing(this, EventArgs.Empty);
+        }
         
         /// <summary>
         /// すべての接続を切断してセッションを終了します。
@@ -168,7 +205,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             // Detachするので二重でここに来ないように。
             if (IsClosing)
                 return;
+
+            OnBeforeClosing();
             IsClosing = true;
+
+            OnClosing();
 
             lock (_connections)
             {
@@ -184,6 +225,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     _server.Sessions.Remove(Id);
                 }
             }
+
+            OnAfterClosing();
         }
 
         #region IRC メッセージ処理

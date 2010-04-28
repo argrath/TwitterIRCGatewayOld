@@ -139,6 +139,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
                         if (statusJson == null || statusJson.id == 0)
                             continue;
 
+                        if (Config.IsThroughMyPostFromUserStream && (statusJson.user.id == CurrentSession.TwitterUser.Id))
+                            continue;
+
                         Status status = new Status()
                                             {
                                                 CreatedAt = statusJson.CreatedAt,
@@ -227,6 +230,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
 
         [Description("all@と同じ挙動になるかどうかを指定します。")]
         public Boolean AllAtMode { get; set; }
+
+        [Description("自分のポストをUser Streamから拾わないようにするかどうかを指定します。")]
+        public Boolean IsThroughMyPostFromUserStream { get; set; }
 
 //        [Description("切断された際に自動的に再接続を試みるかどうかを指定します。")]
 //        public Boolean AutoRestart { get; set; }

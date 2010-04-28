@@ -1673,12 +1673,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 
         /// </summary>
-        public override void Close()
+        protected override void OnClosing()
         {
             OnSessionEnded();
             Dispose();
-            
-            base.Close();
+
+            base.OnClosing();
         }
 
         /// <summary>

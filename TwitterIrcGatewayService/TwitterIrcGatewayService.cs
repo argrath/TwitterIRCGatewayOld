@@ -26,7 +26,7 @@ namespace TwitterIrcGatewayService
 
         void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            EventLog.WriteEntry("ハンドルしていない例外が発生しました:\n\n" + e.ToString(), EventLogEntryType.Error, 9100);
+            EventLog.WriteEntry("ハンドルしていない例外が発生しました:\n\n" + e.ExceptionObject.ToString(), EventLogEntryType.Error, 9100);
         }
 
         protected override void OnStart(string[] args)

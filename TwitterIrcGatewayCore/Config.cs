@@ -28,9 +28,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
         [Description("TypableMapを有効化または無効化します")]
         public Boolean EnableTypableMap { get; set; }
-        [Description("TypableMapのキーサイズを変更します")]
-        public Int32 TypableMapKeyColorNumber { get; set; }
         [Description("TypableMapの色番号を変更します")]
+        public Int32 TypableMapKeyColorNumber { get; set; }
+        [Description("TypableMapのキーサイズを変更します")]
         public Int32 TypableMapKeySize { get; set; }
 
         [Description("冗長な末尾削除を有効化または無効化します")]
