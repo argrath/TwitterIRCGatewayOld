@@ -16,7 +16,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
 
         public ITypableMapStatusRepository Create(int size)
         {
-            return new TypableMapStatusMemoryRepository(size);
+            return new TypableMapStatusMemoryRepository2(size);
         }
 
         #endregion
