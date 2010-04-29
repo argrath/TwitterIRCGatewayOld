@@ -77,6 +77,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
         }
     }
 
+    [Description("URL短縮サービスの設定を行うコンテキストに切り替えます")]
     public class ShortenUrlServiceContext : Context
     {
         public override IConfiguration[] Configurations
