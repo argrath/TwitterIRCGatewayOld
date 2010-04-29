@@ -220,16 +220,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                                                                                  status.Id)
                                                                            : processor.Session.TwitterService.CreateFavorite(
                                                                                  status.Id));
-                                                   processor.Session.SendServer(new NoticeMessage
-                                                                                    {
-                                                                                        Receiver = msg.Receiver,
-                                                                                        Content =
-                                                                                            String.Format(
+                                                   processor.Session.SendChannelMessage(msg.Receiver, processor.Session.CurrentNick, String.Format(
                                                                                             "ユーザ {0} のステータス \"{1}\"をFavorites{2}しました。",
                                                                                             favStatus.User.ScreenName,
                                                                                             favStatus.Text,
-                                                                                            (isUnfav ? "から削除" : "に追加"))
-                                                                                    });
+                                                                                            (isUnfav ? "から削除" : "に追加")), true, false, false, true);
                                                });
                 return true;
             }
