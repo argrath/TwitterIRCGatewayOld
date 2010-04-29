@@ -206,9 +206,11 @@
     <Compile Include="AddIns\DLRIntegration\DLRIntegrationAddIn.cs" />
     <Compile Include="AddIns\ExtensionCommands.cs" />
     <Compile Include="AddIns\IAddIn.cs" />
+    <Compile Include="AddIns\InsertRetweetMark.cs" />
     <Compile Include="AddIns\RecentLog.cs" />
     <Compile Include="AddIns\RemoveRedundantSuffix.cs" />
     <Compile Include="AddIns\ResolveShortUrlServices.cs" />
+    <Compile Include="AddIns\ShortenUrlService.cs" />
     <Compile Include="AddIns\TypableMapSupport.cs" />
     <Compile Include="AddIns\TypableMap\TypableMapStatusRepositoryFactory.cs" />
     <Compile Include="AddIns\TypableMap\TypableMapStatusRepository.cs" />
