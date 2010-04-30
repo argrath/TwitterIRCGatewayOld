@@ -31,6 +31,8 @@ namespace TwitterIrcGatewayService
 
         protected override void OnStart(string[] args)
         {
+            ServicePointManager.DefaultConnectionLimit = 1000;
+
             _server = new Server();
             _server.Encoding = new UTF8Encoding(false);
             //_server.Encoding = encoding;

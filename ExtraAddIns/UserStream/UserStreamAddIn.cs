@@ -218,6 +218,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
             CurrentSession.AddInManager.GetAddIn<UserStreamAddIn>().Setup(config.Enabled);
             Console.NotifyMessage("User Stream を無効にしました。");
         }
+
+        protected override void OnConfigurationChanged(IConfiguration config, MemberInfo memberInfo, object value)
+        {
+            CurrentSession.AddInManager.SaveConfig(config);
+        }
     }
     
     public class UserStreamConfig : IConfiguration
