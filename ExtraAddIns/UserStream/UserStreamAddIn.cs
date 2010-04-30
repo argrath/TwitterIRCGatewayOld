@@ -17,9 +17,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
 {
     public class UserStreamAddIn : AddInBase
     {
-        [ThreadStatic]
-        private static IPEndPoint _localIPEndpoint;
-
         private HashSet<Int64> _friendIds;
 
         private Thread _workerThread;
@@ -30,6 +27,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
 
         public override void Initialize()
         {
+            // XXX:
+            ServicePointManager.DefaultConnectionLimit = 1000;
+            ServicePointManager.MaxServicePoints = 0;
+
             Session.AddInsLoadCompleted += (sender, e) =>
                                                {
                                                    Session.AddInManager.GetAddIn<ConsoleAddIn>().RegisterContext<UserStreamContext>();
@@ -72,9 +73,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
         {
             try
             {
-                String ipEndpoint = Config.IPEndPoint;
-                _localIPEndpoint = (ipEndpoint == null) ? null : new IPEndPoint(IPAddress.Parse(ipEndpoint), 0);
-
                 FieldInfo fieldInfo = typeof(TwitterService).GetField("_credential", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.GetField);
 
                 CredentialCache credentials = fieldInfo.GetValue(CurrentSession.TwitterService) as CredentialCache;
@@ -86,12 +84,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
                 _webRequest.Credentials = credentials.GetCredential(new Uri(CurrentSession.TwitterService.ServiceServerPrefix), "Basic");
                 _webRequest.PreAuthenticate = true;
                 _webRequest.ServicePoint.ConnectionLimit = 1000;
-                _webRequest.ServicePoint.BindIPEndPointDelegate = (servicePoint, remoteEndPoint, retryCount) => { return _localIPEndpoint; };
+                _webRequest.Timeout = 30*1000;
                 using (var response = _webRequest.GetResponse())
                 using (var stream = response.GetResponseStream())
                 {
-                    stream.ReadTimeout = 30*1000;
-
                     StreamReader sr = new StreamReader(stream, Encoding.UTF8);
                     Boolean isFirstLine = true;
                     while (!sr.EndOfStream && _isRunning)
@@ -229,9 +225,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.UserStream
     {
         [Browsable(false)]
         public Boolean Enabled { get; set; }
-
-        [Browsable(false)]
-        public String IPEndPoint { get; set; }
 
         [Description("all@と同じ挙動になるかどうかを指定します。")]
         public Boolean AllAtMode { get; set; }
