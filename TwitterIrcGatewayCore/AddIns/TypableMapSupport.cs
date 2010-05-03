@@ -22,7 +22,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns
             CurrentSession.PreSendMessageTimelineStatus += new EventHandler<TimelineStatusEventArgs>(Session_PreSendMessageTimelineStatus);
             CurrentSession.ConfigChanged += new EventHandler<EventArgs>(Session_ConfigChanged);
 
-            TypableMapFactory = new TypableMapStatusMemoryRepositoryFactory();
+            TypableMapFactory = new TypableMapStatusOnDemandRepositoryFactory(CurrentSession);
             if (CurrentSession.Config.EnableTypableMap)
                 UpdateProcessor();
         }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using TypableMap;
 
@@ -215,5 +217,53 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                            User = null
                        };
         }
+    }
+
+
+    public class TypableMapStatusOnDemandRepository : ITypableMapStatusRepository
+    {
+        private TypableMap<Int64> _typableMap;
+        private Session _session;
+
+        public TypableMapStatusOnDemandRepository(Session session, Int32 size)
+        {
+            _session = session;
+            _typableMap = new TypableMap<Int64>(size);
+        }
+
+        #region ITypableMapStatusRepository メンバ
+        public void SetSize(int size)
+        {
+            _typableMap = new TypableMap<Int64>(size);
+        }
+
+        public String Add(Status status)
+        {
+            return _typableMap.Add(status.Id);
+        }
+
+        public Boolean TryGetValue(String typableMapId, out Status status)
+        {
+            Int64 statusId;
+            status = null;
+
+            if (_typableMap.TryGetValue(typableMapId, out statusId))
+            {
+                try
+                {
+                    status = _session.TwitterService.GetStatusById(statusId);
+                    return (status != null);
+                }
+                catch (TwitterServiceException)
+                {}
+                catch (IOException)
+                {}
+                catch (WebException)
+                {}
+            }
+            return false;
+
+        }
+        #endregion
     }
 }
