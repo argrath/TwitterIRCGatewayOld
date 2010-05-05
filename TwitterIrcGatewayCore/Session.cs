@@ -150,6 +150,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             //_addinManager = AddInManager.CreateInstanceWithAppDomain(_server, this);
 
             Logger = new SessionTraceLogger(this);
+            PostWaitList = new List<Deferred.DeferredState<Boolean>>();
         }
 
         ~Session()
@@ -220,7 +221,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// </summary>
         public String UserConfigDirectory
         {
-#if PLATFORM_HOSTING
+#if HOSTING
             get { return Path.Combine(ConfigBasePath, _twitterUser.Id.ToString()); }
 #else
             get { return Path.Combine(ConfigBasePath, _twitterUser.ScreenName); }
@@ -249,6 +250,14 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public HashSet<User> FollowingUsers
         {
             get { return _followingUsers; }
+        }
+
+        /// <summary>
+        /// 送信予定のステータスメッセージキューを取得します。
+        /// </summary>
+        public List<Deferred.DeferredState<Boolean>> PostWaitList
+        {
+            get; private set;
         }
         
         /// <summary>
@@ -477,6 +486,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _twitter.EnableRepliesCheck = _config.EnableRepliesCheck;
             _twitter.POSTFetchMode = _config.POSTFetchMode;
             _twitter.FetchCount = _config.FetchCount;
+            _twitter.FriendsPerPageThreshold = _config.FriendsPerPageThreshold;
             _twitter.RepliesReceived += new EventHandler<StatusesUpdatedEventArgs>(twitter_RepliesReceived);
             _twitter.TimelineStatusesReceived += new EventHandler<StatusesUpdatedEventArgs>(twitter_TimelineStatusesReceived);
             _twitter.CheckError += new EventHandler<ErrorEventArgs>(twitter_CheckError);
@@ -720,17 +730,127 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             StatusUpdateEventArgs eventArgs = new StatusUpdateEventArgs(message, message.Content);
             if (!FireEvent(UpdateStatusRequestReceived, eventArgs)) return;
 
+            UpdateStatusWithReceiverDeferred(message.Receiver, eventArgs.Text);
+        }
+
+        #region Update Status Methods
+        /// <summary>
+        /// 設定された時間待機した後Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+         public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message)
+        {
+            return UpdateStatusWithReceiverDeferred(receiver, message, 0);
+        }
+
+        /// <summary>
+        /// 設定された時間待機した後Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <param name="inReplyToId"></param>
+        /// <returns></returns>
+        public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message, Int64 inReplyToId)
+        {
+            return UpdateStatusWithReceiverDeferred(receiver, message, inReplyToId, null);
+        }
+
+        /// <summary>
+        /// 設定された時間待機した後Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。完了時に指定されたコールバックメソッドを呼び出します。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <param name="inReplyToId"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        public Deferred.DeferredState<Boolean> UpdateStatusWithReceiverDeferred(String receiver, String message, Int64 inReplyToId, Action<Status> callback)
+        {
+            Deferred.DeferredState<Boolean> state = Deferred.DeferredInvoke<String, String, Int64, Action<Status>, Boolean>(UpdateStatusWithReceiver, Config.UpdateDelayTime * 1000, (asyncResult) => {
+                Deferred.DeferredState<Boolean> state_ = asyncResult.AsyncState as Deferred.DeferredState<Boolean>;
+                
+                // 送信リストから外す
+                lock (PostWaitList)
+                    PostWaitList.Remove(state_);
+
+            }, receiver, message, inReplyToId, callback);
+
+            PostWaitList.Add(state);
+            
+            return state;
+        }
+
+
+        /// <summary>
+        /// Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public Boolean UpdateStatusWithReceiver(String receiver, String message)
+        {
+            return UpdateStatusWithReceiver(receiver, message, 0);
+        }
+
+        /// <summary>
+        /// Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <param name="inReplyToId"></param>
+        /// <returns></returns>
+        public Boolean UpdateStatusWithReceiver(String receiver, String message, Int64 inReplyToId)
+        {
+            return UpdateStatusWithReceiver(receiver, message, inReplyToId, null);
+        }
+
+        /// <summary>
+        /// Twitterのステータスを更新し、失敗した場合には指定されたチャンネルに通知し、リトライします。完了時に指定されたコールバックメソッドを呼び出します。
+        /// </summary>
+        /// <param name="receiver"></param>
+        /// <param name="message"></param>
+        /// <param name="inReplyToId"></param>
+        /// <param name="callback"></param>
+        /// <returns></returns>
+        public Boolean UpdateStatusWithReceiver(String receiver, String message, Int64 inReplyToId, Action<Status> callback)
+        {
             Boolean isRetry = false;
-            Retry:
+            Boolean succeed = true;
+        Retry:
             try
             {
                 // チャンネル宛は自分のメッセージを書き換え
-                if ((String.Compare(message.Receiver, _config.ChannelName, true) == 0) || message.Receiver.StartsWith("#"))
+                if ((String.Compare(receiver, _config.ChannelName, true) == 0) || receiver.StartsWith("#"))
                 {
+                    String postMessage = message;
+                    
+                    // 140文字制限のチェック
+                    if (message.Length > 140)
+                    {
+                        Int32 overCharCount = message.Length - 140;
+                        SendChannelMessage(receiver, Server.ServerNick,
+                                           String.Format("140文字を超えたメッセージの送信は出来ません。{0}文字の超過です。(場所: {1}...)", overCharCount, message.Substring(140, Math.Min(5, overCharCount))), true, false, false, true);
+                        return false;
+                    }
+                    
                     try
                     {
-                        Status status = UpdateStatus(eventArgs.Text);
-                        if (!FireEvent(UpdateStatusRequestCommited, new TimelineStatusEventArgs(status))) return;
+                        // InReplyId が 0 じゃないときは指定されている扱い
+                        Status status = (inReplyToId > 0) ? UpdateStatus(message, inReplyToId) : UpdateStatus(message);
+                        message = status.Text;
+                        if (callback != null)
+                        {
+                            try
+                            {
+                                callback(status);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Error(e.ToString());
+                            }
+                        }
+                        if (!FireEvent(UpdateStatusRequestCommited, new TimelineStatusEventArgs(status))) return false;
                     }
                     catch (TwitterServiceException tse)
                     {
@@ -738,22 +858,22 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     }
 
                     // ほかのグループに送信する
-                    SendChannelMessage(message.Receiver, CurrentNick, message.Content, false, true, true, false);
+                    SendChannelMessage(receiver, CurrentNick, postMessage, false, true, true, false);
                 }
-                else if (String.Compare(message.Receiver, "trace", true) != 0)
+                else if (String.Compare(receiver, "trace", true) != 0)
                 {
                     // 人に対する場合はDirect Message
-                    _twitter.SendDirectMessage(message.Receiver, message.Content);
+                    _twitter.SendDirectMessage(receiver, message);
                 }
                 if (isRetry)
                 {
-                    SendChannelMessage(message.Receiver, Server.ServerNick, "メッセージ送信のリトライに成功しました。", true, false, false, true);
+                    SendChannelMessage(receiver, Server.ServerNick, "メッセージ送信のリトライに成功しました。", true, false, false, true);
                 }
             }
             catch (WebException ex)
             {
                 String content = String.Format("メッセージ送信に失敗しました({0})" + (!isRetry ? "/リトライします。" : ""), ex.Message.Replace("\n", " "));
-                SendChannelMessage(message.Receiver, Server.ServerNick, content, true, false, false, true);
+                SendChannelMessage(receiver, Server.ServerNick, content, true, false, false, true);
 
                 // 一回だけリトライするよ
                 if (!isRetry)
@@ -761,7 +881,33 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     isRetry = true;
                     goto Retry;
                 }
+                else
+                {
+                    succeed = false;
+                }
             }
+
+            return succeed;
+        }
+
+        /// <summary>
+        /// 設定された時間待機した後Twitterのステータスを更新します。
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public Deferred.DeferredState<Status> UpdateStatusAsync(String message)
+        {
+            return Deferred.DeferredInvoke<String, Status>(UpdateStatus, Config.UpdateDelayTime * 1000, message);
+        }
+
+        /// <summary>
+        /// 設定された時間待機した後Twitterのステータスを更新します。
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        public Deferred.DeferredState<Status> UpdateStatusAsync(String message, Int64 inReplyToStatusId)
+        {
+            return Deferred.DeferredInvoke<String, Int64, Status>(UpdateStatus, Config.UpdateDelayTime * 1000, message, inReplyToStatusId);
         }
 
         /// <summary>
@@ -785,7 +931,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return UpdateStatus(message, 0);
             }
         }
-        
+
         /// <summary>
         /// Twitterのステータスを更新します。
         /// </summary>
@@ -815,6 +961,32 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             return status;
         }
+        /// <summary>
+        /// 遅延アップデートのキャンセルを試みます。
+        /// </summary>
+        /// <returns>キャンセルに成功した場合にはtrue、キャンセルする対象が存在しなかった場合にはfalse</returns>
+        public Boolean TryCancelDeferredUpdate()
+        {
+            // まず送信待ちをみる
+            Deferred.DeferredState<Boolean> state = null;
+            lock (PostWaitList)
+            {
+                if (PostWaitList.Count > 0)
+                {
+                    state = PostWaitList[0];
+                }
+            }
+            
+            // 完了コールバック中でPostWaitListを触っているので外側でキャンセルする
+            if (state != null && state.Cancel())
+            {
+                // キャンセル出来た
+                return true;
+            }
+            
+            return false;
+        }
+        #endregion
 
         void MessageReceived_WHOIS(object sender, MessageReceivedEventArgs e)
         {
@@ -1000,7 +1172,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Boolean dummy = false;
             foreach (Status status in e.Statuses.Status)
             {
-                ProcessTimelineStatus(status, ref dummy);
+                ProcessTimelineStatus(status, ref dummy, false, e.IsFirstTime);
             }
         }
         #endregion
@@ -1299,6 +1471,10 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
         public void ProcessTimelineStatus(Status status, ref Boolean friendsCheckRequired, Boolean ignoreGatewayCheck)
         {
+            ProcessTimelineStatus(status, ref friendsCheckRequired, ignoreGatewayCheck, _isFirstTime);
+        }
+        public void ProcessTimelineStatus(Status status, ref Boolean friendsCheckRequired, Boolean ignoreGatewayCheck, Boolean isFirstTime)
+        {
             TimelineStatusEventArgs eventArgs = new TimelineStatusEventArgs(status, status.Text, "PRIVMSG");
             if (!FireEvent(PreProcessTimelineStatus, eventArgs)) return;
             
@@ -1355,7 +1531,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 String[] lines = eventArgsGroup.Text.Split(new Char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var line in lines)
                 {
-                    if (_isFirstTime && !_config.DisableNoticeAtFirstTime)
+                    if (isFirstTime && !_config.DisableNoticeAtFirstTime)
                     {
                         // 初回のときはNOTICE+時間
                         Send(CreateIRCMessageFromStatusAndType(status, "NOTICE", routedGroup.Group.Name,
@@ -1497,12 +1673,12 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// 
         /// </summary>
-        public override void Close()
+        protected override void OnClosing()
         {
             OnSessionEnded();
             Dispose();
-            
-            base.Close();
+
+            base.OnClosing();
         }
 
         /// <summary>

@@ -168,6 +168,25 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// グループを複製します。
+        /// </summary>
+        /// <returns></returns>
+        public Group Clone()
+        {
+            Group g = new Group()
+            {
+                Name = this.Name,
+                ChannelModes = this.ChannelModes,
+                IsJoined = this.IsJoined,
+                IsSpecial = this.IsSpecial,
+                Members = new List<string>(this.Members),
+                Mode = this.Mode,
+                Topic = this.Topic
+            };
+            return g;
+        }
+
+        /// <summary>
         /// 指定した名前でグループのインスタンスを初期化します。
         /// </summary>
         /// <param name="name">#で始まるチャンネル名</param>

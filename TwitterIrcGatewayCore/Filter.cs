@@ -299,10 +299,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.Filter
                 if (Regex.IsMatch(args.Content, _matchPattern, RegexOptions.IgnoreCase) &&
                     ((String.IsNullOrEmpty(_userMatchPattern)) ? true : Regex.IsMatch(args.User.ScreenName, _userMatchPattern)))
                 {
-                    if (!String.IsNullOrEmpty(_replacePattern))
-                    {
-                        args.Content = Regex.Replace(args.Content, _matchPattern, _replacePattern, RegexOptions.IgnoreCase);
-                    }
+                    args.Content = Regex.Replace(args.Content, _matchPattern, _replacePattern ?? String.Empty, RegexOptions.IgnoreCase);
 
                     args.IRCMessageType = _messageType;
                     return true;

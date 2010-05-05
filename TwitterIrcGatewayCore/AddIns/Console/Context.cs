@@ -72,6 +72,18 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
         }
 
         /// <summary>
+        /// 設定が変更される直前に行う処理
+        /// </summary>
+        /// <param name="config"></param>
+        /// <param name="memberInfo"></param>
+        /// <param name="valueOld"></param>
+        /// <param name="valueNew"></param>
+        protected virtual Boolean OnConfigurationBeforeChange(IConfiguration config, MemberInfo memberInfo, Object valueOld, Object valueNew)
+        {
+            return true;
+        }
+
+        /// <summary>
         /// 設定が変更された際に行う処理
         /// </summary>
         /// <param name="config"></param>
@@ -171,13 +183,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                         continue;
 
                     // 値を表示
-                    Object value = null;
-                    if (configPropInfo.MemberInfo is PropertyInfo)
-                        value = ((PropertyInfo)configPropInfo.MemberInfo).GetValue(config, null);
-                    else if (configPropInfo.MemberInfo is FieldInfo)
-                        value = ((FieldInfo)configPropInfo.MemberInfo).GetValue(config);
-                    else if (config is ICustomConfiguration)
-                        value = ((ICustomConfiguration) config).GetValue(configPropInfo.Name);
+                    Object value = configPropInfo.GetValue(config);
                     Console.NotifyMessage(String.Format("{0}({1}) = {2}", configPropInfo.Name, configPropInfo.Type.Name, Inspect(value)));
 
                     hasConfigEntry = true;
@@ -372,14 +378,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.Console
                     {
                         // value が null だったらデフォルトの値をセット
                         Object convertedValue = (value == null) ? configPropInfo.DefaultValue : tConv.ConvertFromString(value);
-                        if (configPropInfo.MemberInfo is PropertyInfo)
-                            ((PropertyInfo)configPropInfo.MemberInfo).SetValue(config, convertedValue, null);
-                        else if (configPropInfo.MemberInfo is FieldInfo)
-                            ((FieldInfo)configPropInfo.MemberInfo).SetValue(config, convertedValue);
-                        else if (config is ICustomConfiguration)
-                            ((ICustomConfiguration)config).SetValue(configPropInfo.Name, convertedValue);
-
-                        Console.NotifyMessage(String.Format("{0} ({1}) = {2}", configPropInfo.Name, configPropInfo.Type.Name, Inspect(convertedValue)));
+                        if (OnConfigurationBeforeChange(config, configPropInfo.MemberInfo, configPropInfo.GetValue(config), convertedValue))
+                        {
+                            configPropInfo.SetValue(config, convertedValue);
+                            Console.NotifyMessage(String.Format("{0} ({1}) = {2}", configPropInfo.Name, configPropInfo.Type.Name, Inspect(convertedValue)));
+                        }
+                        else
+                        {
+                            Console.NotifyMessage("値の設定はキャンセルされました。");
+                        }
                         OnConfigurationChanged(config, configPropInfo.MemberInfo, convertedValue);
                     }
                     catch (Exception ex)

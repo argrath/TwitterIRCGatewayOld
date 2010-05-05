@@ -220,16 +220,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
                                                                                  status.Id)
                                                                            : processor.Session.TwitterService.CreateFavorite(
                                                                                  status.Id));
-                                                   processor.Session.SendServer(new NoticeMessage
-                                                                                    {
-                                                                                        Receiver = msg.Receiver,
-                                                                                        Content =
-                                                                                            String.Format(
+                                                   processor.Session.SendChannelMessage(msg.Receiver, processor.Session.CurrentNick, String.Format(
                                                                                             "ユーザ {0} のステータス \"{1}\"をFavorites{2}しました。",
                                                                                             favStatus.User.ScreenName,
                                                                                             favStatus.Text,
-                                                                                            (isUnfav ? "から削除" : "に追加"))
-                                                                                    });
+                                                                                            (isUnfav ? "から削除" : "に追加")), true, false, false, true);
                                                });
                 return true;
             }
@@ -258,16 +253,20 @@ namespace Misuzilla.Applications.TwitterIrcGateway.AddIns.TypableMap
             public Boolean Process(TypableMapCommandProcessor processor, PrivMsgMessage msg, Status status, string args)
             {
                 var session = processor.Session;
-                session.RunCheck(() =>
-                                     {
-                                         String replyMsg = String.Format("@{0} {1}", status.User.ScreenName, args);
-                                         Status updatedStatus = session.UpdateStatus(replyMsg, status.Id);
-                                         session.SendChannelMessage(updatedStatus.Text);
-                                     },
-                                 (ex) =>
-                                     {
-                                         session.SendChannelMessage(msg.Receiver, Server.ServerNick, "メッセージ送信に失敗しました", true, false, false, true);
-                                     });
+                if (args.Trim() == String.Empty)
+                {
+                    session.SendChannelMessage(msg.Receiver, Server.ServerNick, "返信に空メッセージの送信はできません。", true, false, false, true);
+                    return true;
+                }
+
+                String replyMsg = String.Format("@{0} {1}", status.User.ScreenName, args);
+                
+                // 入力が発言されたチャンネルには必ずエコーバックする。
+                // 先に出しておかないとundoがよくわからなくなる。
+                session.SendChannelMessage(msg.Receiver, session.CurrentNick, replyMsg, true, false, false, false);
+                session.UpdateStatusWithReceiverDeferred(msg.Receiver, replyMsg, status.Id, (updatedStatus) =>
+                                                                                                {
+                                                                                                });
                 return true;
             }
 

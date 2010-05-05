@@ -8,6 +8,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO.Compression;
+using System.Linq;
 
 namespace Misuzilla.Applications.TwitterIrcGateway
 {
@@ -26,11 +27,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private Timer _timer;
         private Timer _timerDirectMessage;
         private Timer _timerReplies;
-        
-        private DateTime _lastAccessTimeline = new DateTime();
-        private DateTime _lastAccessReplies = new DateTime();
+
         private DateTime _lastAccessDirectMessage = DateTime.Now;
-        private Int64 _lastAccessDirectMessageId = 0;
+        private Int64 _lastAccessTimelineId = 1;
+        private Int64 _lastAccessRepliesId = 1;
+        private Int64 _lastAccessDirectMessageId = 1;
         private Boolean _isFirstTime = true;
         private Boolean _isFirstTimeReplies = true;
         private Boolean _isFirstTimeDirectMessage = true;
@@ -61,7 +62,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <summary>
         /// Twitter APIのエンドポイントURLのプレフィックスを取得・設定します。
         /// </summary>
-        public String ServiceServerPrefix = "http://twitter.com";
+        public String ServiceServerPrefix = "http://api.twitter.com/1";
         /// <summary>
         /// リクエストのRefererを取得・設定します。
         /// </summary>
@@ -87,11 +88,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             _credential = credCache;
 
             _userName = userName;
-            
+
             _timer = new Timer(new TimerCallback(OnTimerCallback), null, Timeout.Infinite, Timeout.Infinite);
             _timerDirectMessage = new Timer(new TimerCallback(OnTimerCallbackDirectMessage), null, Timeout.Infinite, Timeout.Infinite);
             _timerReplies = new Timer(new TimerCallback(OnTimerCallbackReplies), null, Timeout.Infinite, Timeout.Infinite);
-            
+
             _statusBuffer = new LinkedList<Int64>();
             _repliesBuffer = new LinkedList<Int64>();
 
@@ -104,10 +105,11 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             IntervalReplies = 120;
             BufferSize = 250;
             EnableCompression = false;
-        
+            FriendsPerPageThreshold = 100;
+
             POSTFetchMode = false;
         }
-        
+
         ~TwitterService()
         {
             //_Counter.Decrement(ref _Counter.TwitterService);
@@ -130,7 +132,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 //_webClient.Proxy = value;
             }
         }
-        
+
         /// <summary>
         /// Cookieを利用してログインしてデータにアクセスします。
         /// </summary>
@@ -140,7 +142,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             get { return _cookieLoginMode; }
             set { _cookieLoginMode = value; }
         }
-         
+
         /// <summary>
         /// POSTを利用してログインしてデータにアクセスします。
         /// </summary>
@@ -150,7 +152,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             get { return false; }
             set { }
         }
-       
+
         /// <summary>
         /// 取りこぼし防止を有効にするかどうかを指定します。
         /// </summary>
@@ -224,6 +226,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// フォローしているユーザ一覧を取得する際、次のページが存在するか判断する閾値を指定します。
+        /// </summary>
+        public Int32 FriendsPerPageThreshold
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// 認証情報を問い合わせます。
         /// </summary>
         /// <return cref="User">ユーザー情報</returns>
@@ -245,6 +256,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
             });
         }
+
         /// <summary>
         /// ステータスを更新します。
         /// </summary>
@@ -254,7 +266,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return UpdateStatus(message, 0);
         }
-        
+
         /// <summary>
         /// ステータスを更新します。
         /// </summary>
@@ -265,7 +277,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             String encodedMessage = TwitterService.EncodeMessage(message);
             return ExecuteRequest<Status>(() =>
             {
-                String responseBody = POST(String.Format("/statuses/update.xml?status={0}&source={1}{2}", encodedMessage, ClientName, (inReplyToStatusId != 0 ? "&in_reply_to_status_id="+inReplyToStatusId : "")), new byte[] {});
+                String postData = String.Format("status={0}&source={1}{2}", encodedMessage, ClientName, (inReplyToStatusId != 0 ? "&in_reply_to_status_id=" + inReplyToStatusId : ""));
+                String responseBody = POST("/statuses/update.xml", postData);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -288,7 +301,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             String encodedMessage = TwitterService.EncodeMessage(message);
             ExecuteRequest(() =>
             {
-                String responseBody = POST(String.Format("/direct_messages/new.xml?user={0}&text={1}", GetUserId(screenName), encodedMessage), new Byte[0]);
+                String postData = String.Format("user={0}&text={1}", GetUserId(screenName), encodedMessage);
+                String responseBody = POST("/direct_messages/new.xml", postData);
             });
         }
 
@@ -309,34 +323,36 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         /// <exception cref="TwitterServiceException"></exception>
         public User[] GetFriends(Int32 maxPage)
         {
-            List<User> usersList = new List<User>();
-            Int32 page = 0;
+            List<User> users = new List<User>();
+            Int64 cursor = -1;
+            Int32 page = maxPage;
             return ExecuteRequest<User[]>(() =>
             {
-                while (page++ != maxPage)
+                while (cursor != 0 && page > 0)
                 {
-                    String responseBody = GET(String.Format("/statuses/friends.xml?page={0}&lite=true", page));
+                    String responseBody = GET(String.Format("/statuses/friends.xml?cursor={0}&lite=true", cursor));
                     if (NilClasses.CanDeserialize(responseBody))
                     {
-                        return usersList.ToArray();
+                        return users.ToArray();
                     }
                     else
                     {
-                        Users users = Users.Serializer.Deserialize(new StringReader(responseBody)) as Users;
-                        if (users == null || users.User == null || users.User.Length == 0)
+                        UsersList usersList = UsersList.Serializer.Deserialize(new StringReader(responseBody)) as UsersList;
+                        if (usersList == null || usersList.Users == null || usersList.Users.User == null || usersList.Users.User.Length == 0)
                         {
-                            return usersList.ToArray();
+                            return users.ToArray();
                         }
                         else
                         {
-                            usersList.AddRange(users.User);
-                            if (users.User.Length < 100)
-                                break;
+                            users.AddRange(usersList.Users.User);
                         }
+
+                        --page;
+                        cursor = usersList.NextCursor;
                     }
                 }
-                // あまりに多い場合はそこまで。
-                return usersList.ToArray();
+
+                return users.ToArray();
             });
         }
 
@@ -425,6 +441,47 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         /// <summary>
+        /// timeline を取得します。
+        /// </summary>
+        /// <param name="sinceId">最後に取得したID</param>
+        /// <returns>ステータス</returns>
+        public Statuses GetTimeline(Int64 sinceId)
+        {
+            return GetTimeline(sinceId, FetchCount);
+        }
+
+        /// <summary>
+        /// timeline を取得します。
+        /// </summary>
+        /// <param name="sinceId">最後に取得したID</param>
+        /// <param name="count">取得数</param>
+        /// <returns>ステータス</returns>
+        public Statuses GetTimeline(Int64 sinceId, Int32 count)
+        {
+            return ExecuteRequest<Statuses>(() =>
+            {
+                String responseBody = GET(String.Format("/statuses/home_timeline.xml?since_id={0}&count={1}", sinceId, count));
+                Statuses statuses;
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    statuses = new Statuses();
+                    statuses.Status = new Status[0];
+                }
+                else
+                {
+                    statuses = Statuses.Serializer.Deserialize(new StringReader(responseBody)) as Statuses;
+                    if (statuses == null || statuses.Status == null)
+                    {
+                        statuses = new Statuses();
+                        statuses.Status = new Status[0];
+                    }
+                }
+
+                return statuses;
+            });
+        }
+
+        /// <summary>
         /// replies を取得します。
         /// </summary>
         /// <exception cref="WebException"></exception>
@@ -434,6 +491,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return GetMentions();
         }
+
         /// <summary>
         /// mentions を取得します。
         /// </summary>
@@ -443,7 +501,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<Statuses>(() =>
             {
-                String responseBody = GET("/statuses/replies.xml");
+                String responseBody = GET("/statuses/mentions.xml");
                 Statuses statuses;
                 if (NilClasses.CanDeserialize(responseBody))
                 {
@@ -496,10 +554,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return directMessages;
             });
         }
-
-        /// <summary>
-        /// 指定したユーザの timeline を取得します。
-        /// </summary>
 
         /// <summary>
         /// direct messages を取得します。
@@ -605,7 +659,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return statuses;
             });
         }
-        
+
         /// <summary>
         /// メッセージをfavoritesに追加します。
         /// </summary>
@@ -674,6 +728,29 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
             });
         }
+
+        /// <summary>
+        /// メッセージをretweetします。
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public Status RetweetStatus(Int64 id)
+        {
+            return ExecuteRequest<Status>(() =>
+            {
+                String responseBody = POST(String.Format("/statuses/retweet/{0}.xml", id), new byte[0]);
+                if (NilClasses.CanDeserialize(responseBody))
+                {
+                    return null;
+                }
+                else
+                {
+                    Status status = Status.Serializer.Deserialize(new StringReader(responseBody)) as Status;
+                    return status;
+                }
+            });
+        }
+
         /// <summary>
         /// ユーザをfollowします。
         /// </summary>
@@ -683,7 +760,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                String responseBody = POST(String.Format("/friendships/create.xml?screen_name={0}", screenName), new byte[0]);
+                String postData = String.Format("screen_name={0}", screenName);
+                String responseBody = POST("/friendships/create.xml", postData);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -704,7 +782,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                String responseBody = POST(String.Format("/friendships/destroy.xml?screen_name={0}", screenName), new byte[0]);
+                String postData = String.Format("screen_name={0}", screenName);
+                String responseBody = POST("/friendships/destroy.xml", postData);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -725,7 +804,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                String responseBody = POST(String.Format("/blocks/create/{0}.xml", GetUserId(screenName)), new byte[0]);
+                String postData = String.Format("screen_name={0}", screenName);
+                String responseBody = POST("/blocks/create.xml", postData);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -746,7 +826,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return ExecuteRequest<User>(() =>
             {
-                String responseBody = POST(String.Format("/blocks/destroy/{0}.xml", GetUserId(screenName)), new byte[0]);
+                String postData = String.Format("screen_name={0}", screenName);
+                String responseBody = POST("/blocks/destroy.xml", postData);
                 if (NilClasses.CanDeserialize(responseBody))
                 {
                     return null;
@@ -858,17 +939,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 // 最終更新時刻
                 if (_enableDropProtection)
                 {
-                    // 取りこぼし防止しているときは一番古い日付
-                    if (status.CreatedAt < _lastAccessTimeline)
+                    // 取りこぼし防止しているときは一番古いID
+                    if (status.Id < _lastAccessTimelineId)
                     {
-                        _lastAccessTimeline = status.CreatedAt;
+                        _lastAccessTimelineId = status.Id;
                     }
                 }
                 else
                 {
-                    if (status.CreatedAt > _lastAccessTimeline)
+                    if (status.Id > _lastAccessTimelineId)
                     {
-                        _lastAccessTimeline = status.CreatedAt;
+                        _lastAccessTimelineId = status.Id;
                     }
                 }
             }
@@ -890,17 +971,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     // 最終更新時刻
                     if (_enableDropProtection)
                     {
-                        // 取りこぼし防止しているときは一番古い日付
-                        if (status.CreatedAt < _lastAccessTimeline)
+                        // 取りこぼし防止しているときは一番古いID
+                        if (status.Id < _lastAccessTimelineId)
                         {
-                            _lastAccessTimeline = status.CreatedAt;
+                            _lastAccessTimelineId = status.Id;
                         }
                     }
                     else
                     {
-                        if (status.CreatedAt > _lastAccessTimeline)
+                        if (status.Id > _lastAccessTimelineId)
                         {
-                            _lastAccessTimeline = status.CreatedAt;
+                            _lastAccessTimelineId = status.Id;
                         }
                     }
                 });
@@ -922,7 +1003,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             List<Status> statusList = new List<Status>();
             foreach (Status status in statuses.Status)
             {
-                if (status.CreatedAt < _lastAccessReplies)
+                if (status.Id < _lastAccessRepliesId)
                     continue;
 
                 if (ProcessDropProtection(_repliesBuffer, status.Id) && ProcessDropProtection(_statusBuffer, status.Id))
@@ -933,16 +1014,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     if (_enableDropProtection)
                     {
                         // 取りこぼし防止しているときは一番古い日付
-                        if (status.CreatedAt < _lastAccessTimeline)
+                        if (status.Id < _lastAccessTimelineId)
                         {
-                            _lastAccessTimeline = status.CreatedAt;
+                            _lastAccessTimelineId = status.Id;
                         }
                     }
                     else
                     {
-                        if (status.CreatedAt > _lastAccessTimeline)
+                        if (status.Id > _lastAccessTimelineId)
                         {
-                            _lastAccessTimeline = status.CreatedAt;
+                            _lastAccessTimelineId = status.Id;
                         }
                     }
                 }
@@ -959,7 +1040,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Boolean friendsCheckRequired = false;
             RunCheck(delegate
             {
-                Statuses statuses = GetTimeline(_lastAccessTimeline);
+                Statuses statuses = GetTimeline(_lastAccessTimelineId);
                 Array.Reverse(statuses.Status);
                 // 差分チェック
                 ProcessStatuses(statuses, (s) =>
@@ -969,7 +1050,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
                 if (_isFirstTime && _enableDropProtection)
                 {
-                    _lastAccessTimeline = DateTime.Now;
+                    if (statuses.Status != null && statuses.Status.Length > 0)
+                        _lastAccessTimelineId = statuses.Status.Select(s => s.Id).Max();
                 }
                 _isFirstTime = false;
             });
@@ -988,9 +1070,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     {
                         continue;
                     }
-                    
+
                     OnDirectMessageReceived(new DirectMessageEventArgs(message, _isFirstTimeDirectMessage));
-                    
+
                     // 最終更新時刻
                     if (message.Id > _lastAccessDirectMessageId)
                     {
@@ -1007,9 +1089,9 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Boolean friendsCheckRequired = false;
             RunCheck(delegate
             {
-                Statuses statuses = GetReplies();
+                Statuses statuses = GetMentions();
                 Array.Reverse(statuses.Status);
-                
+
                 // 差分チェック
                 ProcessRepliesStatus(statuses, (s) =>
                 {
@@ -1021,7 +1103,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
                 if (_isFirstTimeReplies && _enableDropProtection)
                 {
-                    _lastAccessReplies = DateTime.Now;
+                    if (statuses.Status != null && statuses.Status.Length > 0)
+                        _lastAccessRepliesId = statuses.Status.Select(s => s.Id).Max();
                 }
                 _isFirstTimeReplies = false;
             });
@@ -1062,7 +1145,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             return Utility.UrlEncode(s);
         }
-        
+
         /// <summary>
         /// 必要に応じてIDに変換する
         /// </summary>
@@ -1110,6 +1193,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 throw new TwitterServiceException(ie);
             }
         }
+
         private void ExecuteRequest(Procedure execProc)
         {
             try
@@ -1157,13 +1241,15 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
             catch (TwitterServiceException ex2)
             {
-                try { OnCheckError(new ErrorEventArgs(ex2)); } catch { }
+                try { OnCheckError(new ErrorEventArgs(ex2)); }
+                catch { }
                 return false;
             }
             catch (Exception ex3)
             {
-                try { OnCheckError(new ErrorEventArgs(ex3)); } catch { }
-                TraceLogger.Twitter.Information("RunCheck(Unhandled Exception): "+ex3.ToString());
+                try { OnCheckError(new ErrorEventArgs(ex3)); }
+                catch { }
+                TraceLogger.Twitter.Information("RunCheck(Unhandled Exception): " + ex3.ToString());
                 return false;
             }
 
@@ -1178,7 +1264,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private void RunCallback(Timer timer, Procedure callbackProcedure)
         {
             // あまりに処理が遅れると二重になる可能性がある
-            if (Monitor.TryEnter(timer))
+            if (timer != null && Monitor.TryEnter(timer))
             {
                 try
                 {
@@ -1225,7 +1311,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         }
 
         #endregion
-        
+
         internal class PreAuthenticatedWebClient : WebClient
         {
             private TwitterService _twitterService;
@@ -1298,11 +1384,17 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return sr.ReadToEnd();
         }
 
+        public String POST(String url, String postData)
+        {
+            return POST(url, Encoding.UTF8.GetBytes(postData));
+        }
+
         protected virtual HttpWebRequest CreateHttpWebRequest(String url, String method)
         {
             HttpWebRequest webRequest = HttpWebRequest.Create(url) as HttpWebRequest;
             //webRequest.Credentials = _credential;
             //webRequest.PreAuthenticate = true;
+            webRequest.ServicePoint.Expect100Continue = false;
             webRequest.Proxy = _proxy;
             webRequest.Method = method;
             webRequest.Accept = "text/xml, application/xml, text/html;q=0.5";
@@ -1322,7 +1414,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
 
             return webRequest as HttpWebRequest;
         }
-        
+
         private Stream GetResponseStream(WebResponse webResponse)
         {
             HttpWebResponse httpWebResponse = webResponse as HttpWebResponse;
@@ -1387,7 +1479,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 }
 
                 _cookies = response.Cookies;
-                
+
                 return response.Cookies;
             }
         }
@@ -1415,7 +1507,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
             return request;
         }
-           
+
 #if FALSE
         private CookieCollection Login(String userNameOrEmail, String password)
         {
@@ -1497,7 +1589,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
         }
 #endif
-        
+
         String DownloadString(String url)
         {
             WebRequest request = CreateWebRequest(url);
@@ -1761,6 +1853,42 @@ namespace Misuzilla.Applications.TwitterIrcGateway
     /// <summary>
     /// Userのセットを格納します。
     /// </summary>
+    [XmlType("users_list")]
+    public class UsersList
+    {
+        [XmlElement("users")]
+        public Users Users { get; set; }
+
+        [XmlElement("next_cursor")]
+        public Int64 NextCursor { get; set; }
+
+        [XmlElement("previous_cursor")]
+        public Int64 PreviousCursor { get; set; }
+
+        private static Object _syncObject = new object();
+        private static XmlSerializer _serializer = null;
+        static UsersList()
+        {
+            lock (_syncObject)
+            {
+                if (_serializer == null)
+                {
+                    _serializer = new XmlSerializer(typeof(UsersList));
+                }
+            }
+        }
+        public static XmlSerializer Serializer
+        {
+            get
+            {
+                return _serializer;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Userのセットを格納します。
+    /// </summary>
     [XmlType("users")]
     public class Users
     {
@@ -1837,8 +1965,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 return _serializer;
             }
         }
-        
-        
+
+
         public User()
         {
             _Counter.Increment(ref _Counter.User);
@@ -1868,6 +1996,8 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public String InReplyToStatusId;
         [XmlElement("in_reply_to_user_id")]
         public String InReplyToUserId;
+        [XmlElement("retweeted_status")]
+        public Status RetweetedStatus;
         [XmlElement("text")]
         public String _textOriginal;
         [XmlElement("user")]
@@ -1883,7 +2013,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         private String _text;
         [XmlIgnore]
         private DateTime _createdAt;
-        
+
         [XmlIgnore]
         public String Text
         {
@@ -1894,7 +2024,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     _text = Utility.UnescapeCharReference(_textOriginal);
                 }
 
-                return _text;
+                return _text ?? "";
             }
             set
             {
@@ -1939,7 +2069,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         {
             _Counter.Decrement(ref _Counter.Status);
         }
-        
+
         public static XmlSerializer Serializer
         {
             get

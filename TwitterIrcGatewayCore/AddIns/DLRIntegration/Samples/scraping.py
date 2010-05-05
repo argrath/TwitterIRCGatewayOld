@@ -1,4 +1,4 @@
-﻿import sys
+import sys
 import clr
 import re
 import thread
@@ -87,17 +87,15 @@ class Scraping(Object):
 		self.re_source = re.compile(r"<span>from (.*?)</span>")
 		self.re_statuses = re.compile(r"<li class=\"hentry u-.*? status.*?</li>", re.S)
 		self.re_content = re.compile(r"class=\"entry-content\">(.*?)</span>")
-		self.re_user = re.compile(r"class=\"screen-name\" title=\"([^\"]+)\">(.*?)</a>")
+		self.re_user = re.compile(r"class=\"tweet-url screen-name\" title=\"([^\"]+)\">(.*?)</a>")
 		self.re_anchor = re.compile(r"<a href=\"(http://[^\"]*)\"[^>]*>.*?</a>")
 		self.re_tag = re.compile(r"<[^>]*>")
 		self.re_status_id = re.compile(r"id=\"status_(\d+)\"")
+		self.doProcessStatusAction = Action[Status](self.doProcessStatus)
 
 	def start(self):
 		if not self.running:
-			try:
-				CurrentSession.TwitterService.CookieLogin()
-			except:
-				pass
+			CurrentSession.TwitterService.CookieLogin()
 			self.thread = Thread(ThreadStart(self.runProc))
 			self.thread.Start()
 
@@ -127,11 +125,14 @@ class Scraping(Object):
 			# Status
 			s.Source    = self.re_source.search(status).group(1)
 			s.Text      = Utility.UnescapeCharReference(self.re_tag.sub(r"", self.re_anchor.sub(r"\1", self.re_content.search(status).group(1))))
-			s.Id        = int(self.re_status_id.search(status).group(1), 10)
+			s.Id        = long(self.re_status_id.search(status).group(1), 10)
 			s.CreatedAt = DateTime.Now
 			
-			#Trace.WriteLine(s.ToString())
-			CurrentSession.TwitterService.ProcessStatus(s, Action[Status](lambda s1: CurrentSession.ProcessTimelineStatus(s1, False, False)))
+			Trace.WriteLine(s.ToString())
+			CurrentSession.TwitterService.ProcessStatus(s, self.doProcessStatusAction)
+
+	def doProcessStatus(self, s):
+		CurrentSession.ProcessTimelineStatus(s, False, False)
 
 	def onPostProcessTimelineStatuses(self, sender, e):
 		if e.IsFirstTime and self.requireDisableApi():
