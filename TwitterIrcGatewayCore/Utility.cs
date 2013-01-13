@@ -103,7 +103,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                 HttpWebRequest req = HttpWebRequest.Create(url) as HttpWebRequest;
                 req.AllowAutoRedirect = false;
                 req.Timeout = timeOut;
-                req.Method = "HEAD";
+                req.Method = "GET";
                 req.UserAgent = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)";
                 res = req.GetResponse() as HttpWebResponse;
 
@@ -112,6 +112,16 @@ namespace Misuzilla.Applications.TwitterIrcGateway
                     if (!String.IsNullOrEmpty(res.Headers["Location"]))
                     {
                         return res.Headers["Location"];
+                    }
+                } else if (res.StatusCode == HttpStatusCode.OK)
+                {
+                    System.IO.Stream st = res.GetResponseStream();
+                    System.IO.StreamReader sr = new System.IO.StreamReader(st);
+                    string html = sr.ReadToEnd();
+                    Match ma = Regex.Match(html, "URL=([^\"]*)\"");
+                    if (ma.Success)
+                    {
+                        return ma.Groups[1].Value;
                     }
                 }
                 return url;
