@@ -83,7 +83,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public static String ResolveShortUrlInMessage(String message, Int32 timeOut)
         {
             // 改行ゴミがついてるのでついでに削除する
-            return Regex.Replace(message, @"(http://(?:htn\.to|t\.co|bit\.ly|j\.mp)/[A-Za-z0-9_/.;%&\-]+)[\r\n]*", delegate(Match m)
+            return Regex.Replace(message, @"(http://(?:htn\.to|t\.co|bit\.ly|j\.mp|goo\.gl|fb\.me)/[A-Za-z0-9_/.;%&\-]+)[\r\n]*", delegate(Match m)
             {
                 return ResolveRedirectUrl(m.Groups[1].Value, timeOut);
             }, RegexOptions.IgnoreCase);
