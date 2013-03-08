@@ -26,7 +26,26 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         [JsonProperty("id")]
         public Int64 Id;
         [JsonProperty("text")]
-        public String Text;
+        public String _textOriginal { get; set; }
+        [JsonIgnore]
+        private String _text { get; set; }
+        [JsonIgnore]
+        public String Text
+        {
+            get
+            {
+                if (!String.IsNullOrEmpty(_textOriginal) && _text == null)
+                {
+                    _text = Utility.UnescapeCharReference(_textOriginal);
+                }
+
+                return _text ?? "";
+            }
+            set
+            {
+                _text = value;
+            }
+        }
         [JsonProperty("sender_id")]
         public String SenderId;
         [JsonProperty("recipient_id")]
@@ -101,7 +120,27 @@ namespace Misuzilla.Applications.TwitterIrcGateway
         public Entities Entities;
 
         [JsonProperty("text")]
-        public String Text { get; set; }
+        public String _textOriginal { get; set; }
+        [JsonIgnore]
+        private String _text { get; set; }
+        [JsonIgnore]
+        public String Text
+        {
+            get
+            {
+                if (!String.IsNullOrEmpty(_textOriginal) && _text == null)
+                {
+                    _text = Utility.UnescapeCharReference(_textOriginal);
+                }
+
+                return _text ?? "";
+            }
+            set
+            {
+                _text = value;
+            }
+        }
+
         [JsonProperty("created_at")]
         [JsonConverter(typeof(TwitterDateTimeConverter))]
         public DateTime CreatedAt { get; set; }
@@ -216,7 +255,6 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             Culture = CultureInfo.GetCultureInfo("en-us");
         }
     }
-
 
     ///// <summary>
     ///// メディアエンティティの情報を表します。
