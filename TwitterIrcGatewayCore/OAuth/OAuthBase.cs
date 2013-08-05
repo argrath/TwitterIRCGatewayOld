@@ -251,7 +251,11 @@ namespace OAuth {
             {
                 normalizedUrl += ":" + url.Port;
             }
-            normalizedUrl += url.AbsolutePath;
+
+            UriBuilder newUri = new UriBuilder(url);
+            if (httpMethod.ToUpper() == "POST")
+                newUri.Query = "";
+            normalizedUrl += newUri.Uri.AbsolutePath;
             normalizedRequestParameters = NormalizeRequestParameters(parameters);
 
             StringBuilder signatureBase = new StringBuilder();			

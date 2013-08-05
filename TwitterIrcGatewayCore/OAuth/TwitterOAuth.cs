@@ -233,8 +233,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             }
 
             UriBuilder newUri = new UriBuilder(requestUrl);
-            if (method == HttpMethod.GET)
-                newUri.Query = newUri.Query.TrimStart('?') + ((newUri.Query.Length > 0) ? "&" : "") + parameters;
+            newUri.Query = newUri.Query.TrimStart('?') + ((newUri.Query.Length > 0) ? "&" : "") + parameters;
 
             var request = RequestInternal(newUri.Uri, method, Token, TokenSecret, parameters);
 
@@ -390,6 +389,7 @@ namespace Misuzilla.Applications.TwitterIrcGateway
             webRequest.ServicePoint.Expect100Continue = false;
             webRequest.Timeout = 30 * 1000;
             webRequest.Method = "POST";
+            webRequest.ContentType = "application/x-www-form-urlencoded";
             webRequest.Headers["Authorization"] = "OAuth realm=\"\", " +
                                                   String.Join(", ",
                                                     authKeys.Split('&')
